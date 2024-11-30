@@ -1,23 +1,33 @@
-import logo from './logo.svg';
-import './App.css';
+import React, { Suspense, lazy } from "react";
+import { BrowserRouter, Routes, Route } from "react-router-dom";
+import Loader from "./Component/Loader";
+import "./App.css";
+import ContactPage from "./Pages/ContactPage";
+import SpeedTypingTest from "./Pages/SpeedTypingTest ";
+
+// Lazy load the pages
+const Index = lazy(() => import("./Pages/Index"));
+const LandingPage = lazy(() => import("./Pages/LandingPage"));
+const AboutPage = lazy(() => import("./Pages/AboutPage"));
+const NotFound = lazy(() => import("./Pages/NotFound"));
 
 function App() {
   return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
+    <div>
+      <BrowserRouter>
+        <Suspense fallback={<Loader />}>
+          <Routes>
+            {/* Define your routes */}
+            <Route path="/" element={<Index />} />
+            <Route path="/typing" element={<SpeedTypingTest />} />
+            <Route path="/landing" element={<LandingPage />} />
+            <Route path="/about" element={<AboutPage />} />
+            <Route path="/contact" element={<ContactPage />} />
+            <Route path="/support" element={<ContactPage />} />
+            <Route path="/*" element={<NotFound />} />
+          </Routes>
+        </Suspense>
+      </BrowserRouter>
     </div>
   );
 }
