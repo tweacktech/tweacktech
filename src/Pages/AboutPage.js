@@ -108,8 +108,8 @@ const AboutPage = () => {
             <div className="flex flex-wrap gap-2">
               {["Laravel","React", "Python", "Mysql","TypeScript"
               //  "Node.js", "Machine Learning", "Docker", "GraphQL",
-                , "MongoDB", "AWS"].map((skill) => (
-                  <span key={skill} className="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm">
+                , "Java", "AWS"].map((skill) => (
+                  <span key={skill} className="bg-blue-100 text-red-950 px-3 py-1 rounded-full text-sm">
                     {skill}
                   </span>
                 ))}
@@ -130,7 +130,7 @@ const AboutPage = () => {
                 key={category}
                 onClick={() => setFilter(category)}
                 className={`px-2 py-2 rounded-full transition ${filter === category
-                    ? "bg-blue-600 text-white"
+                    ? "bg-red-950 text-white"
                     : "bg-gray-100 text-gray-800 hover:bg-gray-200"
                   }`}
               >
@@ -152,7 +152,7 @@ const AboutPage = () => {
                   {project.technologies.map((tech) => (
                     <span
                       key={tech}
-                      className="bg-blue-100 text-blue-800 px-2 py-1 rounded-full text-xs"
+                      className="bg-blue-100 text-red-950 px-2 py-1 rounded-full text-xs"
                     >
                       {tech}
                     </span>

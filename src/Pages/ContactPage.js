@@ -47,7 +47,7 @@ const ContactPage = () => {
 
               <div className="space-y-6">
                 <div className="flex items-center space-x-4">
-                  <MapPin className="text-blue-600" size={28} />
+                  <MapPin className="text-red-950" size={28} />
                   <div>
                     <h3 className="font-semibold text-gray-800">Address</h3>
                     <p className="text-gray-600">Jabi, Abuja</p>
@@ -75,7 +75,7 @@ const ContactPage = () => {
               <div className="mt-10 border-t pt-8 flex justify-center space-x-6">
                 <Link to="https://github.com/tweacktech/"
                 target="_blank"
-                  className="text-gray-600 hover:text-blue-600 transition"
+                  className="text-gray-600 hover:text-red-950 transition"
                   aria-label="GitHub"
                 >
                   <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -84,7 +84,7 @@ const ContactPage = () => {
                 </Link>
                 <Link to="https://www.linkedin.com/in/dari-datongs/"
                 target="_blank"
-                  className="text-gray-600 hover:text-blue-600 transition"
+                  className="text-gray-600 hover:text-red-950 transition"
                   aria-label="LinkedIn"
                 >
                   <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -94,7 +94,7 @@ const ContactPage = () => {
                   </svg>
                 </Link>
                 <Link to="#"
-                  className="text-gray-600 hover:text-blue-600 transition"
+                  className="text-gray-600 hover:text-red-950 transition"
                   aria-label="Twitter"
                 >
                   <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -107,7 +107,7 @@ const ContactPage = () => {
             {/* Contact Form */}
             <div className="bg-white p-6 rounded-xl shadow-md">
               <h2 className="text-3xl font-bold text-gray-900 mb-1 flex items-center">
-                <MessageCircle className="mr-2 text-blue-600" size={32} />
+                <MessageCircle className="mr-2 text-red-950" size={32} />
                 Send a Message
               </h2>
               <form onSubmit={handleSubmit} className="space-y-5">
@@ -125,7 +125,7 @@ const ContactPage = () => {
                     value={formData.name}
                     onChange={handleChange}
                     required
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-950"
                     placeholder="Your Name"
                   />
                 </div>
@@ -144,7 +144,7 @@ const ContactPage = () => {
                     value={formData.email}
                     onChange={handleChange}
                     required
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-950"
                     placeholder="you@example.com"
                   />
                 </div>
@@ -163,7 +163,7 @@ const ContactPage = () => {
                     value={formData.subject}
                     onChange={handleChange}
                     required
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-950"
                     placeholder="Purpose of your message"
                   />
                 </div>
@@ -182,14 +182,14 @@ const ContactPage = () => {
                     onChange={handleChange}
                     required
                     rows={4}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-950"
                     placeholder="Type your message here..."
                   ></textarea>
                 </div>
 
                 <button
                   type="submit"
-                  className="w-full bg-blue-600 text-white py-3 rounded-lg hover:bg-blue-700 transition flex items-center justify-center"
+                  className="w-full bg-red-950 text-white py-3 rounded-lg hover:bg-blue-700 transition flex items-center justify-center"
                 >
                   <Send className="mr-2" size={20} /> Send Message
                 </button>

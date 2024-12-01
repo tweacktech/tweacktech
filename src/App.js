@@ -8,6 +8,7 @@ import { Helmet } from "react-helmet";
 // Lazy load the pages
 const Index = lazy(() => import("./Pages/Index"));
 const LandingPage = lazy(() => import("./Pages/LandingPage"));
+const VideoDownloader = lazy(() => import("./Pages/VideoDownloader"));
 const AboutPage = lazy(() => import("./Pages/AboutPage"));
 const ContactPage = lazy(() => import("./Pages/ContactPage"));
 const SupportPage = lazy(() => import("./Pages/SupportPage"));
@@ -42,6 +43,7 @@ function App() {
                   <Route path="/" element={<Index />} />
                   <Route path="/typing" element={<SpeedTypingTest />} />
                   <Route path="/landing" element={<LandingPage />} />
+                  <Route path="/download" element={<VideoDownloader />} />
                   <Route path="/about" element={<AboutPage />} />
                   <Route path="/contact" element={<ContactPage />} />
                   <Route path="/support" element={<SupportPage />} />

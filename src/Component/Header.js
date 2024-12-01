@@ -1,4 +1,5 @@
 import React from 'react'
+import { Link } from 'react-router-dom'
 
 function Header() {
   return (
@@ -14,11 +15,11 @@ function Header() {
               Unlock unprecedented growth and efficiency with our cutting-edge platform designed for modern enterprises.
             </p>
             <div className="flex space-x-4">
-              <button className="bg-red-950 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition">
-                Start Free SpeedTypingTest
-              </button>
+              <Link to="/typing" className="bg-red-950 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition">
+                SpeedTypingTest
+              </Link>
               <button className="bg-white text-red-950 px-6 py-3 rounded-lg border border-red-950 hover:bg-blue-50 transition">
-                Learn More
+                Learn More 
               </button>
             </div>
           </div>

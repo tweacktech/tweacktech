@@ -80,7 +80,7 @@ const Index = () => {
             </div>
 
             <div className="bg-white p-8 rounded-xl shadow-md text-center hover:shadow-xl transition">
-              <Code className="mx-auto mb-6 text-green-600" size={56} />
+              <Code className="mx-auto mb-6 text-red-950" size={56} />
               <h3 className="text-2xl font-bold mb-4 text-gray-900">Build</h3>
               <p className="text-gray-600">
                 Powerful development tools and collaborative environments.
@@ -88,7 +88,7 @@ const Index = () => {
             </div>
 
             <div className="bg-white p-8 rounded-xl shadow-md text-center hover:shadow-xl transition">
-              <Users className="mx-auto mb-6 text-purple-600" size={56} />
+              <Users className="mx-auto mb-6 text-blue-600" size={56} />
               <h3 className="text-2xl font-bold mb-4 text-gray-900">Connect</h3>
               <p className="text-gray-600">
                 Network with global experts and like-minded innovators.
