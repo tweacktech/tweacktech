@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import {
   RefreshCw, Clock, Type, Award, Star,
-  TrendingUp, ChevronUp, ChevronDown
+   ChevronUp, ChevronDown
 } from 'lucide-react';
 import Footer from '../Component/Footer';
 import Navbar from '../Component/Navbar';

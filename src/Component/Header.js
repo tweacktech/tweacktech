@@ -27,7 +27,7 @@ function Header() {
           {/* Placeholder Hero Image */}
           <div className="hidden md:flex justify-center">
             <div className="w-full max-w-md bg-blue-100 rounded-xl aspect-square flex items-center justify-center">
-              <span className="text-red-950 text-2xl">
+              <span className="text-red-950 text-2xl ">
                 <img src={require('./tweacktech.jpg')} alt='Hero  Placeholder'/>
                 </span>
             </div>

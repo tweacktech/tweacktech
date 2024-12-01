@@ -25,7 +25,7 @@ function Navbar() {
               {/* <Link to="/pricing" className="text-gray-600 hover:text-red-950 transition">Pricing</Link> */}
               <Link to="/about" className="text-gray-600 hover:text-red-950 transition">About</Link>
               <Link to="/contact" className="text-gray-600 hover:text-red-950 transition">Contact</Link>
-              <Link to="#" className="block text-gray-400 hover:text-white">Support</Link>
+              <Link to="#" className="text-gray-600 hover:text-red-950 transition">Support</Link>
             </div>
 
             {/* Mobile Menu Toggle */}
@@ -39,9 +39,9 @@ function Navbar() {
             </div>
 
             <div className="hidden md:block">
-              <button className="bg-red-950 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition">
-              <Link to="/typing">Speed TypingTest</Link>
-              </button>
+             
+              <Link to="/typing"  className="bg-red-950 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition">Speed TypingTest</Link>
+             
             </div>
           </div>
         </div>
@@ -55,9 +55,9 @@ function Navbar() {
               <Link to="/about" className="block text-gray-600 hover:text-red-950 py-2">About</Link>
               <Link to="/contact" className="block text-gray-600 hover:text-red-950 py-2">Contact</Link>
               <Link to="#" className="block text-gray-400 hover:text-white">Support</Link>
-              <button className="w-full bg-red-950 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition">
-               <Link to="/typing">Speed TypingTest</Link>
-              </button>
+              
+               <Link to="/typing" className="w-full bg-red-950 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition">Speed TypingTest</Link>
+              
             </div>
           </div>
         )}

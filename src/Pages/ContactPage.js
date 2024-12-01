@@ -50,7 +50,7 @@ const ContactPage = () => {
                   <MapPin className="text-blue-600" size={28} />
                   <div>
                     <h3 className="font-semibold text-gray-800">Address</h3>
-                    <p className="text-gray-600">123 Tech Lane, Innovation City, 54321</p>
+                    <p className="text-gray-600">Jabi, Abuja</p>
                   </div>
                 </div>
 
@@ -58,7 +58,7 @@ const ContactPage = () => {
                   <Phone className="text-green-600" size={28} />
                   <div>
                     <h3 className="font-semibold text-gray-800">Phone</h3>
-                    <p className="text-gray-600">(555) 123-4567</p>
+                    <p className="text-gray-600">(+234) 7065216112</p>
                   </div>
                 </div>
 
@@ -66,7 +66,7 @@ const ContactPage = () => {
                   <Mail className="text-red-600" size={28} />
                   <div>
                     <h3 className="font-semibold text-gray-800">Email</h3>
-                    <p className="text-gray-600">contact@johndoe.com</p>
+                    <p className="text-gray-600">meyorpop@gmail.com</p>
                   </div>
                 </div>
               </div>

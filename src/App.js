@@ -2,13 +2,13 @@ import React, { Suspense, lazy } from "react";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Loader from "./Component/Loader";
 import "./App.css";
-import ContactPage from "./Pages/ContactPage";
 import SpeedTypingTest from "./Pages/SpeedTypingTest ";
 
 // Lazy load the pages
 const Index = lazy(() => import("./Pages/Index"));
 const LandingPage = lazy(() => import("./Pages/LandingPage"));
 const AboutPage = lazy(() => import("./Pages/AboutPage"));
+const ContactPage = lazy(() => import("./Pages/ContactPage"));
 const NotFound = lazy(() => import("./Pages/NotFound"));
 
 function App() {
