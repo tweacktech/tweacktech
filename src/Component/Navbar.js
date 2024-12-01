@@ -13,11 +13,12 @@ function Navbar() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center py-4">
             <div className="flex items-center">
-              <Link to='/' className="text-2xl font-bold text-red-950 pl-2">
-                TweackTech
+              <Link to="/" className="text-2xl font-bold text-red-950 flex items-center space-x-2 pl-2">
+                <img src={require('./tweacktech.jpg')} alt="logo" className="w-10 h-10 rounded-full" />
+                <span>TweackTech</span>
               </Link>
-
             </div>
+
 
             {/* Desktop Navigation */}
             <div className="hidden md:flex space-x-8">

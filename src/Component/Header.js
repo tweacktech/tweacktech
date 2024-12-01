@@ -3,11 +3,11 @@ import React from 'react'
 function Header() {
   return (
     <div>
-       <header className="pt-24 pb-12 bg-gradient-to-br from-blue-50 to-white">
+      <header className="pt-24 pb-12 bg-gradient-to-br from-blue-50 to-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 grid md:grid-cols-2 gap-10 items-center">
           <div>
             <h1 className="text-5xl font-extrabold text-gray-900 mb-6">
-              Transform Your Business 
+              Transform Your Business
               <span className="block text-red-950">With Smart Solutions</span>
             </h1>
             <p className="text-xl text-gray-600 mb-8">
@@ -22,16 +22,20 @@ function Header() {
               </button>
             </div>
           </div>
-          
+
           {/* Placeholder Hero Image */}
-          <div className="hidden md:flex justify-center">
+          <div className="flex justify-center">
             <div className="w-full max-w-md bg-blue-100 rounded-xl aspect-square flex items-center justify-center">
               <span className="text-red-950 text-2xl rounded-s-md mb-2 object-cover border-4">
-                <img src={require('./tweacktech.jpg')} alt='Hero  Placeholder'/>
-                </span>
+                <img
+                  src={require('./tweacktech.jpg')}
+                  alt="Hero Placeholder"
+                  className="rounded-s-md"
+                />
+              </span>
             </div>
           </div>
-        </div>
+</div>
       </header>
     </div>
   )

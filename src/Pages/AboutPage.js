@@ -51,7 +51,6 @@ const AboutPage = () => {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <title>About</title>
       <Navbar/>
       {/* Header Section */}
       <header className="bg-gradient-to-r from-blue-500 to-red-950 text-white py-20">

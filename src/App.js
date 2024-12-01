@@ -3,6 +3,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Loader from "./Component/Loader";
 import "./App.css";
 import SpeedTypingTest from "./Pages/SpeedTypingTest ";
+import { Helmet } from "react-helmet";
 
 // Lazy load the pages
 const Index = lazy(() => import("./Pages/Index"));
@@ -15,6 +16,15 @@ function App() {
   return (
     <div>
       <BrowserRouter>
+      <Helmet>
+        <title>TweackTech</title>
+        <meta name="description" content="Learn more about Services TweackTech!" />
+        <meta property="og:title" content="TweackTech" />
+        <meta property="og:description" content="Learn more about My React App." />
+        <meta property="og:image" content="https://tweacktech.vercel.app/image.jpg" />
+        <meta property="og:url" content="https://example.com/about" />
+        <meta property="og:type" content="website" />
+      </Helmet>
         <Suspense fallback={<Loader />}>
           <Routes>
             {/* Define your routes */}

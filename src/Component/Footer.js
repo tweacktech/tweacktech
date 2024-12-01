@@ -4,14 +4,24 @@ import { Link } from 'react-router-dom'
 function Footer() {
   return (
     <div>
-      <footer className="bg-gray-900 text-white py-12">
+      <footer className="bg-gray-900 text-white py-4">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 grid md:grid-cols-3 gap-8">
           <div>
-            <h4 className="text-xl font-bold mb-4"><Link to="/">TweackTech</Link></h4>
+            <h4 className="text-xl font-bold mb-4">
+              <Link to="/" className="flex items-center space-x-2">
+                <img
+                  src={require('./tweacktech.jpg')}
+                  alt="logo"
+                  className="w-10 h-10 rounded-full"
+                />
+                <span>TweackTech</span>
+              </Link>
+            </h4>
             <p className="text-gray-400">
               Innovative solutions for modern businesses, powered by cutting-edge technology.
             </p>
           </div>
+
 
           <div>
             <h4 className="text-xl font-bold mb-4">Quick Links</h4>
