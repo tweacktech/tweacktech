@@ -41,7 +41,7 @@ const SupportPage = () => {
   return (
     <>
     <Navbar/>
-     <div className="max-h-full bg-gray-100 pt-48  pb-16 flex flex-col items-center">
+     <div className="max-h-full bg-gray-100 pt-32  pb-20 flex flex-col items-center">
       <div className="w-full max-w-max bg-white shadow-lg rounded-xl p-8">
         <h1 className="text-3xl font-bold text-center mb-6 text-gray-800">
           Support Our Work
