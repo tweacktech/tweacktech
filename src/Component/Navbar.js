@@ -5,6 +5,11 @@ import { Menu, X, CheckCircle } from 'lucide-react';
 
 function Navbar() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [featuresOpen, setFeaturesOpen] = useState(false);
+
+  const toggleFeaturesDropdown = () => {
+    setFeaturesOpen(!featuresOpen);
+  };
 
 
   return (
@@ -22,7 +27,42 @@ function Navbar() {
 
             {/* Desktop Navigation */}
             <div className="hidden md:flex space-x-8">
-              <Link to="/features" className="text-gray-600 hover:text-red-950 transition">Features</Link>
+              {/* Features Dropdown */}
+              <div className="relative">
+                <button
+                  onClick={toggleFeaturesDropdown}
+                  className="text-gray-600 hover:text-red-950 transition"
+                >
+                  Features
+                </button>
+                {featuresOpen && (
+                  <div className="absolute left-0 mt-2 w-48 bg-white rounded-md shadow-lg ring-1 ring-black ring-opacity-5 z-10">
+                    <div className="py-1">
+                      <Link
+                        to="/typing"
+                        className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 hover:text-red-950"
+                      >
+                        SpeedTyping
+                      </Link>
+                      <Link
+                        to="/download"
+                        className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 hover:text-red-950"
+                      >
+                        Reel Downloader
+                      </Link>
+                      <Link
+                        to="/features/feature3"
+                        className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 hover:text-red-950"
+                      >
+                        Feature 3
+                      </Link>
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* Other Links */}
+              {/* Uncomment Pricing if needed */}
               {/* <Link to="/pricing" className="text-gray-600 hover:text-red-950 transition">Pricing</Link> */}
               <Link to="/about" className="text-gray-600 hover:text-red-950 transition">About</Link>
               <Link to="/contact" className="text-gray-600 hover:text-red-950 transition">Contact</Link>
@@ -49,18 +89,62 @@ function Navbar() {
 
         {/* Mobile Menu */}
         {mobileMenuOpen && (
-          <div className="md:hidden absolute top-full left-0 w-full bg-white shadow-lg">
-            <div className="px-4 pt-2 pb-4 space-y-2">
-              <Link to="/features" className="block text-gray-600 hover:text-red-950 py-2">Features</Link>
-              {/* <Link to="/pricing" className="block text-gray-600 hover:text-red-950 py-2">Pricing</Link> */}
-              <Link to="/about" className="block text-gray-600 hover:text-red-950 py-2">About</Link>
-              <Link to="/contact" className="block text-gray-600 hover:text-red-950 py-2">Contact</Link>
-              <Link to="/support" className="block text-gray-600 hover:text-red-950 py-2">Support</Link>
-
-              <Link to="/typing" className="w-full bg-red-950 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition">Speed TypingTest</Link>
-
+          <div className="md:hidden absolute top-full left-0 w-full bg-white shadow-lg z-10">
+          <div className="px-4 pt-2 pb-4 space-y-2">
+            {/* Features Dropdown */}
+            <div>
+              <button
+                onClick={toggleFeaturesDropdown}
+                className="block text-gray-600 hover:text-red-950 py-2 w-full text-left"
+              >
+                Features
+              </button>
+              {featuresOpen && (
+                <div className="ml-4 mt-1 space-y-1">
+                  <Link
+                    to="/typing"
+                    className="block text-gray-600 hover:text-red-950 py-1"
+                  >
+                    SpeedTyping
+                  </Link>
+                  <Link
+                    to="/download"
+                    className="block text-gray-600 hover:text-red-950 py-1"
+                  >
+                    Reel Downloader
+                  </Link>
+                  {/* <Link
+                    to="/features/feature3"
+                    className="block text-gray-600 hover:text-red-950 py-1"
+                  >
+                    Feature 3
+                  </Link> */}
+                </div>
+              )}
             </div>
+  
+            {/* Other Links */}
+            {/* Uncomment Pricing if needed */}
+            {/* <Link to="/pricing" className="block text-gray-600 hover:text-red-950 py-2">Pricing</Link> */}
+            <Link to="/about" className="block text-gray-600 hover:text-red-950 py-2">
+              About
+            </Link>
+            <Link to="/contact" className="block text-gray-600 hover:text-red-950 py-2">
+              Contact
+            </Link>
+            <Link to="/support" className="block text-gray-600 hover:text-red-950 py-2">
+              Support
+            </Link>
+  
+            {/* Speed Typing Test Link */}
+            <Link
+              to="/typing"
+              className="w-full bg-red-950 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition block text-center"
+            >
+              Speed Typing Test
+            </Link>
           </div>
+        </div>
         )}
       </nav>
     </div>
