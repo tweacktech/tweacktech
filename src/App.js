@@ -10,6 +10,7 @@ const Index = lazy(() => import("./Pages/Index"));
 const LandingPage = lazy(() => import("./Pages/LandingPage"));
 const AboutPage = lazy(() => import("./Pages/AboutPage"));
 const ContactPage = lazy(() => import("./Pages/ContactPage"));
+const SupportPage = lazy(() => import("./Pages/SupportPage"));
 const NotFound = lazy(() => import("./Pages/NotFound"));
 
 function App() {
@@ -43,7 +44,7 @@ function App() {
                   <Route path="/landing" element={<LandingPage />} />
                   <Route path="/about" element={<AboutPage />} />
                   <Route path="/contact" element={<ContactPage />} />
-                  <Route path="/support" element={<ContactPage />} />
+                  <Route path="/support" element={<SupportPage />} />
                   <Route path="/*" element={<NotFound />} />
                 </Routes>
               </Suspense>

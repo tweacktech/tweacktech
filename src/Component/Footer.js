@@ -30,7 +30,7 @@ function Footer() {
               {/* <Link to="#" className="block text-gray-400 hover:text-white">Pricing</Link> */}
               <Link to="/about" className="block text-gray-400 hover:text-white">About</Link>
               <Link to="/contact" className="block text-gray-400 hover:text-white">Contact</Link>
-              <Link to="#" className="block text-gray-400 hover:text-white">Support</Link>
+              <Link to="/support" className="block text-gray-400 hover:text-white">Support</Link>
             </div>
           </div>
 

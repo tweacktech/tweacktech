@@ -26,7 +26,7 @@ function Navbar() {
               {/* <Link to="/pricing" className="text-gray-600 hover:text-red-950 transition">Pricing</Link> */}
               <Link to="/about" className="text-gray-600 hover:text-red-950 transition">About</Link>
               <Link to="/contact" className="text-gray-600 hover:text-red-950 transition">Contact</Link>
-              <Link to="#" className="text-gray-600 hover:text-red-950 transition">Support</Link>
+              <Link to="/support" className="text-gray-600 hover:text-red-950 transition">Support</Link>
             </div>
 
             {/* Mobile Menu Toggle */}
@@ -55,7 +55,7 @@ function Navbar() {
               {/* <Link to="/pricing" className="block text-gray-600 hover:text-red-950 py-2">Pricing</Link> */}
               <Link to="/about" className="block text-gray-600 hover:text-red-950 py-2">About</Link>
               <Link to="/contact" className="block text-gray-600 hover:text-red-950 py-2">Contact</Link>
-              <Link to="#" className="block text-gray-600 hover:text-red-950 py-2">Support</Link>
+              <Link to="/support" className="block text-gray-600 hover:text-red-950 py-2">Support</Link>
 
               <Link to="/typing" className="w-full bg-red-950 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition">Speed TypingTest</Link>
 
