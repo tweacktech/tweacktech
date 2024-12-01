@@ -120,9 +120,9 @@ const AboutPage = () => {
       </section>
 
       {/* Projects Section */}
-      <section className="bg-white py-16">
+      <section className="bg-white py-10">
         <div className="max-w-5xl mx-auto px-4">
-          <h2 className="text-3xl font-bold text-center mb-12 text-gray-800">My Projects</h2>
+          <h2 className="text-3xl font-bold text-center mb-8 text-gray-800">My Projects</h2>
 
           {/* Project Filters */}
           <div className="flex justify-center mb-8 space-x-4">
@@ -130,7 +130,7 @@ const AboutPage = () => {
               <button
                 key={category}
                 onClick={() => setFilter(category)}
-                className={`px-4 py-2 rounded-full transition ${filter === category
+                className={`px-2 py-2 rounded-full transition ${filter === category
                     ? "bg-blue-600 text-white"
                     : "bg-gray-100 text-gray-800 hover:bg-gray-200"
                   }`}

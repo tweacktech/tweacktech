@@ -1,5 +1,4 @@
 import React from 'react'
-import logo from './tweacktech.jpg'
 
 function Header() {
   return (
@@ -27,7 +26,7 @@ function Header() {
           {/* Placeholder Hero Image */}
           <div className="hidden md:flex justify-center">
             <div className="w-full max-w-md bg-blue-100 rounded-xl aspect-square flex items-center justify-center">
-              <span className="text-red-950 text-2xl ">
+              <span className="text-red-950 text-2xl rounded-s-md mb-2 object-cover border-4">
                 <img src={require('./tweacktech.jpg')} alt='Hero  Placeholder'/>
                 </span>
             </div>

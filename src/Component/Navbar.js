@@ -1,5 +1,5 @@
 import React, { useState } from 'react'
-import {  Link, Links } from 'react-router-dom'
+import { Link, Links } from 'react-router-dom'
 import { Menu, X, CheckCircle } from 'lucide-react';
 
 
@@ -13,10 +13,10 @@ function Navbar() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center py-4">
             <div className="flex items-center">
-            <Link to='/' className="text-2xl font-bold text-red-950 pl-2">
-             TweackTech
-             </Link>
-            
+              <Link to='/' className="text-2xl font-bold text-red-950 pl-2">
+                TweackTech
+              </Link>
+
             </div>
 
             {/* Desktop Navigation */}
@@ -39,9 +39,9 @@ function Navbar() {
             </div>
 
             <div className="hidden md:block">
-             
-              <Link to="/typing"  className="bg-red-950 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition">Speed TypingTest</Link>
-             
+
+              <Link to="/typing" className="bg-red-950 text-white px-4 py-2 pt-2 rounded-lg hover:bg-blue-700 transition">Speed TypingTest</Link>
+
             </div>
           </div>
         </div>
@@ -54,10 +54,10 @@ function Navbar() {
               {/* <Link to="/pricing" className="block text-gray-600 hover:text-red-950 py-2">Pricing</Link> */}
               <Link to="/about" className="block text-gray-600 hover:text-red-950 py-2">About</Link>
               <Link to="/contact" className="block text-gray-600 hover:text-red-950 py-2">Contact</Link>
-              <Link to="#" className="block text-gray-400 hover:text-white">Support</Link>
-              
-               <Link to="/typing" className="w-full bg-red-950 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition">Speed TypingTest</Link>
-              
+              <Link to="#" className="block text-gray-600 hover:text-red-950 py-2">Support</Link>
+
+              <Link to="/typing" className="w-full bg-red-950 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition">Speed TypingTest</Link>
+
             </div>
           </div>
         )}
