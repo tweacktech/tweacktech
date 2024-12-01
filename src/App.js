@@ -10,6 +10,7 @@ const Index = lazy(() => import("./Pages/Index"));
 const LandingPage = lazy(() => import("./Pages/LandingPage"));
 const VideoDownloader = lazy(() => import("./Pages/VideoDownloader"));
 const AboutPage = lazy(() => import("./Pages/AboutPage"));
+const MeyorPage = lazy(() => import("./Pages/MeyorPage"));
 const ContactPage = lazy(() => import("./Pages/ContactPage"));
 const SupportPage = lazy(() => import("./Pages/SupportPage"));
 const NotFound = lazy(() => import("./Pages/NotFound"));
@@ -43,6 +44,7 @@ function App() {
                   <Route path="/landing" element={<LandingPage />} />
                   <Route path="/download" element={<VideoDownloader />} />
                   <Route path="/about" element={<AboutPage />} />
+                  <Route path="/meyor" element={<MeyorPage />} />
                   <Route path="/contact" element={<ContactPage />} />
                   <Route path="/support" element={<SupportPage />} />
                   <Route path="/*" element={<NotFound />} />
