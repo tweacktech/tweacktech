@@ -51,10 +51,10 @@ function Navbar() {
                         Reel Downloader
                       </Link>
                       <Link
-                        to="/features/feature3"
+                        to="/login"
                         className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 hover:text-red-950"
                       >
-                        Feature 3
+                       Runing login
                       </Link>
                     </div>
                   </div>

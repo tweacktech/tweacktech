@@ -13,6 +13,7 @@ const AboutPage = lazy(() => import("./Pages/AboutPage"));
 const MeyorPage = lazy(() => import("./Pages/MeyorPage"));
 const ContactPage = lazy(() => import("./Pages/ContactPage"));
 const SupportPage = lazy(() => import("./Pages/SupportPage"));
+const LoginPage = lazy(() => import("./Pages/Login"));
 const NotFound = lazy(() => import("./Pages/NotFound"));
 
 function App() {
@@ -47,6 +48,7 @@ function App() {
                   <Route path="/meyor" element={<MeyorPage />} />
                   <Route path="/contact" element={<ContactPage />} />
                   <Route path="/support" element={<SupportPage />} />
+                  <Route path="/login" element={<LoginPage />} />
                   <Route path="/*" element={<NotFound />} />
                 </Routes>
               </Suspense>
