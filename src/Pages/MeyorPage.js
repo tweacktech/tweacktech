@@ -1,36 +1,48 @@
 import React, { useState } from 'react';
-import {  Globe, Award, Code, Zap, Car, GitFork } from 'lucide-react';
+import {  Globe, Award, Code, Zap, GitFork } from 'lucide-react';
 import Footer from '../Component/Footer';
 import Navbar from '../Component/Navbar';
 
 const projects = [
   {
     id: 1,
-    title: "E-Commerce Platform",
+    title: "E-Commerce Platform(AUTOMOTIVE)",
     description: "Full-stack e-commerce application with React, Node.js, and MongoDB",
-    technologies: ["React", "Node.js", "MongoDB", "Redux"],
+    technologies: ["Blade", "Laravel", "Mysql"],
     githubLink: "#",
-    liveLink: "#",
+    liveLink: "https://www.gapaautoparts.com/",
     type: "Web Development"
   },
   {
     id: 2,
-    title: "AI Chatbot Assistant",
-    description: "Machine learning-powered conversational AI with natural language processing",
-    technologies: ["Python", "TensorFlow", "Flask", "NLP"],
+    title: "E-Commerce Platform (Baby accessories)",
+    description: "Full-stack e-commerce application with React, Node.js, and MongoDB",
+    technologies: ["Blade", "Laravel", "Mysql"],
     githubLink: "#",
-    liveLink: "#",
-    type: "Machine Learning"
-  },
-  {
-    id: 3,
-    title: "Cryptocurrency Tracker",
-    description: "Real-time cryptocurrency price tracking and analytics dashboard",
-    technologies: ["React", "Chart.js", "Web3.js", "API Integration"],
-    githubLink: "#",
-    liveLink: "#",
+    liveLink: "https://gallerybebe.com/",
     type: "Web Development"
   },
+
+  {
+    id: 3,
+    title: "Notification system",
+    description: "Real-time notification system for web applications",
+    technologies: ["Laravel", "Mysql"],
+    githubLink: "#",
+    liveLink: "#",
+    type: "API Development"
+  },
+
+  
+  // {
+  //   id: 3,
+  //   title: "Cryptocurrency Tracker",
+  //   description: "Real-time cryptocurrency price tracking and analytics dashboard",
+  //   technologies: ["React", "Chart.js", "Web3.js", "API Integration"],
+  //   githubLink: "#",
+  //   liveLink: "#",
+  //   type: "Web Development"
+  // },
   {
     id: 4,
     title: "Mobile Health App",
@@ -56,7 +68,7 @@ const MeyorPage = () => {
       <header className="bg-gradient-to-r from-blue-500 to-red-950 text-white py-20">
         <div className="max-w-5xl mx-auto px-4 text-center">
           <img
-            src="/api/placeholder/200/200"
+            src="https://media.licdn.com/dms/image/v2/D4D03AQFbv4y4qRP5-Q/profile-displayphoto-shrink_400_400/profile-displayphoto-shrink_400_400/0/1698186970956?e=1749686400&v=beta&t=gwW5nYnm0TzRzA3KpPGs_fBak-ZM1r9bFdAN33dfCOY"
             alt="Profile"
             className="w-48 h-48 rounded-s-md mx-auto mb-2 object-cover border-4 border-white shadow-lg"
           />
@@ -106,9 +118,10 @@ const MeyorPage = () => {
           <div className="bg-white p-8 rounded-xl shadow-md">
             <h3 className="text-2xl font-bold mb-4 text-gray-800">Skills</h3>
             <div className="flex flex-wrap gap-2">
-              {["Laravel","React", "Python", "Mysql","TypeScript"
+              {["PHP","Laravel","React","Vue", "Python", "Mysql","TypeScript"
               //  "Node.js", "Machine Learning", "Docker", "GraphQL",
-                , "Java", "AWS"].map((skill) => (
+                // , "Java", "AWS"
+              ].map((skill) => (
                   <span key={skill} className="bg-blue-100 text-red-950 px-3 py-1 rounded-full text-sm">
                     {skill}
                   </span>
