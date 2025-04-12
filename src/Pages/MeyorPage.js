@@ -96,7 +96,7 @@ const MeyorPage = () => {
           <div>
             <h2 className="text-3xl font-bold mb-6 text-gray-800">About Me</h2>
             <p className="text-gray-600 mb-4">
-              I'm a passionate developer with 5+ years of experience in creating innovative
+              I'm a passionate developer with 4+ years of experience in creating innovative
               software solutions. My expertise spans full-stack web development, machine learning,
               and mobile application development.
             </p>
