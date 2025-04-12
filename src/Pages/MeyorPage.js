@@ -68,7 +68,7 @@ const MeyorPage = () => {
       <header className="bg-gradient-to-r from-blue-500 to-red-950 text-white py-20">
         <div className="max-w-5xl mx-auto px-4 text-center">
           <img
-            src="https://media.licdn.com/dms/image/v2/D4D03AQFbv4y4qRP5-Q/profile-displayphoto-shrink_400_400/profile-displayphoto-shrink_400_400/0/1698186970956?e=1749686400&v=beta&t=gwW5nYnm0TzRzA3KpPGs_fBak-ZM1r9bFdAN33dfCOY"
+            src={require('./1698186970956.jpeg')}
             alt="Profile"
             className="w-48 h-48 rounded-s-md mx-auto mb-2 object-cover border-4 border-white shadow-lg"
           />
