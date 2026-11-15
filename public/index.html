@@ -3,47 +3,112 @@
   <head>
     <meta charset="utf-8" />
     <link rel="icon" href="%PUBLIC_URL%/favicon.ico" />
-    
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <meta name="theme-color" content="#000000" />
-    
-    <meta name="description" content="Transform Your Business with Smart Solutions Services TweackTech!" />
-    <meta name="keywords" content="laravel,react, web, development,PHP,tweack,tech,Dari,Datongs,Meyor" />
-    <meta property="og:title" content="TweackTech" />
-    <meta property="og:description" content="Transform Your Business with Smart Solutions Services TweackTech!." />
-    <meta property="og:image" content="https://tweacktech.vercel.app/image.jpg" />
-    <meta property="og:url" content="https://example.com/about" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="theme-color" content="#dc2626" />
+    <meta name="color-scheme" content="light dark" />
+
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+    <meta name="apple-mobile-web-app-title" content="TweackTech" />
+    <meta name="mobile-web-app-capable" content="yes" />
+
+    <meta
+      name="description"
+      content="TweackTech is a learning management system for tech skills and a talent hub for programmers. Learn in-demand skills, earn certificates, and get hired."
+    />
+    <meta
+      name="keywords"
+      content="LMS, learning management system, tech skills, programming courses, talent hub, developer jobs, certifications, React, Node.js, Python, DevOps"
+    />
+    <meta name="author" content="TweackTech" />
+    <meta name="robots" content="index, follow, max-image-preview:large" />
+    <link rel="canonical" href="https://tweacktech.vercel.app/" />
+
+    <meta property="og:site_name" content="TweackTech" />
+    <meta property="og:title" content="TweackTech - Learn Tech Skills & Get Hired" />
+    <meta
+      property="og:description"
+      content="An LMS for tech skill knowledge and a talent hub for programmers. Learn, get certified, and connect with companies hiring developers."
+    />
+    <meta property="og:image" content="https://tweacktech.vercel.app/icon-512.png" />
+    <meta property="og:image:width" content="512" />
+    <meta property="og:image:height" content="512" />
+    <meta property="og:url" content="https://tweacktech.vercel.app/" />
     <meta property="og:type" content="website" />
 
-    <link rel="apple-touch-icon" href="%PUBLIC_URL%/logo192.png" />
-    <!--
-      manifest.json provides metadata used when your web app is installed on a
-      user's mobile device or desktop. See https://developers.google.com/web/fundamentals/web-app-manifest/
-    -->
-    <link rel="manifest" href="%PUBLIC_URL%/manifest.json" />
-    <!--
-      Notice the use of %PUBLIC_URL% in the tags above.
-      It will be replaced with the URL of the `public` folder during the build.
-      Only files inside the `public` folder can be referenced from the HTML.
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="TweackTech - Learn Tech Skills & Get Hired" />
+    <meta
+      name="twitter:description"
+      content="An LMS for tech skill knowledge and a talent hub for programmers."
+    />
+    <meta name="twitter:image" content="https://tweacktech.vercel.app/icon-512.png" />
 
-      Unlike "/favicon.ico" or "favicon.ico", "%PUBLIC_URL%/favicon.ico" will
-      work correctly both with client-side routing and a non-root public URL.
-      Learn how to configure a non-root public URL by running `npm run build`.
-    -->
-    <title>TweackTech</title>
+    <link rel="apple-touch-icon" href="%PUBLIC_URL%/icon-192.png" />
+    <link rel="icon" type="image/svg+xml" href="%PUBLIC_URL%/icon.svg" />
+    <link rel="manifest" href="%PUBLIC_URL%/manifest.json" />
+
+    <!-- Apply the saved theme before React paints to avoid a flash of the wrong mode. -->
+    <script>
+      (function () {
+        try {
+          var stored = localStorage.getItem('tweacktech-theme') || 'system';
+          var dark =
+            stored === 'dark' ||
+            (stored === 'system' &&
+              window.matchMedia &&
+              window.matchMedia('(prefers-color-scheme: dark)').matches);
+          var root = document.documentElement;
+          root.classList.remove('light', 'dark');
+          root.classList.add(dark ? 'dark' : 'light');
+          root.setAttribute('data-theme', dark ? 'dark' : 'light');
+          root.style.colorScheme = dark ? 'dark' : 'light';
+        } catch (e) {}
+      })();
+    </script>
+
+    <title>TweackTech - Learn Tech Skills & Get Hired</title>
   </head>
   <body>
     <noscript>You need to enable JavaScript to run this app.</noscript>
     <div id="root"></div>
+
     <!--
-      This HTML file is a template.
-      If you open it directly in the browser, you will see an empty page.
-
-      You can add webfonts, meta tags, or analytics to this file.
-      The build step will place the bundled scripts into the <body> tag.
-
-      To begin the development, run `npm start` or `yarn start`.
-      To create a production bundle, use `npm run build` or `yarn build`.
+      Google AdSense: after your site is approved, paste your AdSense script
+      here. Keep the publisher ID only in this file or an environment variable;
+      never commit private credentials.
     -->
+
+    <script>
+      // Only enable the service worker on a real deployment. During local
+      // development it caches webpack chunks and serves stale code after edits.
+      var localHosts = ['localhost', '127.0.0.1', '0.0.0.0', '[::1]'];
+      var isLocal = localHosts.indexOf(window.location.hostname) !== -1;
+
+      if ('serviceWorker' in navigator) {
+        if (isLocal) {
+          // Clean up any worker registered by an earlier run.
+          navigator.serviceWorker.getRegistrations().then(function (regs) {
+            regs.forEach(function (reg) {
+              reg.unregister();
+            });
+          });
+        } else {
+          window.addEventListener('load', function () {
+            navigator.serviceWorker
+              .register('/service-worker.js')
+              .catch(function (error) {
+                console.log('Service worker registration failed:', error);
+              });
+          });
+        }
+      }
+
+      window.addEventListener('beforeinstallprompt', function (event) {
+        event.preventDefault();
+        window.deferredPrompt = event;
+        window.dispatchEvent(new CustomEvent('pwa-install-available'));
+      });
+    </script>
   </body>
 </html>

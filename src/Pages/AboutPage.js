@@ -1,141 +1,189 @@
 import React from 'react';
-import { 
-  Code, 
-  Smartphone, 
-  Globe, 
-  Target, 
-  Users, 
-  Award, 
-  BookOpen, 
-  Rocket 
-} from 'lucide-react';
 import { Link } from 'react-router-dom';
+import {
+  Award,
+  BookOpen,
+  Briefcase,
+  CheckCircle2,
+  Code2,
+  GraduationCap,
+  Heart,
+  Rocket,
+  Target,
+  Users,
+} from 'lucide-react';
 import Navbar from '../Component/Navbar';
 import Footer from '../Component/Footer';
 
-const TeamMember = ({ name, role, image }) => (
-  <div className="bg-white rounded-lg shadow-md p-6 text-center">
-    <img 
-      src={`/api/placeholder/200/200?text=${name.replace(' ', '+')}`} 
-      alt={name} 
-      className="w-32 h-32 rounded-full mx-auto mb-4 object-cover"
-    />
-    <h3 className="font-semibold text-lg">{name}</h3>
-    <p className="text-gray-600">{role}</p>
-  </div>
-);
+const values = [
+  {
+    icon: BookOpen,
+    title: 'Learn by doing',
+    body: 'Every course pairs short lessons with practical assignments so skills stick.',
+  },
+  {
+    icon: Target,
+    title: 'Career focused',
+    body: 'Curriculum is shaped around the skills employers actually hire for.',
+  },
+  {
+    icon: Users,
+    title: 'Community first',
+    body: 'Instructors and mentors support learners through feedback and live sessions.',
+  },
+  {
+    icon: Heart,
+    title: 'Accessible to all',
+    body: 'Free and partially funded courses keep quality tech education within reach.',
+  },
+];
 
-const AboutPage = () => {
-  const services = [
-    {
-      icon: <Code className="w-12 h-12 text-blue-600" />,
-      title: 'Web Development',
-      description: 'Crafting responsive, high-performance websites and web applications using cutting-edge technologies.'
-    },
-    {
-      icon: <Smartphone className="w-12 h-12 text-green-600" />,
-      title: 'Mobile App Development',
-      description: 'Creating intuitive and powerful mobile applications for iOS and Android platforms.'
-    },
-    {
-      icon: <BookOpen className="w-12 h-12 text-purple-600" />,
-      title: 'Tech Training',
-      description: 'Providing comprehensive training programs to help individuals and teams master modern technologies.'
-    }
-  ];
+const stats = [
+  { value: '8+', label: 'Expert-led courses' },
+  { value: '4', label: 'Career tracks' },
+  { value: '100%', label: 'Project based' },
+  { value: '24/7', label: 'Learning access' },
+];
 
-  const teamMembers = [
-    { name: 'Dari Daniel (Meyor)', role: 'Founder & CEO' },
-    { name: 'Sarah Chen', role: 'Chief Technology Officer' },
-    { name: 'Michael Thompson', role: 'Lead Web Developer' },
-    { name: 'Emma Johnson', role: 'Mobile App Specialist' }
-  ];
+const AboutPage = () => (
+  <div className="min-h-screen bg-slate-50 dark:bg-slate-950 transition-colors">
+    <Navbar />
 
-  return (
-    <>
-    <Navbar/>
-    <div className="bg-gray-50">
-      {/* Hero Section */}
-      <div className="bg-red-950 text-white py-20">
-        <div className="container mx-auto px-4 text-center">
-          <h1 className="text-4xl font-bold mb-4 flex items-center justify-center">
-            <Rocket className="mr-4" /> TweakTech
+    <header className="relative overflow-hidden border-b border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900">
+      <div className="container-page py-14">
+        <div className="max-w-3xl">
+          <span className="section-eyebrow">
+            <Rocket className="h-3.5 w-3.5" /> About TweackTech
+          </span>
+          <h1 className="mt-4 text-3xl font-extrabold tracking-tight text-slate-900 dark:text-white md:text-5xl">
+            A learning platform and a <span className="gradient-text">talent hub</span> in one.
           </h1>
-          <p className="text-xl max-w-2xl mx-auto">
-            Transforming innovative ideas into powerful digital solutions that drive business growth and technological advancement.
+          <p className="mt-4 text-lg text-slate-600 dark:text-slate-400">
+            TweackTech helps people learn modern technology skills, prove what they can do,
+            and connect directly with companies hiring developers and designers.
           </p>
         </div>
       </div>
+    </header>
 
-      {/* Mission Section */}
-      <div className="container mx-auto px-4 py-16">
-        <div className="grid md:grid-cols-2 gap-12 items-center">
-          <div>
-            <h2 className="text-3xl font-bold mb-6 flex items-center">
-              <Target className="mr-4 text-blue-600" /> Our Mission
-            </h2>
-            <p className="text-gray-700 mb-4">
-              At TweakTech, we believe in empowering businesses and individuals through innovative technology solutions. Our mission is to bridge the gap between complex technological challenges and user-friendly, efficient digital experiences.
-            </p>
-            <p className="text-gray-700">
-              We don't just create software; we craft digital ecosystems that transform how businesses operate and how people interact with technology.
+    <main className="container-page py-12">
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        {stats.map((stat) => (
+          <div key={stat.label} className="card p-6 text-center">
+            <p className="text-3xl font-extrabold text-red-600 dark:text-red-500">{stat.value}</p>
+            <p className="mt-1 text-sm font-medium text-slate-500 dark:text-slate-400">
+              {stat.label}
             </p>
           </div>
-          <div className="grid grid-cols-2 gap-4">
-            <div className="bg-white shadow-md rounded-lg p-6 text-center">
-              <Award className="w-12 h-12 mx-auto text-blue-600 mb-4" />
-              <h3 className="font-semibold">3+ Years</h3>
-              <p className="text-gray-600">Industry Experience</p>
-            </div>
-            <div className="bg-white shadow-md rounded-lg p-6 text-center">
-              <Users className="w-12 h-12 mx-auto text-green-600 mb-4" />
-              <h3 className="font-semibold">10+</h3>
-              <p className="text-gray-600">Successful Projects</p>
-            </div>
-          </div>
-        </div>
+        ))}
       </div>
 
-      {/* Services Section */}
-      <div className="bg-white py-16">
-        <div className="container mx-auto px-4">
-          <h2 className="text-3xl font-bold text-center mb-12">Our Services</h2>
-          <div className="grid md:grid-cols-3 gap-8">
-            {services.map((service, index) => (
-              <div 
-                key={index} 
-                className="bg-gray-50 rounded-lg p-6 text-center shadow-md hover:shadow-xl transition-shadow"
-              >
-                <div className="flex justify-center mb-6">
-                  {service.icon}
-                </div>
-                <h3 className="text-xl font-semibold mb-4">{service.title}</h3>
-                <p className="text-gray-600">{service.description}</p>
-              </div>
-            ))}
+      <section className="mt-14 grid gap-10 lg:grid-cols-2 lg:items-center">
+        <div>
+          <span className="section-eyebrow">Our story</span>
+          <h2 className="section-title mt-4">Built for learners who want real outcomes</h2>
+          <p className="section-subtitle">
+            Too many courses stop at theory. TweackTech was built around a simple idea: a
+            learner should leave every module with something they can show an employer — a
+            project, a certificate, or a job application.
+          </p>
+          <p className="mt-4 text-slate-600 dark:text-slate-400">
+            Our learning management system tracks progress, assignments, attendance, and
+            certificates. Our talent hub gives graduates a profile where hiring teams can
+            discover them, and lets approved partners post roles directly to the community.
+          </p>
+          <div className="mt-6 flex flex-wrap gap-3">
+            <Link to="/courses" className="btn-primary">
+              <GraduationCap className="h-4 w-4" /> Explore courses
+            </Link>
+            <Link to="/jobs" className="btn-secondary">
+              <Briefcase className="h-4 w-4" /> View jobs
+            </Link>
           </div>
         </div>
-      </div>
 
-      {/* Team Section */}
-      <div className="container mx-auto px-4 py-16">
-        <h2 className="text-3xl font-bold text-center mb-12">Meet Our Team</h2>
-        <div className="grid md:grid-cols-4 gap-8">
-          {teamMembers.map((member, index) => (
-          <Link to="/meyor">  <TeamMember 
-              key={index} 
-              name={member.name} 
-              role={member.role} 
-            /></Link>
+        <div className="grid gap-4 sm:grid-cols-2">
+          {values.map(({ icon: Icon, title, body }) => (
+            <div key={title} className="card p-5">
+              <span className="grid h-10 w-10 place-items-center rounded-xl bg-red-50 dark:bg-red-950/50 text-red-600 dark:text-red-400">
+                <Icon className="h-5 w-5" />
+              </span>
+              <h3 className="mt-3 font-bold text-slate-900 dark:text-white">{title}</h3>
+              <p className="mt-1 text-sm text-slate-600 dark:text-slate-400">{body}</p>
+            </div>
           ))}
         </div>
-      </div>
-    
-    </div>
-    <Footer/>
-    </>
-    
-  );
-};
+      </section>
+
+      <section className="mt-14 card p-8">
+        <div className="grid gap-8 lg:grid-cols-2">
+          <div>
+            <span className="section-eyebrow">
+              <Award className="h-3.5 w-3.5" /> What we offer
+            </span>
+            <h2 className="mt-3 text-2xl font-bold text-slate-900 dark:text-white">
+              Courses, assignments, certificates, and hiring
+            </h2>
+            <ul className="mt-4 space-y-2.5">
+              {[
+                'Structured courses with slides, documents, PDFs, and video lessons',
+                'Assignments with instructor feedback and grading',
+                'Downloadable certificates on completion',
+                'A public talent hub and vetted job board',
+                'Live sessions and attendance tracking',
+              ].map((item) => (
+                <li key={item} className="flex items-start gap-2 text-sm text-slate-600 dark:text-slate-300">
+                  <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-red-600 dark:text-red-400" />
+                  {item}
+                </li>
+              ))}
+            </ul>
+          </div>
+
+          <div className="space-y-4">
+            <div className="rounded-2xl border border-slate-200 dark:border-slate-800 p-5">
+              <h3 className="flex items-center gap-2 font-bold text-slate-900 dark:text-white">
+                <Code2 className="h-4 w-4 text-red-600 dark:text-red-400" /> For learners
+              </h3>
+              <p className="mt-1 text-sm text-slate-600 dark:text-slate-400">
+                Start free, track your progress, and build a portfolio as you learn.
+              </p>
+              <Link to="/register" className="btn-primary mt-3 w-full">
+                Create free account
+              </Link>
+            </div>
+            <div className="rounded-2xl border border-slate-200 dark:border-slate-800 p-5">
+              <h3 className="flex items-center gap-2 font-bold text-slate-900 dark:text-white">
+                <Briefcase className="h-4 w-4 text-red-600 dark:text-red-400" /> For companies
+              </h3>
+              <p className="mt-1 text-sm text-slate-600 dark:text-slate-400">
+                Discover vetted developers and post roles to the community.
+              </p>
+              <Link to="/contact" className="btn-secondary mt-3 w-full">
+                Get in touch
+              </Link>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section className="mt-14 rounded-2xl border border-red-200 dark:border-red-900/50 bg-gradient-to-br from-red-50 to-white dark:from-red-950/30 dark:to-slate-900 p-8 text-center">
+        <h2 className="text-2xl font-bold text-slate-900 dark:text-white">
+          Ready to start learning?
+        </h2>
+        <p className="mx-auto mt-2 max-w-xl text-sm text-slate-600 dark:text-slate-400">
+          Join thousands of learners building practical tech skills and connecting with
+          employers on TweackTech.
+        </p>
+        <div className="mt-5 flex flex-wrap justify-center gap-3">
+          <Link to="/courses" className="btn-primary">Browse courses</Link>
+          <Link to="/register" className="btn-secondary">Join free</Link>
+        </div>
+      </section>
+    </main>
+
+    <Footer />
+  </div>
+);
 
 export default AboutPage;

@@ -1,48 +1,47 @@
-import React from 'react'
-import Navbar from '../Component/Navbar'
-import Header from '../Component/Header'
-import Footer from '../Component/Footer'
-import { BookOpen, EraserIcon, Smile } from 'lucide-react'
-import { Link } from 'react-router-dom'
+import React from 'react';
+import { Link } from 'react-router-dom';
+import { BookOpen, Compass, Home, LayoutDashboard } from 'lucide-react';
+import Navbar from '../Component/Navbar';
+import Footer from '../Component/Footer';
+import { useAuth } from '../AuthContext';
 
-function NotFound() {
+const NotFound = () => {
+  const { isAuthenticated } = useAuth();
+
   return (
-    <div>
-      {/* Navigation */}
+    <div className="min-h-screen bg-slate-50 transition-colors dark:bg-slate-950">
       <Navbar />
-
-      {/* Header Section
-      <Header /> */}
-
-      {/* Features Section */}
-      <section className="max-h-full bg-gray-100 pt-48 pb-16">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-16">
-            <h2 className="text-4xl font-bold text-gray-900 mb-4">
-            Page not found 
-            </h2>
-           
-          </div>
-
-          <div className="grid md:grid-cols-1 gap-8">
-            <div className="bg-white p-8 rounded-xl shadow-md text-center hover:shadow-xl transition">
-              <Smile className="mx-auto mb-6 text-red-950" size={56} />
-              <h3 className="text-2xl font-bold mb-4 text-gray-900">404  Page not found. Please check the URL and try again.</h3>
-            
-              <Link to='/'  className="w-full bg-red-950 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition">Home</Link>
-            </div>
-          </div>
-
+      <div className="container-page flex min-h-[65vh] flex-col items-center justify-center py-16 text-center">
+        <span className="grid h-20 w-20 place-items-center rounded-3xl bg-red-100 text-red-600 dark:bg-red-950/60 dark:text-red-400">
+          <Compass className="h-10 w-10" />
+        </span>
+        <p className="mt-6 text-6xl font-extrabold tracking-tight text-slate-900 dark:text-white">
+          404
+        </p>
+        <h1 className="mt-2 text-2xl font-bold text-slate-900 dark:text-white">
+          We could not find that page
+        </h1>
+        <p className="mt-2 max-w-md text-slate-500 dark:text-slate-400">
+          The link may be broken, or the page may have moved. Check the URL or use one of the
+          shortcuts below.
+        </p>
+        <div className="mt-6 flex flex-wrap justify-center gap-2">
+          <Link to="/" className="btn-primary">
+            <Home className="h-4 w-4" /> Home
+          </Link>
+          <Link to="/courses" className="btn-secondary">
+            <BookOpen className="h-4 w-4" /> Browse courses
+          </Link>
+          {isAuthenticated && (
+            <Link to="/dashboard" className="btn-secondary">
+              <LayoutDashboard className="h-4 w-4" /> Dashboard
+            </Link>
+          )}
         </div>
-      </section>
-
-
-
-      {/* Footer */}
+      </div>
       <Footer />
-
     </div>
-  )
-}
+  );
+};
 
-export default NotFound
+export default NotFound;

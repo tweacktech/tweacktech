@@ -1,0 +1,9 @@
+backend
+Archive.zip
+build
+.git
+coverage
+*.log
+.DS_Store
+.env
+.env.*
