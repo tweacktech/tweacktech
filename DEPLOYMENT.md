@@ -36,6 +36,20 @@ cd backend
 DATABASE_URL="<direct, non-pooler URL>" npx prisma migrate deploy
 ```
 
+The latest schema adds `ActivityLog`, `MentorProfile` and `AttendanceRecord` models.
+For an existing Neon database that already has the earlier tables, the fastest safe
+update is:
+
+```bash
+cd backend
+DATABASE_URL="<direct, non-pooler URL>" npx prisma db push
+```
+
+This is non-destructive for additive changes. For a fresh database, `migrate deploy`
+(above) applies the full history. The API also depends on `compression`; it is declared
+in `backend/package.json` and treated as optional at runtime, so an older bundle still
+starts without it.
+
 Seed only on a fresh database:
 
 ```bash

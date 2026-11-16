@@ -1,6 +1,6 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
-import { APP_GUARD } from '@nestjs/core';
+import { APP_GUARD, APP_INTERCEPTOR } from '@nestjs/core';
 import { AuthModule } from './auth/auth.module';
 import { UsersModule } from './users/users.module';
 import { CoursesModule } from './courses/courses.module';
@@ -27,6 +27,10 @@ import { HealthModule } from './health/health.module';
 import { EmailModule } from './email/email.module';
 import { RealtimeModule } from './realtime/realtime.module';
 import { InvitationsModule } from './invitations/invitations.module';
+import { ActivityModule } from './activity/activity.module';
+import { ActivityInterceptor } from './activity/activity.interceptor';
+import { AttendanceModule } from './attendance/attendance.module';
+import { MentorsModule } from './mentors/mentors.module';
 
 @Module({
   imports: [
@@ -35,6 +39,7 @@ import { InvitationsModule } from './invitations/invitations.module';
       envFilePath: '.env',
     }),
     PrismaModule,
+    ActivityModule,
     MailModule,
     RealtimeModule,
     NotificationsModule,
@@ -57,6 +62,8 @@ import { InvitationsModule } from './invitations/invitations.module';
     ChatbotModule,
     CalendarModule,
     TalentModule,
+    AttendanceModule,
+    MentorsModule,
     SeedersModule,
   ],
   providers: [
@@ -67,6 +74,10 @@ import { InvitationsModule } from './invitations/invitations.module';
     {
       provide: APP_GUARD,
       useClass: RolesGuard,
+    },
+    {
+      provide: APP_INTERCEPTOR,
+      useClass: ActivityInterceptor,
     },
   ],
 })

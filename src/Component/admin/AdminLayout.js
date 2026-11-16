@@ -1,9 +1,11 @@
 import React, { useEffect, useState } from 'react';
 import { Link, NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom';
 import {
+  Activity,
   Award,
   BookOpen,
   Briefcase,
+  CalendarCheck,
   CreditCard,
   ExternalLink,
   GraduationCap,
@@ -30,6 +32,8 @@ const items = [
     permission: 'MANAGE_COURSES',
   },
   { to: '/admin/payments', label: 'Payments', icon: CreditCard, permission: 'MANAGE_PAYMENTS' },
+  { to: '/admin/attendance', label: 'Attendance', icon: CalendarCheck, permission: 'MANAGE_COURSES' },
+  { to: '/admin/activity', label: 'Activity log', icon: Activity, adminOnly: true },
   { to: '/admin/talent', label: 'Talent Hub', icon: Users, permission: 'MANAGE_TALENT' },
   { to: '/admin/blog', label: 'Blog', icon: Newspaper, permission: 'MANAGE_BLOG' },
   { to: '/admin/jobs', label: 'Jobs', icon: Briefcase, permission: 'MANAGE_JOBS' },
@@ -75,6 +79,9 @@ const AdminLayout = () => {
   }, [hasPermission, isSuperAdmin]);
 
   const visible = items.filter((item) => {
+    if (item.adminOnly) {
+      return isSuperAdmin || user?.role === 'ADMIN';
+    }
     if (!item.permission) return true;
     return isSuperAdmin || hasPermission(item.permission);
   });

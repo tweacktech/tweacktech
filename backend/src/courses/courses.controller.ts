@@ -85,6 +85,17 @@ export class CoursesController {
     });
   }
 
+  @Get('teaching')
+  @UseGuards(JwtAuthGuard)
+  @Roles(Role.SUPERADMIN, Role.ADMIN, Role.STAFF)
+  async teaching(@CurrentUser() user: any) {
+    return this.coursesService.findAll({
+      limit: 100,
+      staffUserId: user.role === Role.STAFF ? user.sub : undefined,
+      isPublished: undefined,
+    });
+  }
+
   @Get('admin/:id')
   @UseGuards(JwtAuthGuard)
   @Roles(Role.SUPERADMIN, Role.ADMIN, Role.STAFF)

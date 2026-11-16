@@ -44,6 +44,7 @@ const Dashboard = () => {
   const [applications, setApplications] = useState([]);
   const [certificates, setCertificates] = useState([]);
   const [invitations, setInvitations] = useState([]);
+  const [attendance, setAttendance] = useState(null);
   const [loading, setLoading] = useState(true);
 
   const tabs = [
@@ -64,12 +65,14 @@ const Dashboard = () => {
         applicationsRes,
         certificatesRes,
         invitationsRes,
+        attendanceRes,
       ] = await Promise.allSettled([
         api.get('/enrollments/my?limit=50'),
         api.get('/assignments/my'),
         api.get('/jobs/applications/my'),
         api.get('/certificates/my'),
         api.get('/invitations/my'),
+        api.get('/attendance/my'),
       ]);
 
       if (cancelled) return;
@@ -94,6 +97,7 @@ const Dashboard = () => {
       setApplications(value(applicationsRes) || []);
       setCertificates(value(certificatesRes) || []);
       setInvitations(value(invitationsRes) || []);
+      setAttendance(value(attendanceRes) || null);
       setLoading(false);
     };
 
@@ -138,8 +142,14 @@ const Dashboard = () => {
         icon: Briefcase,
         tone: 'bg-violet-100 text-violet-600 dark:bg-violet-950/60 dark:text-violet-400',
       },
+      {
+        label: 'Attendance',
+        value: `${attendance?.summary?.attendanceRate ?? 0}%`,
+        icon: CheckCircle2,
+        tone: 'bg-emerald-100 text-emerald-600 dark:bg-emerald-950/60 dark:text-emerald-400',
+      },
     ],
-    [courses.length, pendingAssignments, certificates.length, applications.length]
+    [courses.length, pendingAssignments, certificates.length, applications.length, attendance]
   );
 
   const downloadCertificate = (certificate) => {
@@ -198,7 +208,7 @@ const Dashboard = () => {
           </div>
         </div>
 
-        <div className="mt-8 grid grid-cols-2 gap-4 lg:grid-cols-4 stagger-children">
+        <div className="mt-8 grid grid-cols-2 gap-4 lg:grid-cols-5 stagger-children">
           {stats.map((stat) => (
             <div key={stat.label} className="stat-card card p-5">
               <div className="flex items-start justify-between gap-3">
@@ -523,6 +533,47 @@ const Dashboard = () => {
                   <Link to="/courses" className="btn-secondary">Browse courses</Link>
                 </div>
               )}
+            </div>
+          </div>
+        )}
+
+        {activeTab === 'overview' && attendance?.courses?.length > 0 && (
+          <div className="card mt-6 p-5">
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              <h2 className="flex items-center gap-2 text-sm font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
+                <CheckCircle2 className="h-4 w-4 text-emerald-500" /> Mentor attendance & scores
+              </h2>
+              <span className="text-xs text-slate-500 dark:text-slate-400">
+                {attendance.summary?.marked || 0} sessions recorded · average score{' '}
+                {attendance.summary?.averageScore ?? '—'}
+              </span>
+            </div>
+            <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+              {attendance.courses.map((item) => (
+                <div
+                  key={item.courseId}
+                  className="rounded-xl border border-slate-200 p-3 dark:border-slate-800"
+                >
+                  <p className="truncate text-sm font-semibold text-slate-900 dark:text-white">
+                    {item.course?.title}
+                  </p>
+                  <div className="mt-2 flex items-center gap-2">
+                    <div className="h-2 flex-1 overflow-hidden rounded-full bg-slate-200 dark:bg-slate-700">
+                      <div
+                        className="h-2 rounded-full bg-emerald-500"
+                        style={{ width: `${item.rate || 0}%` }}
+                      />
+                    </div>
+                    <span className="text-xs font-bold text-slate-600 dark:text-slate-300">
+                      {item.rate || 0}%
+                    </span>
+                  </div>
+                  <p className="mt-1.5 text-[11px] text-slate-500 dark:text-slate-400">
+                    {item.present || 0} of {item.marked || 0} present · score{' '}
+                    {item.averageScore ?? '—'}
+                  </p>
+                </div>
+              ))}
             </div>
           </div>
         )}

@@ -8,12 +8,21 @@ import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
 import { ConfigService } from '@nestjs/config';
 import { join } from 'path';
 import { mkdirSync } from 'fs';
-const compression = require('compression');
 import { HttpExceptionFilter } from './common/filters/http-exception.filter';
 import { TransformInterceptor } from './common/interceptors/transform.interceptor';
 import { TimeoutInterceptor } from './common/interceptors/timeout.interceptor';
 
 const logger = new Logger('Bootstrap');
+
+// compression is a small optimisation, never a hard deployment requirement.
+// (Older serverless bundles sometimes ship without it — skip gzip if absent.)
+let compression: (options?: any) => any = () => (_req: any, _res: any, next: any) => next();
+try {
+  // eslint-disable-next-line @typescript-eslint/no-var-requires
+  compression = require('compression');
+} catch {
+  logger.warn('compression is not installed — continuing without response compression');
+}
 
 /**
  * Shared application setup used by both the long-running server (`main.ts`)

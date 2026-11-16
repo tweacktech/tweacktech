@@ -50,6 +50,16 @@ export const ADMIN_PAGES = [
     permission: 'MANAGE_SUPPORT',
     label: 'Support',
   },
+  {
+    path: '/admin/attendance',
+    permission: 'MANAGE_COURSES',
+    label: 'Attendance',
+  },
+  {
+    path: '/admin/activity',
+    permission: 'MANAGE_SETTINGS',
+    label: 'Activity log',
+  },
 ];
 
 export const canAccessAdminPath = (pathname, { isSuperAdmin, hasPermission }) => {

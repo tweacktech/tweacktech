@@ -12,6 +12,7 @@ import { Role } from '@prisma/client';
 import { ConfigService } from '@nestjs/config';
 import { createHash, randomBytes } from 'crypto';
 import { MailService } from '../common/services/mail.service';
+import { ActivityService } from '../activity/activity.service';
 
 const RESET_TOKEN_TTL_MS = 60 * 60 * 1000; // 1 hour
 const GENERIC_RESET_MESSAGE =
@@ -32,6 +33,7 @@ export class AuthService {
     private jwtService: JwtService,
     private config: ConfigService,
     private mail: MailService,
+    private activity: ActivityService,
   ) {}
 
   // Public registration always creates a STUDENT. Staff/admin accounts must be
@@ -103,12 +105,26 @@ export class AuthService {
 
     const isPasswordValid = await bcrypt.compare(password, user.password);
     if (!isPasswordValid) {
+      this.activity.log({
+        action: 'auth.login_failed',
+        description: `Failed sign-in attempt for ${email}`,
+        entityType: 'account',
+        metadata: { email },
+      });
       throw new UnauthorizedException('Invalid email or password');
     }
 
     await this.prisma.user.update({
       where: { id: user.id },
       data: { lastLoginAt: new Date() },
+    });
+
+    this.activity.log({
+      actor: user,
+      action: 'auth.login',
+      description: `${user.firstName} ${user.lastName} signed in`.trim(),
+      entityType: 'account',
+      entityId: user.id,
     });
 
     const tokens = await this.generateTokens(user.id, user.email, user.role);

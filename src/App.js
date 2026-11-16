@@ -18,6 +18,8 @@ const CoursePlayer = lazy(() => import("./Pages/CoursePlayer"));
 const Dashboard = lazy(() => import("./Pages/Dashboard"));
 const StaffDashboard = lazy(() => import("./Pages/StaffDashboard"));
 const TalentHub = lazy(() => import("./Pages/TalentHub"));
+const MentorsPage = lazy(() => import("./Pages/MentorsPage"));
+const MentorDetail = lazy(() => import("./Pages/MentorDetail"));
 const TalentDetail = lazy(() => import("./Pages/TalentDetail"));
 const JobListings = lazy(() => import("./Pages/JobListings"));
 const JobDetail = lazy(() => import("./Pages/JobDetail"));
@@ -46,6 +48,8 @@ const VerifyCertificate = lazy(() => import("./Pages/VerifyCertificate"));
 // Admin pages
 const AdminLayout = lazy(() => import("./Component/admin/AdminLayout"));
 const AdminDashboard = lazy(() => import("./Pages/admin/AdminDashboard"));
+const AdminActivity = lazy(() => import("./Pages/admin/AdminActivity"));
+const AdminAttendance = lazy(() => import("./Pages/admin/AdminAttendance"));
 const AdminUsers = lazy(() => import("./Pages/admin/AdminUsers"));
 const AdminCourses = lazy(() => import("./Pages/admin/AdminCourses"));
 const AdminCourseBuilder = lazy(() => import("./Pages/admin/AdminCourseBuilder"));
@@ -180,6 +184,8 @@ function AppRoutes() {
             <Route path="/courses/:courseId" element={<CourseDetail />} />
             <Route path="/courses/:courseId/lessons/:lessonId" element={<CoursePlayer />} />
             <Route path="/talent" element={<TalentHub />} />
+            <Route path="/mentors" element={<MentorsPage />} />
+            <Route path="/mentors/:id" element={<MentorDetail />} />
             <Route path="/talent/:id" element={<TalentDetail />} />
             <Route path="/jobs" element={<JobListings />} />
             <Route path="/jobs/:jobId" element={<JobDetail />} />
@@ -297,6 +303,22 @@ function AppRoutes() {
                   <RequirePermission permission="MANAGE_SUPPORT">
                     <AdminSupport />
                   </RequirePermission>
+                }
+              />
+              <Route
+                path="attendance"
+                element={
+                  <RequireManagement>
+                    <AdminAttendance />
+                  </RequireManagement>
+                }
+              />
+              <Route
+                path="activity"
+                element={
+                  <RequireManagement>
+                    <AdminActivity />
+                  </RequireManagement>
                 }
               />
             </Route>

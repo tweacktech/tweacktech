@@ -292,3 +292,24 @@ Seeded NGN/GHS bank accounts are under **Admin → Payments → Bank accounts**.
   watermark, seal, signature, certificate ID and verification URL. No browser print dialog
   is required.
 - The PDF is generated client-side with jsPDF and named after the certificate code.
+
+
+### Admin dashboard, activity log, mentor banners and attendance (new)
+- **Admin dashboard (`/admin`)**: a rich overview for admins/superadmins with platform
+  stats, six-month enrolment trend, today's attendance rate, revenue by currency, top
+  courses, recent users, upcoming live sessions and a live activity feed. Staff see a
+  teaching-focused dashboard with their courses and pending submissions.
+- **Activity log (`/admin/activity`)**: admins can search/filter a complete audit trail of
+  writes (users, courses, payments, assignments, attendance, mentor profiles and logins).
+  Sensitive fields such as passwords and tokens are stripped before storage.
+- **Profile photos**: every user can upload or remove their own avatar from `/profile`
+  (4MB limit, stored through the media service).
+- **Mentor banners**: staff/admins can publish a mentor profile from `/profile` with a
+  headline, bio, qualifications, skills, years of experience and social links. Public
+  profiles are listed on `/mentors`, featured on the landing page, and each has a detail
+  page with their courses plus WhatsApp, X, LinkedIn, Facebook, Telegram and copy-link
+  sharing to promote their courses and skills.
+- **Attendance & scores (`/admin/attendance`)**: mentors can pick any course and date,
+  toggle each enrolled student present/absent at any time, mark everyone present, and
+  record a 0–100 score per student. Scores and attendance rates are shown to students on
+  `/dashboard` and can be used as a grading input. Every change is written to the activity log.

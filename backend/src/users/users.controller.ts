@@ -51,6 +51,12 @@ export class UsersController {
     return this.usersService.create(body);
   }
 
+  @Get('dashboard/admin')
+  @Roles(Role.SUPERADMIN, Role.ADMIN)
+  async getAdminDashboard() {
+    return this.usersService.getAdminDashboard();
+  }
+
   @Get('dashboard/me')
   async getMyDashboard(@CurrentUser() user: any) {
     if (user.role === Role.STUDENT) {

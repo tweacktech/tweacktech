@@ -2,6 +2,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import { Link, NavLink, useLocation, useNavigate } from 'react-router-dom';
 import {
   Award,
+  BadgeCheck,
   BookOpen,
   Briefcase,
   CalendarDays,
@@ -24,6 +25,7 @@ import ThemeToggle from './ThemeToggle';
 
 const navLinks = [
   { to: '/courses', label: 'Courses', icon: BookOpen },
+  { to: '/mentors', label: 'Mentors', icon: BadgeCheck },
   { to: '/talent', label: 'Talent Hub', icon: Users },
   { to: '/jobs', label: 'Jobs', icon: Briefcase },
   { to: '/blog', label: 'Blog', icon: GraduationCap },

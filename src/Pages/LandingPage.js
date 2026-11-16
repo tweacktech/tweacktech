@@ -3,12 +3,14 @@ import { Link } from 'react-router-dom';
 import {
   ArrowRight,
   Award,
+  BadgeCheck,
   BookOpen,
   Briefcase,
   CheckCircle2,
   GraduationCap,
   Layers,
   PlayCircle,
+  Share2,
   Sparkles,
   Users,
 } from 'lucide-react';
@@ -17,6 +19,7 @@ import Footer from '../Component/Footer';
 import { useAuth } from '../AuthContext';
 import { useCurrency } from '../CurrencyContext';
 import { effectivePrice, isDiscountActive } from '../lib/coursePrice';
+import MentorCard from '../Component/MentorCard';
 
 const unwrap = (res) => (res?.data && res.data.data !== undefined ? res.data.data : res?.data);
 
@@ -150,6 +153,7 @@ const LandingPage = () => {
   const { api } = useAuth();
   const [courses, setCourses] = useState([]);
   const [loadingCourses, setLoadingCourses] = useState(true);
+  const [mentors, setMentors] = useState([]);
 
   useEffect(() => {
     let cancelled = false;
@@ -171,6 +175,20 @@ const LandingPage = () => {
       }
     };
     load();
+    return () => {
+      cancelled = true;
+    };
+  }, [api]);
+
+  useEffect(() => {
+    let cancelled = false;
+    api
+      .get('/mentors/featured?limit=3')
+      .then((res) => {
+        const list = unwrap(res) || [];
+        if (!cancelled) setMentors(list.slice(0, 3));
+      })
+      .catch(() => undefined);
     return () => {
       cancelled = true;
     };
@@ -362,6 +380,65 @@ const LandingPage = () => {
               </Link>
             </div>
           )}
+        </div>
+      </section>
+
+      {/* Mentor banner */}
+      <section className="relative overflow-hidden bg-slate-900 py-14 text-white sm:py-16">
+        <div className="absolute inset-0">
+          <div className="absolute -left-16 top-0 h-64 w-64 rounded-full bg-red-600/25 blur-3xl" />
+          <div className="absolute right-0 bottom-0 h-64 w-64 rounded-full bg-rose-500/20 blur-3xl" />
+          <div className="absolute inset-0 opacity-[0.06] [background-image:linear-gradient(white_1px,transparent_1px),linear-gradient(90deg,white_1px,transparent_1px)] [background-size:44px_44px]" />
+        </div>
+        <div className="container-page relative">
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+            <div className="max-w-2xl">
+              <span className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/10 px-3 py-1 text-[11px] font-bold uppercase tracking-wider text-red-200">
+                <BadgeCheck className="h-3.5 w-3.5" /> Learn from the best
+              </span>
+              <h2 className="mt-4 text-2xl font-extrabold tracking-tight sm:text-4xl">
+                Meet the mentors behind every course
+              </h2>
+              <p className="mt-3 text-sm leading-relaxed text-slate-300 sm:text-base">
+                Verified qualifications, real-world experience and a genuine interest in your
+                growth. Explore their profiles, see the courses they teach, and share the ones
+                that inspire you.
+              </p>
+            </div>
+            <div className="flex flex-wrap gap-2">
+              <Link to="/mentors" className="btn-primary">
+                <Users className="h-4 w-4" /> All mentors
+              </Link>
+              <Link
+                to="/mentors"
+                className="btn-secondary !border-white/20 !bg-white/10 !text-white hover:!bg-white/20"
+              >
+                <Share2 className="h-4 w-4" /> Share a profile
+              </Link>
+            </div>
+          </div>
+
+          {mentors.length > 0 && (
+            <div className="mt-9 grid gap-5 md:grid-cols-2 lg:grid-cols-3">
+              {mentors.map((mentor) => (
+                <div key={mentor.id} className="rounded-2xl bg-white dark:bg-slate-950">
+                  <MentorCard mentor={mentor} featured={mentor.isFeatured} />
+                </div>
+              ))}
+            </div>
+          )}
+
+          <div className="mt-8 flex flex-wrap items-center justify-center gap-x-8 gap-y-2 text-xs font-semibold text-slate-300">
+            <span className="inline-flex items-center gap-1.5">
+              <CheckCircle2 className="h-3.5 w-3.5 text-emerald-400" /> Verified qualifications
+            </span>
+            <span className="inline-flex items-center gap-1.5">
+              <CheckCircle2 className="h-3.5 w-3.5 text-emerald-400" /> Real projects & feedback
+            </span>
+            <span className="inline-flex items-center gap-1.5">
+              <CheckCircle2 className="h-3.5 w-3.5 text-emerald-400" /> Shareable public profiles
+            </span>
+          </div>
         </div>
       </section>
 

@@ -9,7 +9,12 @@ import { ConfigService } from '@nestjs/config';
 import * as bcrypt from 'bcryptjs';
 import { randomBytes } from 'crypto';
 import { PrismaService } from '../common/services/prisma.service';
-import { AssignmentStatus, Role } from '@prisma/client';
+import {
+  AssignmentStatus,
+  PaymentStatus,
+  Role,
+  TicketStatus,
+} from '@prisma/client';
 import { MailService } from '../common/services/mail.service';
 import { NotificationsService } from '../notifications/notifications.service';
 import { RealtimeService } from '../realtime/realtime.service';
@@ -392,8 +397,12 @@ export class UsersService {
     return this.prisma.user.update({
       where: { id: userId },
       data: {
-        // Protected identity fields are deliberately absent: email, name,
-        // avatar and role can only be changed by an administrator.
+        // Identity fields (email, name, role) stay admin-only. Users may
+        // upload their own avatar URL; it is length-checked before saving.
+        avatar:
+          typeof data.avatar === 'string' && data.avatar.length <= 600
+            ? data.avatar || null
+            : undefined,
         phone: data.phone,
         bio: data.bio,
         location: data.location,
@@ -427,6 +436,174 @@ export class UsersService {
         updatedAt: true,
       },
     });
+  }
+
+  async getAdminDashboard() {
+    const now = new Date();
+    const startOfToday = new Date(
+      Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()),
+    );
+    const since = new Date(
+      Date.UTC(now.getUTCFullYear(), now.getUTCMonth() - 5, 1),
+    );
+
+    const [
+      users,
+      students,
+      staff,
+      courses,
+      publishedCourses,
+      enrollments,
+      certificates,
+      pendingSubmissions,
+      awaitingPayments,
+      openTickets,
+      mentors,
+      upcomingSessions,
+      attendanceRows,
+      recentLogs,
+      recentUsers,
+      topCourses,
+      revenueByCurrency,
+      enrollmentRows,
+      upcoming,
+    ] = await Promise.all([
+      this.prisma.user.count(),
+      this.prisma.user.count({ where: { role: Role.STUDENT } }),
+      this.prisma.user.count({ where: { role: { in: [Role.STAFF, Role.ADMIN] } } }),
+      this.prisma.course.count(),
+      this.prisma.course.count({ where: { isPublished: true } }),
+      this.prisma.enrollment.count(),
+      this.prisma.certificate.count(),
+      this.prisma.assignmentSubmission.count({
+        where: { status: AssignmentStatus.SUBMITTED },
+      }),
+      this.prisma.payment.count({
+        where: { status: PaymentStatus.AWAITING_APPROVAL },
+      }),
+      this.prisma.supportTicket.count({
+        where: { status: { in: [TicketStatus.OPEN, TicketStatus.IN_PROGRESS] } },
+      }),
+      this.prisma.mentorProfile.count({ where: { isPublished: true } }),
+      this.prisma.liveSession.count({
+        where: { startTime: { gte: now }, isCancelled: false },
+      }),
+      this.prisma.attendanceRecord.groupBy({
+        by: ['isPresent'],
+        where: { date: startOfToday },
+        _count: { _all: true },
+      }),
+      this.prisma.activityLog.findMany({
+        orderBy: { createdAt: 'desc' },
+        take: 8,
+        include: {
+          actor: {
+            select: { id: true, firstName: true, lastName: true, avatar: true, role: true },
+          },
+        },
+      }),
+      this.prisma.user.findMany({
+        orderBy: { createdAt: 'desc' },
+        take: 5,
+        select: {
+          id: true,
+          firstName: true,
+          lastName: true,
+          email: true,
+          avatar: true,
+          role: true,
+          createdAt: true,
+        },
+      }),
+      this.prisma.course.findMany({
+        where: { isPublished: true },
+        take: 5,
+        orderBy: { enrollments: { _count: 'desc' } },
+        select: {
+          id: true,
+          title: true,
+          thumbnail: true,
+          price: true,
+          currency: true,
+          type: true,
+          _count: { select: { enrollments: true } },
+        },
+      }),
+      this.prisma.payment.groupBy({
+        by: ['currency'],
+        where: { status: PaymentStatus.COMPLETED },
+        _sum: { amount: true },
+      }),
+      this.prisma.enrollment.findMany({
+        where: { enrolledAt: { gte: since } },
+        select: { enrolledAt: true },
+      }),
+      this.prisma.liveSession.findMany({
+        where: { startTime: { gte: now }, isCancelled: false },
+        orderBy: { startTime: 'asc' },
+        take: 4,
+        select: {
+          id: true,
+          title: true,
+          startTime: true,
+          meetingUrl: true,
+          course: { select: { id: true, title: true } },
+          instructor: { select: { firstName: true, lastName: true } },
+        },
+      }),
+    ]);
+
+    const present = attendanceRows.find((row) => row.isPresent)?._count._all || 0;
+    const absent = attendanceRows.find((row) => !row.isPresent)?._count._all || 0;
+
+    const months: Array<{ key: string; label: string; count: number }> = [];
+    for (let index = 5; index >= 0; index -= 1) {
+      const date = new Date(now.getFullYear(), now.getMonth() - index, 1);
+      months.push({
+        key: `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`,
+        label: date.toLocaleDateString('en-US', { month: 'short' }),
+        count: 0,
+      });
+    }
+    enrollmentRows.forEach((row) => {
+      const key = `${row.enrolledAt.getFullYear()}-${String(
+        row.enrolledAt.getMonth() + 1,
+      ).padStart(2, '0')}`;
+      const bucket = months.find((item) => item.key === key);
+      if (bucket) bucket.count += 1;
+    });
+
+    return {
+      stats: {
+        users,
+        students,
+        staff,
+        courses,
+        publishedCourses,
+        enrollments,
+        certificates,
+        pendingSubmissions,
+        awaitingPayments,
+        openTickets,
+        mentors,
+        upcomingSessions,
+      },
+      attendanceToday: {
+        present,
+        absent,
+        marked: present + absent,
+        rate: present + absent ? Math.round((present / (present + absent)) * 100) : 0,
+      },
+      revenue: revenueByCurrency.map((row) => ({
+        currency: row.currency,
+        amount: row._sum.amount || 0,
+      })),
+      trend: months,
+      topCourses,
+      recentUsers,
+      recentLogs,
+      upcoming,
+    };
   }
 
   async getStudentDashboard(userId: string) {
