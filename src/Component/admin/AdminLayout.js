@@ -15,6 +15,7 @@ import {
   Menu,
   MessageSquare,
   Newspaper,
+  User,
   Users,
   X,
 } from 'lucide-react';
@@ -142,6 +143,9 @@ const AdminLayout = () => {
       </div>
 
       <div className="mt-auto space-y-1 border-t border-slate-200 p-4 dark:border-slate-800">
+        <Link to="/profile" className="nav-link w-full">
+          <User className="h-4 w-4" /> My profile
+        </Link>
         <Link to="/student-dashboard" className="nav-link w-full">
           <LayoutDashboard className="h-4 w-4" /> Student dashboard
         </Link>

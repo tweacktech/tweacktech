@@ -134,10 +134,11 @@ const RequireAdminPage = ({ children }) => {
 // work; admins are sent to the management overview.
 const DashboardRoute = () => {
   const { user } = useAuth();
-  if (user?.role === "STAFF") return <StaffDashboard />;
-  if (user?.role === "ADMIN" || user?.role === "SUPERADMIN") {
+  if (user?.role === 'STAFF') return <StaffDashboard />;
+  if (user?.role === 'ADMIN') {
     return <Navigate to="/admin" replace />;
   }
+  // SUPERADMIN (and students) can open the learner dashboard directly.
   return <Dashboard />;
 };
 

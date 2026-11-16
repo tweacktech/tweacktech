@@ -309,6 +309,12 @@ const AdminUsers = () => {
         }
       />
 
+      {!editOpen && editNotice && (
+        <p className="rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-700 dark:border-emerald-900/60 dark:bg-emerald-950/40 dark:text-emerald-300">
+          {editNotice}
+        </p>
+      )}
+
       <ErrorBox message={error} />
 
       <div className="card p-4">
