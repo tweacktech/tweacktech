@@ -1,5 +1,6 @@
 import {
   BadRequestException,
+  ConflictException,
   ForbiddenException,
   Injectable,
   Logger,
@@ -138,6 +139,99 @@ export class UsersService {
     }
 
     return user;
+  }
+
+  /**
+   * Full admin edit of another account. Superadmin-only at the controller
+   * level; includes identity, role, capabilities and profile photo.
+   */
+  async adminUpdateUser(userId: string, data: any) {
+    const existing = await this.prisma.user.findUnique({
+      where: { id: userId },
+      select: { id: true, email: true, role: true },
+    });
+    if (!existing) throw new NotFoundException('User not found');
+
+    const email = typeof data.email === 'string' ? data.email.trim().toLowerCase() : '';
+    if (email && email !== existing.email) {
+      const clash = await this.prisma.user.findUnique({ where: { email } });
+      if (clash) throw new ConflictException('That email address is already in use');
+    }
+
+    const roles = Object.values(Role);
+    const role = roles.includes(data.role) ? (data.role as Role) : undefined;
+    if (data.role && !role) throw new BadRequestException('Invalid role');
+
+    const allowedPermissions = [
+      'MANAGE_COURSES', 'MANAGE_STUDENTS', 'MANAGE_BLOG', 'MANAGE_JOBS',
+      'MANAGE_SUPPORT', 'MANAGE_PAYMENTS', 'MANAGE_TALENT', 'MANAGE_CHAT',
+      'MANAGE_CERTIFICATES', 'GRADE_ASSIGNMENTS', 'MANAGE_USERS', 'MANAGE_SETTINGS',
+    ];
+    const permissions: string[] | undefined = Array.isArray(data.permissions)
+      ? Array.from(
+          new Set(
+            data.permissions
+              .map((item: unknown) => String(item))
+              .filter((item: string) => allowedPermissions.includes(item)),
+          ),
+        )
+      : undefined;
+
+    const updated = await this.prisma.user.update({
+      where: { id: userId },
+      data: {
+        email: email || undefined,
+        firstName:
+          typeof data.firstName === 'string' && data.firstName.trim()
+            ? data.firstName.trim()
+            : undefined,
+        lastName:
+          typeof data.lastName === 'string' && data.lastName.trim()
+            ? data.lastName.trim()
+            : undefined,
+        phone: data.phone === undefined ? undefined : data.phone || null,
+        bio: data.bio === undefined ? undefined : data.bio || null,
+        location: data.location === undefined ? undefined : data.location || null,
+        website: data.website === undefined ? undefined : data.website || null,
+        avatar:
+          data.avatar === undefined
+            ? undefined
+            : data.avatar === '' || data.avatar === null
+            ? null
+            : typeof data.avatar === 'string' && data.avatar.length <= 600
+            ? data.avatar
+            : undefined,
+        role,
+        permissions:
+          permissions === undefined
+            ? undefined
+            : role === Role.STUDENT
+            ? []
+            : permissions,
+      },
+      select: {
+        id: true,
+        email: true,
+        firstName: true,
+        lastName: true,
+        role: true,
+        permissions: true,
+        avatar: true,
+        phone: true,
+        bio: true,
+        location: true,
+        isActive: true,
+        updatedAt: true,
+      },
+    });
+
+    if (role || permissions !== undefined) {
+      await this.realtime.trigger(`private-user-${userId}`, 'account:updated', {
+        permissions: updated.permissions,
+        role: updated.role,
+      });
+    }
+    return updated;
   }
 
   async updateRole(userId: string, role: Role) {

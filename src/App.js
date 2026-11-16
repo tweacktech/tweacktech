@@ -209,6 +209,7 @@ function AppRoutes() {
 
             {/* Signed-in student area */}
             <Route path="/dashboard" element={<RequireAuth><DashboardRoute /></RequireAuth>} />
+            <Route path="/student-dashboard" element={<RequireAuth><Dashboard /></RequireAuth>} />
             <Route path="/assignments" element={<RequireAuth><Assignments /></RequireAuth>} />
             <Route path="/profile" element={<RequireAuth><ProfilePage /></RequireAuth>} />
             <Route path="/messages" element={<RequireAuth><Messages /></RequireAuth>} />

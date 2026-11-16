@@ -313,3 +313,15 @@ Seeded NGN/GHS bank accounts are under **Admin → Payments → Bank accounts**.
   toggle each enrolled student present/absent at any time, mark everyone present, and
   record a 0–100 score per student. Scores and attendance rates are shown to students on
   `/dashboard` and can be used as a grading input. Every change is written to the activity log.
+
+### Superadmin student preview and full user editing
+- Superadmins can open **Student view** from the admin overview or the sidebar's
+  "Student dashboard" link at `/student-dashboard`. It renders the normal learner
+  dashboard (courses, assignments, certificates, attendance) with a preview banner
+  and a quick route back to `/admin`. `/dashboard` still routes management accounts
+  to their own dashboards.
+- Superadmins get an **Edit** action on every row in `/admin/users`. The editor
+  updates name, email (with duplicate check), role, capabilities, phone, location,
+  bio and profile photo in one request via `PATCH /api/users/:id/profile`. Only a
+  superadmin can call it; every change is recorded in the activity log.
+- Users can also upload or remove their own avatar from `/profile` (4MB limit).

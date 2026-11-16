@@ -142,7 +142,7 @@ const AdminLayout = () => {
       </div>
 
       <div className="mt-auto space-y-1 border-t border-slate-200 p-4 dark:border-slate-800">
-        <Link to="/dashboard" className="nav-link w-full">
+        <Link to="/student-dashboard" className="nav-link w-full">
           <LayoutDashboard className="h-4 w-4" /> Student dashboard
         </Link>
         <Link to="/" className="nav-link w-full">

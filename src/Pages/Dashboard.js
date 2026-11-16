@@ -14,6 +14,7 @@ import {
   MessageCircle,
   PlayCircle,
   Settings,
+  ShieldCheck,
   Users,
 } from 'lucide-react';
 import Navbar from '../Component/Navbar';
@@ -207,6 +208,20 @@ const Dashboard = () => {
             )}
           </div>
         </div>
+
+        {isManagement && (
+          <div className="mt-6 flex flex-wrap items-center gap-3 rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800 dark:border-red-900/60 dark:bg-red-950/30 dark:text-red-200">
+            <ShieldCheck className="h-5 w-5 shrink-0" />
+            <p className="min-w-0 flex-1">
+              <span className="font-bold">Student preview.</span> You are viewing the learner
+              experience. Your own course list will be empty until you enrol — browse courses to
+              try the full flow.
+            </p>
+            <Link to="/admin" className="btn-secondary !py-1.5 text-xs">
+              <Settings className="h-3.5 w-3.5" /> Back to admin
+            </Link>
+          </div>
+        )}
 
         <div className="mt-8 grid grid-cols-2 gap-4 lg:grid-cols-5 stagger-children">
           {stats.map((stat) => (

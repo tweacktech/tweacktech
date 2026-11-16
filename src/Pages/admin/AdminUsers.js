@@ -1,8 +1,11 @@
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import {
+  Camera,
   Check,
   Copy,
   KeyRound,
+  Loader2,
+  Pencil,
   Mail,
   Search,
   Shield,
@@ -23,6 +26,7 @@ import {
   formatDate,
 } from '../../Component/admin/AdminUI';
 import { ADMIN_PAGES } from '../../lib/permissions';
+import { getErrorMessage } from '../../lib/apiError';
 
 const unwrap = (res) => (res?.data && res.data.data !== undefined ? res.data.data : res?.data);
 
@@ -51,7 +55,7 @@ const roleBadge = (role) => {
 const EMPTY_FORM = { firstName: '', lastName: '', email: '', role: 'STUDENT', phone: '' };
 
 const AdminUsers = () => {
-  const { api, isSuperAdmin, hasPermission } = useAuth();
+  const { api, user, refreshUser, isSuperAdmin, hasPermission } = useAuth();
   const [users, setUsers] = useState([]);
   const [meta, setMeta] = useState(null);
   const [page, setPage] = useState(1);
@@ -68,6 +72,13 @@ const AdminUsers = () => {
   const [formError, setFormError] = useState('');
   const [created, setCreated] = useState(null);
   const [copied, setCopied] = useState(false);
+  const [editOpen, setEditOpen] = useState(false);
+  const [editForm, setEditForm] = useState(null);
+  const [editSaving, setEditSaving] = useState(false);
+  const [editError, setEditError] = useState('');
+  const [editNotice, setEditNotice] = useState('');
+  const [avatarBusy, setAvatarBusy] = useState(false);
+  const editAvatarRef = useRef(null);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -91,6 +102,84 @@ const AdminUsers = () => {
     const timer = setTimeout(load, 250);
     return () => clearTimeout(timer);
   }, [load]);
+
+  const openEdit = (target) => {
+    setEditForm({
+      id: target.id,
+      firstName: target.firstName || '',
+      lastName: target.lastName || '',
+      email: target.email || '',
+      role: target.role,
+      phone: target.phone || '',
+      bio: target.bio || '',
+      location: target.location || '',
+      avatar: target.avatar || '',
+      permissions: target.permissions || [],
+    });
+    setEditError('');
+    setEditNotice('');
+    setEditOpen(true);
+  };
+
+  const uploadEditAvatar = async (event) => {
+    const file = event.target.files?.[0];
+    event.target.value = '';
+    if (!file) return;
+    setEditError('');
+    if (!file.type.startsWith('image/')) {
+      setEditError('Please choose a JPG, PNG or WebP image.');
+      return;
+    }
+    if (file.size > 4 * 1024 * 1024) {
+      setEditError('Profile photos must be 4MB or smaller.');
+      return;
+    }
+    setAvatarBusy(true);
+    try {
+      const payload = new FormData();
+      payload.append('file', file);
+      payload.append('folder', 'avatars');
+      const uploaded = unwrap(await api.post('/media/upload', payload));
+      if (!uploaded?.url) throw new Error('Upload failed');
+      setEditForm((prev) => ({ ...prev, avatar: uploaded.url }));
+      setEditNotice('Photo uploaded — save the form to apply it.');
+    } catch (err) {
+      setEditError(getErrorMessage(err, 'Unable to upload that photo.'));
+    } finally {
+      setAvatarBusy(false);
+    }
+  };
+
+  const saveEdit = async (event) => {
+    event.preventDefault();
+    if (!editForm) return;
+    setEditSaving(true);
+    setEditError('');
+    setEditNotice('');
+    try {
+      const payload = {
+        firstName: editForm.firstName,
+        lastName: editForm.lastName,
+        email: editForm.email,
+        phone: editForm.phone,
+        bio: editForm.bio,
+        location: editForm.location,
+        avatar: editForm.avatar,
+        role: editForm.role,
+        permissions: editForm.permissions,
+      };
+      const updated = unwrap(await api.patch(`/users/${editForm.id}/profile`, payload));
+      setUsers((prev) => prev.map((item) => (item.id === editForm.id ? { ...item, ...updated } : item)));
+      if (user?.id === editForm.id) await refreshUser();
+      setEditNotice('User updated successfully.');
+      setEditOpen(false);
+      load();
+    } catch (err) {
+      setEditError(err.response?.data?.message || 'Unable to update that user.');
+    } finally {
+      setEditSaving(false);
+    }
+  };
 
   const changeRole = async (userId, nextRole) => {
     try {
@@ -337,6 +426,17 @@ const AdminUsers = () => {
                         {isSuperAdmin && (
                           <button
                             type="button"
+                            onClick={() => openEdit(u)}
+                            className="btn-secondary !px-2.5 !py-1.5"
+                            title="Edit user"
+                            aria-label={`Edit ${u.firstName} ${u.lastName}`}
+                          >
+                            <Pencil className="h-3.5 w-3.5" />
+                          </button>
+                        )}
+                        {isSuperAdmin && (
+                          <button
+                            type="button"
                             onClick={() => openPermissions(u)}
                             className="btn-secondary !px-2.5 !py-1.5"
                             title="Manage permissions"
@@ -364,6 +464,138 @@ const AdminUsers = () => {
           </div>
         </div>
       )}
+
+      <Modal
+        open={editOpen}
+        onClose={() => setEditOpen(false)}
+        title={editForm ? `Edit ${editForm.firstName} ${editForm.lastName}` : 'Edit user'}
+        description="Update account details, role, capabilities and profile photo."
+        wide
+      >
+        {editError && <ErrorBox message={editError} />}
+        {editNotice && (
+          <p className="mb-3 rounded-xl border border-emerald-200 bg-emerald-50 px-3 py-2 text-xs text-emerald-700 dark:border-emerald-900/60 dark:bg-emerald-950/40 dark:text-emerald-300">
+            {editNotice}
+          </p>
+        )}
+        {editForm && (
+          <form onSubmit={saveEdit} className="space-y-4">
+            <div className="flex flex-wrap items-center gap-4 rounded-xl border border-slate-200 p-3 dark:border-slate-700">
+              {editForm.avatar ? (
+                <img src={editForm.avatar} alt="" className="h-14 w-14 rounded-xl object-cover" />
+              ) : (
+                <span className="grid h-14 w-14 place-items-center rounded-xl bg-slate-100 text-sm font-bold text-slate-600 dark:bg-slate-800 dark:text-slate-300">
+                  {`${editForm.firstName?.[0] || ''}${editForm.lastName?.[0] || ''}`}
+                </span>
+              )}
+              <div className="min-w-0 flex-1">
+                <p className="text-sm font-semibold text-slate-900 dark:text-white">Profile photo</p>
+                <p className="text-[11px] text-slate-500 dark:text-slate-400">
+                  JPG, PNG or WebP · max 4MB · visible across TweackTech
+                </p>
+                <div className="mt-2 flex flex-wrap gap-2">
+                  <button
+                    type="button"
+                    onClick={() => editAvatarRef.current?.click()}
+                    disabled={avatarBusy}
+                    className="btn-secondary !py-1.5 text-xs"
+                  >
+                    {avatarBusy ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Camera className="h-3.5 w-3.5" />}
+                    {avatarBusy ? 'Uploading…' : 'Upload new photo'}
+                  </button>
+                  {editForm.avatar && (
+                    <button
+                      type="button"
+                      onClick={() => setEditForm((prev) => ({ ...prev, avatar: '' }))}
+                      className="btn-secondary !py-1.5 text-xs"
+                    >
+                      Remove
+                    </button>
+                  )}
+                  <input
+                    ref={editAvatarRef}
+                    type="file"
+                    accept="image/*"
+                    onChange={uploadEditAvatar}
+                    className="hidden"
+                    aria-label="Choose new profile photo"
+                  />
+                </div>
+              </div>
+            </div>
+
+            <div className="grid gap-4 sm:grid-cols-2">
+              <div>
+                <label htmlFor="edit-first" className="label">First name</label>
+                <input id="edit-first" required value={editForm.firstName} onChange={(e) => setEditForm((prev) => ({ ...prev, firstName: e.target.value }))} className="input-field" />
+              </div>
+              <div>
+                <label htmlFor="edit-last" className="label">Last name</label>
+                <input id="edit-last" required value={editForm.lastName} onChange={(e) => setEditForm((prev) => ({ ...prev, lastName: e.target.value }))} className="input-field" />
+              </div>
+              <div>
+                <label htmlFor="edit-email" className="label">Email</label>
+                <input id="edit-email" required type="email" value={editForm.email} onChange={(e) => setEditForm((prev) => ({ ...prev, email: e.target.value }))} className="input-field" />
+              </div>
+              <div>
+                <label htmlFor="edit-role" className="label">Role</label>
+                <select id="edit-role" value={editForm.role} onChange={(e) => setEditForm((prev) => ({ ...prev, role: e.target.value }))} className="input-field">
+                  <option value="STUDENT">STUDENT</option>
+                  <option value="STAFF">STAFF</option>
+                  <option value="ADMIN">ADMIN</option>
+                  <option value="SUPERADMIN">SUPERADMIN</option>
+                </select>
+              </div>
+              <div>
+                <label htmlFor="edit-phone" className="label">Phone</label>
+                <input id="edit-phone" value={editForm.phone} onChange={(e) => setEditForm((prev) => ({ ...prev, phone: e.target.value }))} className="input-field" placeholder="+234…" />
+              </div>
+              <div>
+                <label htmlFor="edit-location" className="label">Location</label>
+                <input id="edit-location" value={editForm.location} onChange={(e) => setEditForm((prev) => ({ ...prev, location: e.target.value }))} className="input-field" placeholder="Lagos, Nigeria" />
+              </div>
+            </div>
+
+            <div>
+              <label htmlFor="edit-bio" className="label">Bio</label>
+              <textarea id="edit-bio" rows={3} value={editForm.bio} onChange={(e) => setEditForm((prev) => ({ ...prev, bio: e.target.value }))} className="input-field" />
+            </div>
+
+            <div>
+              <p className="mb-2 text-xs font-bold uppercase tracking-wider text-slate-400">Capabilities</p>
+              <div className="grid gap-2 sm:grid-cols-2">
+                {ALL_PERMISSIONS.map(([value, label]) => (
+                  <Toggle
+                    key={value}
+                    label={label}
+                    checked={editForm.permissions.includes(value)}
+                    onChange={(checked) =>
+                      setEditForm((prev) => ({
+                        ...prev,
+                        permissions: checked
+                          ? [...new Set([...prev.permissions, value])]
+                          : prev.permissions.filter((item) => item !== value),
+                      }))
+                    }
+                  />
+                ))}
+              </div>
+              <p className="mt-2 text-[11px] text-slate-400">
+                Students automatically have no admin capabilities, even if boxes are ticked.
+              </p>
+            </div>
+
+            <div className="flex justify-end gap-2 border-t border-slate-100 pt-4 dark:border-slate-800">
+              <button type="button" onClick={() => setEditOpen(false)} className="btn-secondary">
+                Cancel
+              </button>
+              <button type="submit" disabled={editSaving} className="btn-primary">
+                {editSaving ? 'Saving…' : 'Save user'}
+              </button>
+            </div>
+          </form>
+        )}
+      </Modal>
 
       <Modal
         open={!!editing}

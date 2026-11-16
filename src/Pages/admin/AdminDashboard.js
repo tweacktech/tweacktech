@@ -248,6 +248,12 @@ const AdminDashboard = () => {
             >
               <Activity className="h-4 w-4" /> Activity log
             </Link>
+            <Link
+              to="/student-dashboard"
+              className="btn-secondary !border-white/20 !bg-white/10 !text-white hover:!bg-white/20"
+            >
+              <GraduationCap className="h-4 w-4" /> Student view
+            </Link>
           </div>
         </div>
       </section>
