@@ -175,7 +175,7 @@ const LoginPage = () => {
               </button>
             </form>
 
-            <div className="mt-6 border-t border-slate-200 dark:border-slate-800 pt-5">
+            {/* <div className="mt-6 border-t border-slate-200 dark:border-slate-800 pt-5">
               <p className="mb-2 text-center text-xs font-medium uppercase tracking-wider text-slate-400">
                 Demo accounts
               </p>
@@ -198,7 +198,7 @@ const LoginPage = () => {
               <p className="mt-2 text-center text-[11px] text-slate-400">
                 Password for demo accounts: password@123
               </p>
-            </div>
+            </div> */}
           </div>
         </div>
       </div>
