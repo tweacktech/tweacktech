@@ -145,12 +145,20 @@ export class UsersService {
    * Full admin edit of another account. Superadmin-only at the controller
    * level; includes identity, role, capabilities and profile photo.
    */
-  async adminUpdateUser(userId: string, data: any) {
+  async adminUpdateUser(userId: string, data: any, actor?: any) {
     const existing = await this.prisma.user.findUnique({
       where: { id: userId },
-      select: { id: true, email: true, role: true },
+      select: { id: true, email: true, role: true, permissions: true },
     });
     if (!existing) throw new NotFoundException('User not found');
+
+    const isSuperAdmin = actor?.role === Role.SUPERADMIN;
+    const actorPermissions: string[] = Array.isArray(actor?.permissions) ? actor.permissions : [];
+
+    // Admins must not edit superadmins or mint new ones.
+    if (!isSuperAdmin && existing.role === Role.SUPERADMIN) {
+      throw new ForbiddenException('Superadmin accounts can only be edited by a superadmin');
+    }
 
     const email = typeof data.email === 'string' ? data.email.trim().toLowerCase() : '';
     if (email && email !== existing.email) {
@@ -161,13 +169,16 @@ export class UsersService {
     const roles = Object.values(Role);
     const role = roles.includes(data.role) ? (data.role as Role) : undefined;
     if (data.role && !role) throw new BadRequestException('Invalid role');
+    if (!isSuperAdmin && role === Role.SUPERADMIN) {
+      throw new ForbiddenException('Only a superadmin can assign the SUPERADMIN role');
+    }
 
     const allowedPermissions = [
       'MANAGE_COURSES', 'MANAGE_STUDENTS', 'MANAGE_BLOG', 'MANAGE_JOBS',
       'MANAGE_SUPPORT', 'MANAGE_PAYMENTS', 'MANAGE_TALENT', 'MANAGE_CHAT',
       'MANAGE_CERTIFICATES', 'GRADE_ASSIGNMENTS', 'MANAGE_USERS', 'MANAGE_SETTINGS',
     ];
-    const permissions: string[] | undefined = Array.isArray(data.permissions)
+    let permissions: string[] | undefined = Array.isArray(data.permissions)
       ? Array.from(
           new Set(
             data.permissions
@@ -176,6 +187,10 @@ export class UsersService {
           ),
         )
       : undefined;
+    // An admin can only grant capabilities that they already hold.
+    if (!isSuperAdmin && permissions) {
+      permissions = permissions.filter((item) => actorPermissions.includes(item));
+    }
 
     const updated = await this.prisma.user.update({
       where: { id: userId },

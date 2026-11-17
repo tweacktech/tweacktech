@@ -84,9 +84,10 @@ export class UsersController {
   }
 
   @Patch(':id/profile')
-  @Roles(Role.SUPERADMIN)
-  async adminUpdate(@Param('id') id: string, @Body() body: any) {
-    return this.usersService.adminUpdateUser(id, body);
+  @Roles(Role.SUPERADMIN, Role.ADMIN)
+  @RequirePermissions('MANAGE_USERS')
+  async adminUpdate(@Param('id') id: string, @Body() body: any, @CurrentUser() user: any) {
+    return this.usersService.adminUpdateUser(id, body, user);
   }
 
   @Patch(':id/role')

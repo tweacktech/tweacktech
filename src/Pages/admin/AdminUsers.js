@@ -115,7 +115,9 @@ const AdminUsers = () => {
       bio: target.bio || '',
       location: target.location || '',
       avatar: target.avatar || '',
-      permissions: target.permissions || [],
+      permissions: isSuperAdmin
+        ? target.permissions || []
+        : (target.permissions || []).filter((item) => user?.permissions?.includes(item)),
     });
     setEditError('');
     setEditNotice('');
@@ -294,6 +296,9 @@ const AdminUsers = () => {
   };
 
   const canManageUsers = isSuperAdmin || hasPermission?.('MANAGE_USERS');
+  const editablePermissions = isSuperAdmin
+    ? ALL_PERMISSIONS
+    : ALL_PERMISSIONS.filter(([value]) => user?.permissions?.includes(value));
 
   return (
     <div className="space-y-6 fade-in">
@@ -430,7 +435,7 @@ const AdminUsers = () => {
                     </td>
                     <td>
                       <div className="flex items-center justify-end gap-2">
-                        {isSuperAdmin && (
+                        {canManageUsers && (
                           <button
                             type="button"
                             onClick={() => openEdit(u)}
@@ -571,7 +576,7 @@ const AdminUsers = () => {
             <div>
               <p className="mb-2 text-xs font-bold uppercase tracking-wider text-slate-400">Capabilities</p>
               <div className="grid gap-2 sm:grid-cols-2">
-                {ALL_PERMISSIONS.map(([value, label]) => (
+                {editablePermissions.map(([value, label]) => (
                   <Toggle
                     key={value}
                     label={label}

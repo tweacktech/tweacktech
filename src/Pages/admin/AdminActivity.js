@@ -8,6 +8,7 @@ import {
   RefreshCw,
   Search,
   ShieldCheck,
+  Trash2,
 } from 'lucide-react';
 import { useAuth } from '../../AuthContext';
 import {
@@ -44,6 +45,8 @@ const AdminActivity = () => {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState('');
+  const [clearing, setClearing] = useState(false);
+  const [toast, setToast] = useState('');
   const searchRef = useRef(search);
   searchRef.current = search;
 
@@ -82,6 +85,32 @@ const AdminActivity = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [page, action, from, to]);
 
+  const clearLog = async () => {
+    if (!window.confirm('Clear the entire activity log? This cannot be undone.')) return;
+    setClearing(true);
+    setError('');
+    try {
+      await api.delete('/activity');
+      setToast('Activity log cleared.');
+      setPage(1);
+      await load(1, true);
+    } catch (err) {
+      setError(
+        err?.response?.status === 403
+          ? 'Only admins can clear the activity log.'
+          : 'Unable to clear the activity log.',
+      );
+    } finally {
+      setClearing(false);
+    }
+  };
+
+  useEffect(() => {
+    if (!toast) return undefined;
+    const timer = setTimeout(() => setToast(''), 2400);
+    return () => clearTimeout(timer);
+  }, [toast]);
+
   useEffect(() => {
     const timer = setTimeout(() => {
       setPage(1);
@@ -105,6 +134,14 @@ const AdminActivity = () => {
               className="btn-secondary"
             >
               <RefreshCw className={`h-4 w-4 ${refreshing ? 'animate-spin' : ''}`} /> Refresh
+            </button>
+            <button
+              type="button"
+              onClick={clearLog}
+              disabled={clearing}
+              className="btn-secondary !border-red-200 !text-red-600 dark:!border-red-900/60 dark:!text-red-400"
+            >
+              <Trash2 className="h-4 w-4" /> {clearing ? 'Clearing…' : 'Clear log'}
             </button>
             <span className="inline-flex items-center gap-1.5 self-center rounded-full bg-emerald-50 px-3 py-1.5 text-xs font-semibold text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300">
               <ShieldCheck className="h-3.5 w-3.5" /> Live monitoring
@@ -292,6 +329,12 @@ const AdminActivity = () => {
 
       {!loading && logs.length > 0 && (
         <Pagination meta={meta} onPage={(next) => setPage(next)} />
+      )}
+
+      {toast && (
+        <div className="fixed bottom-6 left-1/2 z-[95] -translate-x-1/2 rounded-full bg-slate-900 px-4 py-2 text-xs font-semibold text-white shadow-xl dark:bg-white dark:text-slate-900">
+          {toast}
+        </div>
       )}
     </div>
   );

@@ -7,11 +7,11 @@ import Footer from '../Component/Footer';
 import { useAuth } from '../AuthContext';
 import { useCurrency } from '../CurrencyContext';
 import { getErrorMessage } from '../lib/apiError';
+import { publicName, publicInitials } from '../lib/displayName';
 
 const unwrap = (res) => (res?.data && res.data.data !== undefined ? res.data.data : res?.data);
 
-const initials = (profile) =>
-  `${profile.user?.firstName?.[0] || ''}${profile.user?.lastName?.[0] || ''}`.trim() || 'TT';
+const initials = (profile) => publicInitials(profile.user, profile.headline || 'Tech Talent');
 
 const TalentHub = () => {
   const { api, isAuthenticated, hasPermission } = useAuth();
@@ -203,7 +203,7 @@ const TalentHub = () => {
                   </div>
                   <div className="p-5">
                     <h2 className="font-bold text-slate-900 group-hover:text-red-600 dark:text-white dark:group-hover:text-red-400">
-                      {profile.user?.firstName} {profile.user?.lastName}
+                      {publicName(profile.user, profile.headline || 'Tech Talent')}
                     </h2>
                     <p className="truncate text-sm text-slate-500 dark:text-slate-400">
                       {profile.headline}

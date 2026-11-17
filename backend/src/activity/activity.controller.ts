@@ -1,4 +1,4 @@
-import { Controller, Get, Query, UseGuards } from '@nestjs/common';
+import { Controller, Delete, Get, Query, UseGuards } from '@nestjs/common';
 import { Role } from '@prisma/client';
 import { ActivityService } from './activity.service';
 import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
@@ -8,6 +8,18 @@ import { Roles } from '../common/decorators/roles.decorator';
 @UseGuards(JwtAuthGuard)
 export class ActivityController {
   constructor(private readonly activity: ActivityService) {}
+
+  @Delete()
+  @Roles(Role.SUPERADMIN, Role.ADMIN)
+  async clear() {
+    const result = await this.activity.clear();
+    this.activity.log({
+      action: 'activity.cleared',
+      description: `Activity log cleared (${result.count} records removed)`,
+      entityType: 'activity',
+    });
+    return { deleted: result.count };
+  }
 
   @Get()
   @Roles(Role.SUPERADMIN, Role.ADMIN)

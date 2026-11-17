@@ -75,6 +75,10 @@ export class ActivityService {
       });
   }
 
+  async clear() {
+    return this.prisma.activityLog.deleteMany({});
+  }
+
   async findAll(query: {
     page?: number;
     limit?: number;

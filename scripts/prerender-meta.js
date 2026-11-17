@@ -160,8 +160,13 @@ const fetchJson = async (endpoint) => {
   }
 };
 
-const nameOf = (user) =>
-  [user?.firstName, user?.lastName].filter(Boolean).join(' ') || 'TweackTech';
+const PLACEHOLDER_NAMES = new Set([
+  'admin user', 'admin', 'user', 'test user', 'demo user', 'tweacktech', 'tweack tech',
+]);
+const nameOf = (user, fallback = 'TweackTech Talent') => {
+  const name = [user?.firstName, user?.lastName].filter(Boolean).join(' ').trim();
+  return !name || PLACEHOLDER_NAMES.has(name.toLowerCase()) ? fallback : name;
+};
 
 const buildRoutes = async () => {
   const routes = [
@@ -194,7 +199,7 @@ const buildRoutes = async () => {
   ]);
 
   (Array.isArray(mentors) ? mentors : []).forEach((mentor) => {
-    const mentorName = nameOf(mentor.user);
+    const mentorName = nameOf(mentor.user, mentor.headline || 'Tech Mentor');
     routes.push({
       path: `/mentors/${mentor.userId}`,
       seo: {
@@ -264,11 +269,14 @@ const buildRoutes = async () => {
   });
 
   (talent?.profiles || []).forEach((profile) => {
-    const talentName = nameOf(profile.user);
+    const talentName = nameOf(profile.user, profile.headline || 'Tech Talent');
     routes.push({
       path: `/talent/${profile.id}`,
       seo: {
-        title: `${talentName} — ${profile.headline || 'Developer'}`,
+        title:
+          talentName === profile.headline
+            ? profile.headline || 'Developer'
+            : `${talentName} — ${profile.headline || 'Developer'}`,
         description: profile.bio || 'Discover skilled developers on the TweackTech talent hub.',
         image: profile.avatar || profile.user?.avatar,
         url: `/talent/${profile.id}`,

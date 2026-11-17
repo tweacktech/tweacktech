@@ -17,6 +17,7 @@ import Footer from '../Component/Footer';
 import ShareButtons from '../Component/ShareButtons';
 import { useAuth } from '../AuthContext';
 import { useSeo } from '../Component/useSeo';
+import { publicName, publicInitials } from '../lib/displayName';
 import { useCurrency } from '../CurrencyContext';
 import { getErrorMessage } from '../lib/apiError';
 
@@ -32,10 +33,14 @@ const TalentDetail = () => {
   const [error, setError] = useState('');
   const [starting, setStarting] = useState(false);
 
+  const talentName = publicName(profile?.user, profile?.headline || 'Tech Talent');
+  const talentTitle =
+    profile && talentName !== profile.headline
+      ? `${talentName} — ${profile.headline}`
+      : profile?.headline || 'Developer Talent';
+
   useSeo({
-    title: profile
-      ? `${profile.user?.firstName || ''} ${profile.user?.lastName || ''} — ${profile.headline}`
-      : 'Developer Talent',
+    title: talentTitle,
     description:
       profile?.bio ||
       'Discover developers and their skills on the TweackTech talent hub.',
@@ -127,16 +132,18 @@ const TalentDetail = () => {
                         />
                       ) : (
                         <span className="grid h-24 w-24 place-items-center rounded-2xl border-4 border-white bg-slate-100 text-2xl font-bold text-slate-500 shadow-lg dark:border-slate-900 dark:bg-slate-800">
-                          {`${profile.user?.firstName?.[0] || ''}${profile.user?.lastName?.[0] || ''}`}
+                          {publicInitials(profile.user, profile.headline || 'Tech Talent')}
                         </span>
                       )}
                       <div className="pb-1">
                         <h1 className="text-2xl font-extrabold text-slate-900 dark:text-white">
-                          {profile.user?.firstName} {profile.user?.lastName}
+                          {talentName}
                         </h1>
-                        <p className="text-sm font-medium text-red-600 dark:text-red-400">
-                          {profile.headline}
-                        </p>
+                        {talentName !== profile.headline && (
+                          <p className="text-sm font-medium text-red-600 dark:text-red-400">
+                            {profile.headline}
+                          </p>
+                        )}
                       </div>
                     </div>
                     <span
@@ -185,7 +192,7 @@ const TalentDetail = () => {
                   <ShareButtons
                     className="mt-5 border-t border-slate-100 pt-4 dark:border-slate-800"
                     url={`/talent/${id}`}
-                    title={`${profile.user?.firstName} ${profile.user?.lastName} — ${profile.headline}`}
+                    title={talentTitle}
                     description={profile.bio || 'TweackTech Talent Hub profile'}
                   />
                 </div>
@@ -220,7 +227,7 @@ const TalentDetail = () => {
             <aside className="space-y-4">
               <div className="card p-6">
                 <p className="text-xs font-bold uppercase tracking-wider text-slate-400">
-                  Work with {profile.user?.firstName}
+                  Work with {talentName}
                 </p>
                 <p className="mt-2 text-2xl font-extrabold text-slate-900 dark:text-white">
                   {profile.hourlyRate
