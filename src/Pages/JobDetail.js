@@ -17,6 +17,7 @@ import Navbar from '../Component/Navbar';
 import Footer from '../Component/Footer';
 import ShareButtons from '../Component/ShareButtons';
 import { useAuth } from '../AuthContext';
+import { useSeo } from '../Component/useSeo';
 
 const unwrap = (res) => (res?.data && res.data.data !== undefined ? res.data.data : res?.data);
 
@@ -71,6 +72,18 @@ const JobDetail = () => {
   const [submitting, setSubmitting] = useState(false);
   const [formError, setFormError] = useState('');
   const [success, setSuccess] = useState('');
+
+  useSeo({
+    title: job ? `${job.title} at ${job.company}` : 'Developer Jobs',
+    description:
+      job?.description?.replace(/<[^>]+>/g, '').slice(0, 180) ||
+      `${job?.company || ''} is hiring on TweackTech. Explore developer roles and apply.`,
+    image: job?.companyLogo || '/icon-512.png',
+    url: `/jobs/${jobId}`,
+    author: `${job?.company || 'TweackTech'} · Meyor Dari`,
+    section: 'Developer jobs',
+    keywords: `${job?.title || ''}, ${job?.company || ''} jobs, developer jobs, TweackTech talent hub, Meyor Dari`,
+  });
 
   useEffect(() => {
     let cancelled = false;

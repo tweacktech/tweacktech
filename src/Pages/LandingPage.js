@@ -20,6 +20,7 @@ import { useAuth } from '../AuthContext';
 import { useCurrency } from '../CurrencyContext';
 import { effectivePrice, isDiscountActive } from '../lib/coursePrice';
 import MentorCard from '../Component/MentorCard';
+import { useSeo } from '../Component/useSeo';
 
 const unwrap = (res) => (res?.data && res.data.data !== undefined ? res.data.data : res?.data);
 
@@ -154,6 +155,17 @@ const LandingPage = () => {
   const [courses, setCourses] = useState([]);
   const [loadingCourses, setLoadingCourses] = useState(true);
   const [mentors, setMentors] = useState([]);
+
+  useSeo({
+    title: 'Learn Tech Skills from Expert Mentors',
+    description:
+      'TweackTech is a tech learning platform and talent hub. Learn coding, design and DevOps from verified mentors, build real projects, earn certificates and get hired.',
+    image: '/icon-512.png',
+    url: '/',
+    section: 'Technology education',
+    keywords:
+      'tech tweack, TweackTech online courses, learn programming, Meyor Dari, tech mentorship, developer career',
+  });
 
   useEffect(() => {
     let cancelled = false;

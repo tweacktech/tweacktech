@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
+import { normalizeImageUrl } from '../lib/image';
 import { Link } from 'react-router-dom';
 import {
   ArrowRight,
@@ -12,6 +13,7 @@ import {
 import Navbar from '../Component/Navbar';
 import Footer from '../Component/Footer';
 import MentorCard from '../Component/MentorCard';
+import { useSeo } from '../Component/useSeo';
 import { useAuth } from '../AuthContext';
 
 const unwrap = (res) => (res?.data && res.data.data !== undefined ? res.data.data : res?.data);
@@ -22,6 +24,16 @@ const MentorsPage = () => {
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [skill, setSkill] = useState('');
+
+  useSeo({
+    title: 'Meet the TweackTech Mentors',
+    description:
+      'Explore TweackTech mentors, their qualifications, skills and courses. Learn from working tech professionals and share their profiles to help others get started.',
+    image: mentors[0]?.user?.avatar || mentors[0]?.bannerImage || '/icon-512.png',
+    url: '/mentors',
+    section: 'Mentors',
+    keywords: 'tech mentors, coding instructors, TweackTech mentors, Meyor Dari, qualified tech educators',
+  });
 
   useEffect(() => {
     let cancelled = false;
@@ -106,7 +118,7 @@ const MentorsPage = () => {
               <div className="flex items-center gap-4">
                 {hero.user?.avatar ? (
                   <img
-                    src={hero.user.avatar}
+                    src={normalizeImageUrl(hero.user.avatar)}
                     alt=""
                     className="h-20 w-20 rounded-2xl border-2 border-white/30 object-cover sm:h-24 sm:w-24"
                   />

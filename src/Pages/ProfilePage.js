@@ -1,4 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
+import { normalizeImageUrl } from '../lib/image';
 import { Link } from 'react-router-dom';
 import {
   AlertCircle,
@@ -262,7 +263,7 @@ const ProfilePage = () => {
                 <div className="relative -mt-10 mx-auto h-20 w-20">
                   {user?.avatar ? (
                     <img
-                      src={user.avatar}
+                      src={normalizeImageUrl(user.avatar)}
                       alt="Your profile"
                       className="h-20 w-20 rounded-2xl border-4 border-white object-cover shadow-sm dark:border-slate-900"
                     />

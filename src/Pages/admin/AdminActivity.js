@@ -1,4 +1,5 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
+import { normalizeImageUrl } from '../../lib/image';
 import {
   Activity,
   AlertCircle,
@@ -217,7 +218,7 @@ const AdminActivity = () => {
                 <summary className="flex cursor-pointer list-none flex-col gap-2 lg:grid lg:grid-cols-[160px,1fr,150px,150px] lg:items-center lg:gap-4">
                   <div className="flex items-center gap-2.5">
                     {log.actor?.avatar ? (
-                      <img src={log.actor.avatar} alt="" className="h-8 w-8 rounded-lg object-cover" />
+                      <img src={normalizeImageUrl(log.actor.avatar)} alt="" className="h-8 w-8 rounded-lg object-cover" />
                     ) : (
                       <span className="grid h-8 w-8 shrink-0 place-items-center rounded-lg bg-slate-100 text-[10px] font-bold text-slate-600 dark:bg-slate-800 dark:text-slate-300">
                         {log.actorName

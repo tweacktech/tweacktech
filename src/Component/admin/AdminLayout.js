@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { normalizeImageUrl } from '../../lib/image';
 import { Link, NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom';
 import {
   Activity,
@@ -210,7 +211,7 @@ const AdminLayout = () => {
           <div className="ml-auto flex items-center gap-2">
             <ThemeToggle compact />
             {user?.avatar ? (
-              <img src={user.avatar} alt="" className="h-8 w-8 rounded-lg object-cover" />
+              <img src={normalizeImageUrl(user.avatar)} alt="" className="h-8 w-8 rounded-lg object-cover" />
             ) : (
               <span className="grid h-8 w-8 place-items-center rounded-lg bg-red-100 text-xs font-bold text-red-700 dark:bg-red-950/60 dark:text-red-400">
                 {`${user?.firstName?.[0] || ''}${user?.lastName?.[0] || ''}` || 'A'}

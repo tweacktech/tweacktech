@@ -1,4 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import { normalizeImageUrl } from '../../lib/image';
 import {
   CalendarDays,
   Check,
@@ -308,7 +309,7 @@ const AdminAttendance = () => {
                   >
                     <div className="flex min-w-0 flex-1 items-center gap-3">
                       {student.avatar ? (
-                        <img src={student.avatar} alt="" className="h-10 w-10 rounded-xl object-cover" />
+                        <img src={normalizeImageUrl(student.avatar)} alt="" className="h-10 w-10 rounded-xl object-cover" />
                       ) : (
                         <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-slate-100 text-xs font-bold text-slate-600 dark:bg-slate-800 dark:text-slate-300">
                           {initials(student)}

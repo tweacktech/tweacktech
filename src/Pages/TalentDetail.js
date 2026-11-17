@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { normalizeImageUrl } from '../lib/image';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import {
   ArrowLeft,
@@ -15,6 +16,7 @@ import Navbar from '../Component/Navbar';
 import Footer from '../Component/Footer';
 import ShareButtons from '../Component/ShareButtons';
 import { useAuth } from '../AuthContext';
+import { useSeo } from '../Component/useSeo';
 import { useCurrency } from '../CurrencyContext';
 import { getErrorMessage } from '../lib/apiError';
 
@@ -29,6 +31,20 @@ const TalentDetail = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [starting, setStarting] = useState(false);
+
+  useSeo({
+    title: profile
+      ? `${profile.user?.firstName || ''} ${profile.user?.lastName || ''} — ${profile.headline}`
+      : 'Developer Talent',
+    description:
+      profile?.bio ||
+      'Discover developers and their skills on the TweackTech talent hub.',
+    image: profile?.avatar || profile?.user?.avatar || '/icon-512.png',
+    url: `/talent/${id}`,
+    author: 'Meyor Dari · TweackTech',
+    section: 'Talent hub',
+    keywords: `${(profile?.skills || []).join(', ')}, TweackTech talent hub, hire developers, Meyor Dari`,
+  });
 
   useEffect(() => {
     let cancelled = false;
@@ -105,7 +121,7 @@ const TalentDetail = () => {
                     <div className="flex items-end gap-4">
                       {profile.avatar || profile.user?.avatar ? (
                         <img
-                          src={profile.avatar || profile.user.avatar}
+                          src={normalizeImageUrl(profile.avatar || profile.user.avatar)}
                           alt=""
                           className="h-24 w-24 rounded-2xl border-4 border-white object-cover shadow-lg dark:border-slate-900"
                         />

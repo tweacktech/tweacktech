@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { normalizeImageUrl } from '../lib/image';
 import { Link } from 'react-router-dom';
 import {
   BadgeCheck,
@@ -96,7 +97,7 @@ const MentorCard = ({ mentor, featured = false }) => {
         <div className="-mt-9 flex items-end justify-between gap-3">
           {user.avatar ? (
             <img
-              src={user.avatar}
+              src={normalizeImageUrl(user.avatar)}
               alt={`${user.firstName} ${user.lastName}`}
               className="h-16 w-16 rounded-2xl border-4 border-white object-cover shadow-md dark:border-slate-900"
             />

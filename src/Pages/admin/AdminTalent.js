@@ -1,4 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import { normalizeImageUrl } from '../../lib/image';
 import {
   BadgeCheck,
   Briefcase,
@@ -224,7 +225,7 @@ const AdminTalent = () => {
                 <div className="-mt-8 flex items-end justify-between">
                   {profile.avatar || profile.user?.avatar ? (
                     <img
-                      src={profile.avatar || profile.user.avatar}
+                      src={normalizeImageUrl(profile.avatar || profile.user.avatar)}
                       alt=""
                       className="h-16 w-16 rounded-2xl border-4 border-white object-cover dark:border-slate-900"
                     />

@@ -61,7 +61,11 @@ export class MediaService {
 
     if (this.cloudinaryReady) {
       try {
-        const result = await this.uploadToCloudinary(buffer, folder);
+        const result = await this.uploadToCloudinary(
+          buffer,
+          folder,
+          file.mimetype,
+        );
         const media = await this.record({
           filename: result.public_id,
           originalName: file.originalname,
@@ -163,10 +167,17 @@ export class MediaService {
   private uploadToCloudinary(
     buffer: Buffer,
     folder: string,
+    mimeType?: string,
   ): Promise<UploadApiResponse> {
     return new Promise((resolve, reject) => {
       const stream = cloudinary.uploader.upload_stream(
-        { folder, resource_type: 'auto' },
+        {
+          folder,
+          resource_type: 'auto',
+          // Browsers (and social crawlers) cannot render HEIC/AVIF uploads from
+          // iPhones. Normalise image uploads to a universally readable JPG.
+          ...(mimeType?.startsWith('image/') ? { format: 'jpg' } : {}),
+        },
         (error, result) => {
           if (error || !result) reject(error || new Error('Empty upload result'));
           else resolve(result);

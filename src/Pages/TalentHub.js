@@ -1,4 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import { normalizeImageUrl } from '../lib/image';
 import { Link } from 'react-router-dom';
 import { Filter, Plus, RefreshCw, Search, User } from 'lucide-react';
 import Navbar from '../Component/Navbar';
@@ -175,7 +176,7 @@ const TalentHub = () => {
                     <div className="absolute inset-0 flex items-center justify-center">
                       {profile.avatar || profile.user?.avatar ? (
                         <img
-                          src={profile.avatar || profile.user.avatar}
+                          src={normalizeImageUrl(profile.avatar || profile.user.avatar)}
                           alt=""
                           className="h-24 w-24 rounded-2xl border-4 border-white/30 object-cover"
                         />

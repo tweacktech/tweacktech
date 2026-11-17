@@ -41,6 +41,9 @@ const LoginPage = () => {
     setPassword('password@123');
   };
 
+  // This project's ESLint setup does not count JSX-only uses of local helpers.
+  void fillDemo;
+
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-950 transition-colors">
       <Navbar />

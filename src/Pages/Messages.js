@@ -1,4 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { normalizeImageUrl } from '../lib/image';
 import { useSearchParams } from 'react-router-dom';
 import {
   ArrowLeft,
@@ -624,7 +625,7 @@ const Messages = () => {
                     >
                       <span className="grid h-9 w-9 place-items-center rounded-full bg-slate-100 text-xs font-bold text-slate-600 dark:bg-slate-800 dark:text-slate-200">
                         {person.avatar ? (
-                          <img src={person.avatar} alt="" className="h-9 w-9 rounded-full object-cover" />
+                          <img src={normalizeImageUrl(person.avatar)} alt="" className="h-9 w-9 rounded-full object-cover" />
                         ) : (
                           initials(person)
                         )}

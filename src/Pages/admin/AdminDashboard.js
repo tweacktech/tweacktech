@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { normalizeImageUrl } from '../../lib/image';
 import { Link } from 'react-router-dom';
 import {
   Activity,
@@ -499,7 +500,7 @@ const AdminDashboard = () => {
             {(overview?.recentUsers || []).map((person) => (
               <div key={person.id} className="flex items-center gap-3 px-5 py-3">
                 {person.avatar ? (
-                  <img src={person.avatar} alt="" className="h-9 w-9 rounded-lg object-cover" />
+                  <img src={normalizeImageUrl(person.avatar)} alt="" className="h-9 w-9 rounded-lg object-cover" />
                 ) : (
                   <span className="grid h-9 w-9 place-items-center rounded-lg bg-slate-100 text-xs font-bold text-slate-600 dark:bg-slate-800 dark:text-slate-300">
                     {`${person.firstName?.[0] || ''}${person.lastName?.[0] || ''}`}

@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { normalizeImageUrl } from '../lib/image';
 import { Link, useParams } from 'react-router-dom';
 import {
   ArrowLeft,
@@ -23,6 +24,7 @@ import Navbar from '../Component/Navbar';
 import Footer from '../Component/Footer';
 import { useAuth } from '../AuthContext';
 import { mentorShareLinks, mentorShareText, copyText } from '../lib/share';
+import { useSeo } from '../Component/useSeo';
 
 const unwrap = (res) => (res?.data && res.data.data !== undefined ? res.data.data : res?.data);
 
@@ -60,14 +62,21 @@ const MentorDetail = () => {
     };
   }, [api, id]);
 
-  useEffect(() => {
-    if (mentor?.user) {
-      document.title = `${mentor.user.firstName} ${mentor.user.lastName} · Mentor · TweackTech`;
-    }
-    return () => {
-      document.title = 'TweackTech';
-    };
-  }, [mentor]);
+  const mentorName = mentor?.user
+    ? `${mentor.user.firstName} ${mentor.user.lastName}`
+    : 'TweackTech Mentor';
+  useSeo({
+    title: `${mentorName} — ${mentor?.headline || 'Tech Mentor'}`,
+    description:
+      mentor?.bio ||
+      `${mentorName} is a verified tech mentor at TweackTech. View qualifications, skills, courses and share this profile.`,
+    image: mentor?.bannerImage || mentor?.user?.avatar || '/icon-512.png',
+    url: `/mentors/${mentor?.userId || id}`,
+    type: 'profile',
+    author: `${mentorName} · Meyor Dari`,
+    section: 'Mentor profile',
+    keywords: `${(mentor?.skills || []).join(', ')}, ${mentorName}, tech mentor, TweackTech`,
+  });
 
   if (loading) {
     return (
@@ -134,7 +143,7 @@ const MentorDetail = () => {
           <div className="mt-6 flex flex-col gap-6 sm:flex-row sm:items-end">
             {user.avatar ? (
               <img
-                src={user.avatar}
+                src={normalizeImageUrl(user.avatar)}
                 alt={`${user.firstName} ${user.lastName}`}
                 className="h-28 w-28 rounded-3xl border-4 border-white/20 object-cover shadow-2xl sm:h-36 sm:w-36"
               />

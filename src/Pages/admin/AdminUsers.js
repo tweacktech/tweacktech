@@ -1,4 +1,5 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
+import { normalizeImageUrl } from '../../lib/image';
 import {
   Camera,
   Check,
@@ -372,7 +373,7 @@ const AdminUsers = () => {
                     <td>
                       <div className="flex items-center gap-3">
                         {u.avatar ? (
-                          <img src={u.avatar} alt="" className="h-9 w-9 rounded-lg object-cover" />
+                          <img src={normalizeImageUrl(u.avatar)} alt="" className="h-9 w-9 rounded-lg object-cover" />
                         ) : (
                           <span className="grid h-9 w-9 place-items-center rounded-lg bg-slate-100 dark:bg-slate-800 text-xs font-bold">
                             {`${u.firstName?.[0] || ''}${u.lastName?.[0] || ''}`}
@@ -488,7 +489,7 @@ const AdminUsers = () => {
           <form onSubmit={saveEdit} className="space-y-4">
             <div className="flex flex-wrap items-center gap-4 rounded-xl border border-slate-200 p-3 dark:border-slate-700">
               {editForm.avatar ? (
-                <img src={editForm.avatar} alt="" className="h-14 w-14 rounded-xl object-cover" />
+                <img src={normalizeImageUrl(editForm.avatar)} alt="" className="h-14 w-14 rounded-xl object-cover" />
               ) : (
                 <span className="grid h-14 w-14 place-items-center rounded-xl bg-slate-100 text-sm font-bold text-slate-600 dark:bg-slate-800 dark:text-slate-300">
                   {`${editForm.firstName?.[0] || ''}${editForm.lastName?.[0] || ''}`}

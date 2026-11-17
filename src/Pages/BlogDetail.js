@@ -5,6 +5,7 @@ import Navbar from '../Component/Navbar';
 import Footer from '../Component/Footer';
 import ShareButtons from '../Component/ShareButtons';
 import { useAuth } from '../AuthContext';
+import { useSeo } from '../Component/useSeo';
 
 const unwrap = (res) => (res?.data && res.data.data !== undefined ? res.data.data : res?.data);
 
@@ -33,6 +34,22 @@ const BlogDetail = () => {
   const [related, setRelated] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+
+  useSeo({
+    title: post?.title || 'Tech Blog',
+    description:
+      post?.excerpt ||
+      'Read insights, tutorials and career advice from the TweackTech tech blog.',
+    image: post?.featuredImage || '/icon-512.png',
+    url: `/blog/${slug}`,
+    type: 'article',
+    author: post?.author
+      ? `${post.author.firstName || ''} ${post.author.lastName || ''} · Meyor Dari`
+      : 'Meyor Dari',
+    section: 'Tech insights',
+    publishedTime: post?.createdAt,
+    keywords: `${post?.title || ''}, TweackTech blog, tech articles, Meyor Dari, programming tutorials`,
+  });
 
   useEffect(() => {
     let cancelled = false;

@@ -1,4 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import { normalizeImageUrl } from '../lib/image';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import {
   ArrowRight,
@@ -24,6 +25,7 @@ import Navbar from '../Component/Navbar';
 import Footer from '../Component/Footer';
 import ShareButtons from '../Component/ShareButtons';
 import { useAuth } from '../AuthContext';
+import { useSeo } from '../Component/useSeo';
 import { useCurrency } from '../CurrencyContext';
 import { getErrorMessage } from '../lib/apiError';
 import { effectivePrice, isDiscountActive } from '../lib/coursePrice';
@@ -71,6 +73,22 @@ const CourseDetail = () => {
   const [paymentBusy, setPaymentBusy] = useState(false);
   const [paymentError, setPaymentError] = useState('');
   const [paymentSuccess, setPaymentSuccess] = useState('');
+
+  useSeo({
+    title: course?.title || 'Tech Courses',
+    description:
+      course?.shortDescription ||
+      course?.description?.slice(0, 180) ||
+      'Learn in-demand tech skills with TweackTech courses, projects and certificates.',
+    image: course?.thumbnail || '/icon-512.png',
+    url: `/courses/${courseId}`,
+    type: 'product',
+    author: course?.instructor
+      ? `${course.instructor.firstName} ${course.instructor.lastName} · Meyor Dari`
+      : 'Meyor Dari',
+    section: course?.category?.name || 'Tech courses',
+    keywords: `${course?.title || ''}, ${course?.level || ''} tech course, TweackTech, Meyor Dari, learn ${course?.title || 'technology'}`,
+  });
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -508,7 +526,7 @@ const CourseDetail = () => {
                     .map((person) => (
                       <div key={person.id} className="flex items-center gap-3">
                         {person.avatar ? (
-                          <img src={person.avatar} alt="" className="h-10 w-10 rounded-full object-cover" />
+                          <img src={normalizeImageUrl(person.avatar)} alt="" className="h-10 w-10 rounded-full object-cover" />
                         ) : (
                           <span className="grid h-10 w-10 place-items-center rounded-full bg-red-100 text-xs font-bold text-red-700 dark:bg-red-950/60 dark:text-red-400">
                             {person.firstName?.[0]}

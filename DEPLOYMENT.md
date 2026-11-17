@@ -301,3 +301,17 @@ Verified in this workspace:
 - PWA registration, precache, manifest/icons, and full offline navigation
 - responsive audit at 390×844, 768×1024, and 1440×900 across public, student,
   and admin pages (no horizontal overflow, no runtime exceptions)
+### SEO / social preview prerender
+The frontend `npm run build` now runs `scripts/prerender-meta.js` afterwards. It
+fetches public content from `REACT_APP_API_URL` and writes one static HTML file
+per public detail route (mentors, courses, blog, jobs, talent) with that item's
+own Open Graph image, title, description and structured data. Social crawlers
+read this raw HTML, so it is required for correct share previews.
+
+- Deploy the backend first, or make sure `REACT_APP_API_URL` points to a live
+  backend during the frontend build. If the API is unreachable the build still
+  succeeds, but share previews fall back to the generic site image.
+- Re-run the frontend build/deploy when you add new public content so its
+  preview page is generated.
+- `vercel.json` keeps the SPA rewrite as a fallback; Vercel serves the
+  prerendered files at their matching paths automatically.

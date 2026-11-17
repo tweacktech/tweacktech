@@ -1,4 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
+import { normalizeImageUrl } from '../lib/image';
 import { Link, NavLink, useLocation, useNavigate } from 'react-router-dom';
 import {
   Award,
@@ -198,7 +199,7 @@ const Navbar = () => {
                   >
                     {user?.avatar ? (
                       <img
-                        src={user.avatar}
+                        src={normalizeImageUrl(user.avatar)}
                         alt=""
                         className="h-7 w-7 rounded-lg object-cover"
                       />

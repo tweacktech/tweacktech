@@ -325,3 +325,17 @@ Seeded NGN/GHS bank accounts are under **Admin → Payments → Bank accounts**.
   bio and profile photo in one request via `PATCH /api/users/:id/profile`. Only a
   superadmin can call it; every change is recorded in the activity log.
 - Users can also upload or remove their own avatar from `/profile` (4MB limit).
+
+### Share previews and SEO
+- Every public detail page (mentors, courses, blog posts, jobs, talent profiles)
+  now has its own title, description, author, keywords, canonical URL and
+  Open Graph / Twitter Card tags. The avatar, course thumbnail, blog image,
+  company logo or talent photo is used as that page's social preview image.
+- `scripts/prerender-meta.js` runs automatically after `npm run build` and writes
+  a static HTML file for each public route with crawler-readable metadata —
+  social networks and Google read raw HTML and do not run the React app.
+- Structured data (Organization, WebSite, page/Article) and site-wide keywords
+  include “tech tweack”, TweackTech, Meyor Dari and Dari for Google.
+- Cloudinary images are delivered with `f_jpg,q_auto`, so iPhone HEIC profile
+  photos display in every browser and in social previews. New image uploads are
+  also normalised to JPG at upload time.
