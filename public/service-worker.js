@@ -5,7 +5,7 @@
    - Offline fallback page for navigations
    ========================================================================== */
 
-const VERSION = 'v28';
+const VERSION = 'v29';
 const STATIC_CACHE = `tweacktech-static-${VERSION}`;
 const RUNTIME_CACHE = `tweacktech-runtime-${VERSION}`;
 const API_CACHE = `tweacktech-api-${VERSION}`;

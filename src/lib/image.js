@@ -18,7 +18,9 @@ export const normalizeImageUrl = (url) => {
         (part) => part === 'f_jpg' || part === 'f_auto' || part.startsWith('f_jpg,'),
       );
       if (!alreadyConverted) {
-        parsed.pathname = `${prefix}/image/upload/f_jpg,q_auto/${rest}`;
+        const parts = rest.split('/');
+        parts[parts.length - 1] = parts[parts.length - 1].replace(/\.[a-z0-9]+$/i, '');
+        parsed.pathname = `${prefix}/image/upload/f_jpg,q_auto/${parts.join('/')}`;
       }
     }
     return parsed.toString();

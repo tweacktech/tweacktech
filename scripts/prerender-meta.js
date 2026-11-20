@@ -53,6 +53,15 @@ const escapeAttr = (value) =>
     .replace(/</g, '&lt;')
     .replace(/>/g, '&gt;');
 
+// Several social scrapers (LinkedIn, WhatsApp, X) read the raw meta value and
+// do not decode &amp; — it breaks query strings in image URLs. A raw & is
+// valid inside an HTML attribute and is what crawlers expect here.
+const escapeUrl = (value) =>
+  String(value || '')
+    .replace(/"/g, '&quot;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;');
+
 const normalizeImage = (url) => {
   if (!url) return DEFAULT_IMAGE;
   try {
@@ -63,7 +72,11 @@ const normalizeImage = (url) => {
     ) {
       const [prefix, rest] = parsed.pathname.split('/image/upload/');
       if (!rest.split('/').some((part) => part.startsWith('f_'))) {
-        parsed.pathname = `${prefix}/image/upload/f_jpg,q_auto/${rest}`;
+        // Drop the original extension (often .heic from phones) so crawlers
+        // never see a non-web format in the URL.
+        const parts = rest.split('/');
+        parts[parts.length - 1] = parts[parts.length - 1].replace(/\.[a-z0-9]+$/i, '');
+        parsed.pathname = `${prefix}/image/upload/f_jpg,q_auto/${parts.join('/')}`;
       }
     }
     return parsed.toString();
@@ -78,9 +91,10 @@ const absolute = (url) => {
   return `${SITE_URL}/${String(url).replace(/^\//, '')}`;
 };
 
-const upsertMeta = (html, attribute, key, content) => {
+const upsertMeta = (html, attribute, key, content, isUrl = false) => {
   if (!content) return html;
-  const tag = `<meta ${attribute}="${key}" content="${escapeAttr(content)}" />`;
+  const escape = isUrl ? escapeUrl : escapeAttr;
+  const tag = `<meta ${attribute}="${key}" content="${escape(content)}" />`;
   const regex = new RegExp(`<meta\\s+${attribute}="${key}"[\\s\\S]*?/>`, 'i');
   return regex.test(html) ? html.replace(regex, tag) : html.replace('</head>', `    ${tag}\n  </head>`);
 };
@@ -108,17 +122,22 @@ const injectSeo = (html, options = {}) => {
     ['property', 'og:type', options.type || 'website'],
     ['property', 'og:title', title],
     ['property', 'og:description', description],
-    ['property', 'og:image', image],
-    ['property', 'og:image:secure_url', image],
+    ['property', 'og:image', image, true],
+    ['property', 'og:image:secure_url', image, true],
+    ['property', 'og:image:type', /\.png(\?|$)/i.test(image) ? 'image/png' : 'image/jpeg'],
+    ['property', 'og:image:width', '1200'],
+    ['property', 'og:image:height', '630'],
     ['property', 'og:image:alt', title],
-    ['property', 'og:url', url],
+    ['property', 'og:url', url, true],
     ['property', 'article:author', author],
+    ['name', 'twitter:card', 'summary_large_image'],
     ['name', 'twitter:title', title],
     ['name', 'twitter:description', description],
-    ['name', 'twitter:image', image],
+    ['name', 'twitter:image', image, true],
+    ['name', 'twitter:image:alt', title],
   ];
-  meta.forEach(([attribute, key, content]) => {
-    output = upsertMeta(output, attribute, key, content);
+  meta.forEach(([attribute, key, content, isUrl]) => {
+    output = upsertMeta(output, attribute, key, content, isUrl);
   });
 
   const structured = {

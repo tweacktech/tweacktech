@@ -86,6 +86,13 @@ export const setSeo = ({
   upsertMeta('property', 'og:description', pageDescription);
   upsertMeta('property', 'og:image', pageImage);
   upsertMeta('property', 'og:image:secure_url', pageImage);
+  upsertMeta(
+    'property',
+    'og:image:type',
+    /\.png(\?|$)/i.test(pageImage) ? 'image/png' : 'image/jpeg',
+  );
+  upsertMeta('property', 'og:image:width', '1200');
+  upsertMeta('property', 'og:image:height', '630');
   upsertMeta('property', 'og:image:alt', pageTitle);
   upsertMeta('property', 'og:url', pageUrl);
   if (section) upsertMeta('property', 'article:section', section);

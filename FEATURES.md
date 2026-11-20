@@ -57,6 +57,17 @@ configured Neon database, and both the API and React client build successfully.
   ("Start quiz"). Passing it replaces the card with a small "Module quiz passed"
   indicator instead of a permanent retake button.
 
+### Social sharing images
+- Prerendered pages now emit raw `&` in og:image URLs (several social scrapers
+  do not decode `&amp;` and silently dropped images with query strings).
+- Added `og:image:type`, `og:image:width`/`height` (1200×630) and
+  `twitter:image:alt`; stale 512×512 dimensions from the default shell no
+  longer override per-item images.
+- Cloudinary delivery URLs strip the original file extension (e.g. `.heic`
+  from phones) before adding `f_jpg,q_auto`, so scrapers always receive a
+  standard web image. Verified the resulting URL returns `200 image/jpeg`.
+- Verified all 41 prerendered HTML files have absolute HTTPS og:image URLs.
+
 ### Module-specific quizzes, staff preview and lesson editor
 - Quiz questions are now unique per module: selection is rotated by module
   order, and extra questions are generated from each lesson's own text.
