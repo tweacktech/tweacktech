@@ -452,8 +452,15 @@ export class SeedersService {
     for (const course of courses) {
       const c = await this.prisma.course.upsert({
         where: { slug: course.slug },
-        update: {},
-        create: course,
+        update: {
+          enrollmentLocked: true,
+          enrollmentLockedMessage: 'Enrolment is currently closed while we prepare the courses. Please check back soon.',
+        },
+        create: {
+          ...course,
+          enrollmentLocked: true,
+          enrollmentLockedMessage: 'Enrolment is currently closed while we prepare the courses. Please check back soon.',
+        },
       });
       createdCourses.push(c);
     }
@@ -1481,36 +1488,28 @@ export class SeedersService {
   }
 
   private buildLessonReading(courseTitle: string, moduleTitle: string, lessonTitle: string): string {
-    return `LESSON OVERVIEW
-${lessonTitle} is part of ${moduleTitle} in the ${courseTitle} course. Work through this guide before or after watching the lesson; it is written so you can understand the topic from reading alone.
-
-WHAT YOU WILL LEARN
-- Explain the purpose of ${lessonTitle.toLowerCase()} in your own words.
-- Recognise the key terms, tools and decisions introduced in this module.
-- Apply the idea in a small, practical exercise.
-- Identify common mistakes and how to avoid them.
-
-GUIDED READING
-Start by connecting this lesson to the previous one. Ask yourself what problem the topic solves and where you have seen a similar idea before. Write a one-sentence definition in your notes, then expand it with an example from a real project.
-
-Next, break the topic into its moving parts. For each part, note its input, the action it performs and the result it produces. This input-process-output habit makes complex systems easier to reason about and is especially useful during debugging.
-
-Finally, consider the trade-offs. Most engineering choices balance simplicity, performance, reliability and cost. Being able to explain those trade-offs is what separates someone who memorised a definition from someone who can use the concept professionally.
-
-WORKED EXAMPLE
-Imagine you are building a small feature for a learning platform. Identify where ${lessonTitle.toLowerCase()} appears, describe the simplest implementation, then list one way to make it more robust. Write the steps down before coding; clear thinking now saves debugging time later.
-
-PRACTICE
-1. Summarise this lesson in three bullet points.
-2. Build a tiny example that uses the concept.
-3. Break the example on purpose and explain the error message.
-4. Write down one question you still have and bring it to the class chat.
-
-KEY TAKEAWAYS
-- ${lessonTitle} is a tool for solving a specific kind of problem, not a rule to memorise.
-- Understand the inputs, outputs and trade-offs.
-- Practise on a small example, then increase the complexity gradually.
-- Review your notes before the next lesson and ask questions early.`;
+    const esc = (value: string) =>
+      value.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+    return `<h1>${esc(lessonTitle)}</h1>
+<p class="lead">${esc(lessonTitle)} is one step in <em>${esc(moduleTitle)}</em> in ${esc(courseTitle)}. Learn the idea, study the example, then try it yourself.</p>
+<h2>In simple terms</h2>
+<p>Start with the shortest version that works, run it, and then add detail. If you cannot explain a line in one sentence, test it before moving on.</p>
+<h2>Worked example</h2>
+<pre><code>// Write a tiny version of ${esc(lessonTitle.toLowerCase())} here, then run it.</code></pre>
+<h2>Try it yourself</h2>
+<ol>
+  <li>Write the example in your own editor and run it.</li>
+  <li>Change one value and predict the result.</li>
+  <li>Break it deliberately, read the error, then fix it.</li>
+</ol>
+<h2>Common mistakes</h2>
+<ul>
+  <li>Copying code without running it.</li>
+  <li>Changing too many things at once.</li>
+  <li>Ignoring error messages.</li>
+</ul>
+<h2>Ready for the module quiz?</h2>
+<p>Finish every lesson in this module, then take the module quiz. You can retake it any time.</p>`;
   }
 
   private getModuleTitle(courseTitle: string, moduleNum: number): string {

@@ -102,19 +102,22 @@ const Assignments = () => {
     load();
   }, [load]);
 
+  const available = useMemo(() => assignments.filter((a) => !a.locked), [assignments]);
+  const lockedCount = assignments.length - available.length;
+
   const counts = useMemo(
     () => ({
-      all: assignments.length,
-      pending: assignments.filter((a) => statusOf(a) === 'pending').length,
-      submitted: assignments.filter((a) => statusOf(a) === 'submitted').length,
-      graded: assignments.filter((a) => statusOf(a) === 'graded').length,
+      all: available.length,
+      pending: available.filter((a) => statusOf(a) === 'pending').length,
+      submitted: available.filter((a) => statusOf(a) === 'submitted').length,
+      graded: available.filter((a) => statusOf(a) === 'graded').length,
     }),
-    [assignments]
+    [available]
   );
 
   const visible = useMemo(
     () =>
-      assignments.filter((assignment) => {
+      available.filter((assignment) => {
         if (courseFilter && assignment.course?.id !== courseFilter) return false;
         if (filter !== 'all' && statusOf(assignment) !== filter) return false;
         if (!search) return true;
@@ -122,7 +125,7 @@ const Assignments = () => {
           .toLowerCase()
           .includes(search.toLowerCase());
       }),
-    [assignments, filter, search, courseFilter]
+    [available, filter, search, courseFilter]
   );
 
   const openSubmit = (assignment) => {
@@ -235,6 +238,12 @@ const Assignments = () => {
                 </button>
               ))}
             </div>
+
+            {lockedCount > 0 && (
+              <div className="mt-4 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-xs text-amber-800 dark:border-amber-900/60 dark:bg-amber-950/30 dark:text-amber-200">
+                {lockedCount} module quiz{lockedCount === 1 ? '' : 'zes'} locked. Complete every lesson and pass the quiz in the previous module to unlock the next one.
+              </div>
+            )}
 
             <div className="card mt-6 p-4">
               <div className="relative">

@@ -12,6 +12,8 @@ const THUMBNAILS = {
   PHP: 'https://images.unsplash.com/photo-1517694712202-14dd9538aa97?w=1200&auto=format&fit=crop',
   Python: 'https://images.unsplash.com/photo-1526374965328-7f61d4dc18c5?w=1200&auto=format&fit=crop',
   Node: 'https://images.unsplash.com/photo-1461749280684-dccba630e2f6?w=1200&auto=format&fit=crop',
+  SQL: 'https://images.unsplash.com/photo-1544383835-bda2bc66a55d?w=1200&auto=format&fit=crop',
+  MySQL: 'https://images.unsplash.com/photo-1558494949-ef010cbdcc31?w=1200&auto=format&fit=crop',
 };
 
 const MODULES = {
@@ -110,6 +112,40 @@ const SNIPPETS = {
     `// Capstone: enrolment service\nclass EnrolmentService {\n  constructor(db) {\n    this.db = db;\n  }\n  enrol(userId, courseId) {\n    return this.db.query('INSERT INTO enrollments (user_id, course_id) VALUES ($1, $2)', [userId, courseId]);\n  }\n}`,
     `// Capstone: input validation\nconst email = 'student@example.com';\nif (!email.includes('@')) throw new Error('Invalid email');\nconsole.log('Welcome', email);`,
   ],
+  SQL: [
+    `SELECT * FROM students;`,
+    `SELECT first_name, email FROM students WHERE is_active = true;`,
+    `SELECT COUNT(*) AS total FROM enrollments;`,
+    `SELECT first_name, score FROM students ORDER BY score DESC LIMIT 5;`,
+    `SELECT course_id, COUNT(*) AS learners FROM enrollments GROUP BY course_id;`,
+    `SELECT s.first_name, c.title FROM students s JOIN enrollments e ON s.id = e.student_id JOIN courses c ON c.id = e.course_id;`,
+    `UPDATE students SET last_seen_at = NOW() WHERE id = 1;`,
+    `DELETE FROM enrollments WHERE status = 'CANCELLED';`,
+    `EXPLAIN SELECT * FROM students WHERE email = 'student@example.com';`,
+    `CREATE INDEX idx_students_email ON students(email);`,
+    `BEGIN; UPDATE accounts SET balance = balance - 100 WHERE id = 1; COMMIT;`,
+    `CREATE VIEW active_students AS SELECT * FROM students WHERE is_active = true;`,
+    `GRANT SELECT ON courses TO readonly_user;`,
+    `SELECT * FROM courses ORDER BY created_at DESC LIMIT 10;`,
+    `WITH top_courses AS (SELECT course_id, COUNT(*) n FROM enrollments GROUP BY course_id) SELECT * FROM top_courses WHERE n > 10;`,
+  ],
+  MySQL: [
+    `SELECT * FROM students;`,
+    `SELECT first_name, email FROM students WHERE is_active = 1;`,
+    `SELECT COUNT(*) AS total FROM enrollments;`,
+    `SELECT first_name, score FROM students ORDER BY score DESC LIMIT 5;`,
+    `SELECT course_id, COUNT(*) AS learners FROM enrollments GROUP BY course_id;`,
+    `SELECT s.first_name, c.title FROM students s INNER JOIN enrollments e ON s.id = e.student_id INNER JOIN courses c ON c.id = e.course_id;`,
+    `UPDATE students SET last_seen_at = NOW() WHERE id = 1;`,
+    `DELETE FROM enrollments WHERE status = 'CANCELLED';`,
+    `EXPLAIN SELECT * FROM students WHERE email = 'student@example.com';`,
+    `CREATE INDEX idx_students_email ON students(email);`,
+    `START TRANSACTION; UPDATE accounts SET balance = balance - 100 WHERE id = 1; COMMIT;`,
+    `CREATE VIEW active_students AS SELECT * FROM students WHERE is_active = 1;`,
+    `GRANT SELECT ON tweacktech.courses TO 'readonly_user'@'localhost';`,
+    `SELECT * FROM courses ORDER BY created_at DESC LIMIT 10;`,
+    `WITH top_courses AS (SELECT course_id, COUNT(*) n FROM enrollments GROUP BY course_id) SELECT * FROM top_courses WHERE n > 10;`,
+  ],
 };
 
 const escapeHtml = (value) =>
@@ -120,34 +156,35 @@ const escapeHtml = (value) =>
     .replace(/"/g, '&quot;');
 
 function buildReading(courseTitle, moduleTitle, lessonTitle, language, snippet) {
-  const langLabel = { PHP: 'PHP', Python: 'Python', Node: 'Node.js' }[language] || language;
+  const langLabel = { PHP: 'PHP', Python: 'Python', Node: 'Node.js', SQL: 'SQL', MySQL: 'MySQL' }[language] || language;
   return `<h1>${escapeHtml(lessonTitle)}</h1>
-<p class="lead">In this lesson you will learn <strong>${escapeHtml(lessonTitle.toLowerCase())}</strong> as part of <em>${escapeHtml(moduleTitle)}</em> in ${escapeHtml(courseTitle)}. Every example uses ${langLabel} and can be copied into your own project.</p>
-<h2>Why this matters</h2>
-<p>Understanding this topic lets you make better decisions when you build real applications. You will see it again in authentication, APIs, data processing and deployment, so it is worth practising until it feels natural.</p>
-<h2>Key ideas</h2>
-<ul>
-  <li>Start with the simplest version that works, then improve it.</li>
-  <li>Name things clearly so the next developer (often you) can understand them.</li>
-  <li>Handle invalid input early instead of letting errors appear deep in the code.</li>
-  <li>Keep examples small enough to reason about, then combine them into features.</li>
-</ul>
-<h2>Worked example</h2>
+<p class="lead">${escapeHtml(lessonTitle)} is one step in <em>${escapeHtml(moduleTitle)}</em> in ${escapeHtml(courseTitle)}. This guide follows the same simple pattern used throughout the course: learn the idea, see a working example, then try it yourself.</p>
+<h2>In simple terms</h2>
+<p>Use ${langLabel} to solve one small problem at a time. Start with the shortest version that works, run it, and only then add more detail. If you cannot explain what a line does in one sentence, slow down and test it.</p>
+<h2>Example</h2>
 <pre><code>${escapeHtml(snippet)}</code></pre>
-<p>Type the example yourself rather than pasting it. Change the values, run it again, and predict the output before you execute it. That habit builds real debugging skill.</p>
-<h2>Practice task</h2>
+<p>The example above is complete and runnable. Copy it into your editor, run it, and compare the result with what you expected.</p>
+<h2>Try it yourself</h2>
 <ol>
-  <li>Recreate the example in your own editor.</li>
-  <li>Change at least two values and explain what changes in the output.</li>
-  <li>Break it deliberately, read the error message, then fix it.</li>
-  <li>Extend it with one small feature of your own.</li>
+  <li>Type the example exactly as written and run it.</li>
+  <li>Change one value or condition and predict the new result before running it.</li>
+  <li>Add one small feature of your own, such as a second item or an extra check.</li>
+  <li>Break the example on purpose, read the error, and fix it.</li>
 </ol>
-<h2>Key takeaways</h2>
+<h2>How it works</h2>
 <ul>
-  <li>${escapeHtml(lessonTitle)} is a practical tool, not a definition to memorise.</li>
-  <li>Small, readable examples are the fastest way to learn a new concept.</li>
-  <li>Ask questions in the class chat as soon as you get stuck.</li>
-</ul>`;
+  <li>Read the code from top to bottom and name what each line does.</li>
+  <li>Notice the inputs, the action, and the output.</li>
+  <li>Keep names clear so the next reader understands your intent.</li>
+</ul>
+<h2>Common mistakes</h2>
+<ul>
+  <li>Copying without running — always test the example.</li>
+  <li>Changing several things at once — change one thing and re-run.</li>
+  <li>Ignoring error messages — they tell you exactly where to look.</li>
+</ul>
+<h2>Ready for the module quiz?</h2>
+<p>When every lesson in this module is complete, take the module quiz in Study mode or My assignments. You need 6 out of 10 to unlock the next module, and you can retake it whenever you want.</p>`;
 }
 
 const tierCourses = [
@@ -160,6 +197,12 @@ const tierCourses = [
   ['Node.js Backend: Beginner', 'nodejs-backend-beginner', 'Beginner', 1, CourseType.FREE, 0, 'Node'],
   ['Node.js Backend: Intermediate', 'nodejs-backend-intermediate', 'Intermediate', 1, CourseType.PAID, 69.99, 'Node'],
   ['Node.js Backend: Advanced', 'nodejs-backend-advanced', 'Advanced', 1, CourseType.PAID, 119.99, 'Node'],
+  ['SQL: Beginner Fundamentals', 'sql-beginner', 'Beginner', 1, CourseType.FREE, 0, 'SQL'],
+  ['SQL: Intermediate Development', 'sql-intermediate', 'Intermediate', 1, CourseType.PAID, 54.99, 'SQL'],
+  ['SQL: Advanced Engineering', 'sql-advanced', 'Advanced', 1, CourseType.PAID, 94.99, 'SQL'],
+  ['MySQL: Beginner Fundamentals', 'mysql-beginner', 'Beginner', 1, CourseType.FREE, 0, 'MySQL'],
+  ['MySQL: Intermediate Development', 'mysql-intermediate', 'Intermediate', 1, CourseType.PAID, 59.99, 'MySQL'],
+  ['MySQL: Advanced Engineering', 'mysql-advanced', 'Advanced', 1, CourseType.PAID, 99.99, 'MySQL'],
 ];
 
 function blueprint(language, level) {
@@ -197,6 +240,8 @@ async function main() {
         description: `${language === 'Node' ? 'Node.js' : language} ${level.toLowerCase()} course with practical, example-driven lessons. Build real features, debug them and understand why each decision matters.`,
         shortDescription: `${title} — hands-on ${language} lessons with examples`,
         isPublished: true,
+        enrollmentLocked: true,
+        enrollmentLockedMessage: 'Enrolment is currently closed while we prepare the courses. Please check back soon.',
         categoryId: backendCategory?.id || null,
         instructorId: instructor.id,
         requirements: JSON.stringify([
@@ -223,6 +268,8 @@ async function main() {
         shortDescription: `${title} — hands-on ${language} lessons with examples`,
         thumbnail: THUMBNAILS[language],
         isPublished: true,
+        enrollmentLocked: true,
+        enrollmentLockedMessage: 'Enrolment is currently closed while we prepare the courses. Please check back soon.',
         categoryId: backendCategory?.id || null,
         instructorId: instructor.id,
         requirements: JSON.stringify(['A computer with internet access', 'A code editor and terminal']),
@@ -267,7 +314,6 @@ async function main() {
   // Enrich existing generic lesson guides for every other course (frontend,
   // backend, data, DevOps, design, etc.) without touching custom content.
   const allLessons = await prisma.lesson.findMany({
-    where: { OR: [{ readingContent: null }, { readingContent: { startsWith: 'LESSON OVERVIEW' } }] },
     include: { module: { include: { course: { select: { title: true } } } } },
   });
   for (const lesson of allLessons) {

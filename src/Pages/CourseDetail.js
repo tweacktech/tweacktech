@@ -484,7 +484,7 @@ const CourseDetail = () => {
                     <PlayCircle className="h-5 w-5" /> Continue learning
                   </Link>
                 )
-              ) : (
+              ) : course.enrollmentLocked ? null : (
                 <button
                   type="button"
                   onClick={handleEnroll}

@@ -264,20 +264,105 @@ export class AssignmentsService {
     const courseIds = enrollments.map((e) => e.courseId);
     if (courseIds.length === 0) return [];
 
-    const assignments = await this.prisma.assignment.findMany({
-      where: { courseId: { in: courseIds }, isPublished: true },
-      orderBy: [{ dueAt: 'asc' }, { createdAt: 'desc' }],
-      include: {
-        course: { select: { id: true, title: true, thumbnail: true } },
-        submissions: { where: { userId } },
-        _count: { select: { questions: true } },
-      },
-    });
+    const [assignments, modules, quizzes, submissions, progress] = await Promise.all([
+      this.prisma.assignment.findMany({
+        where: { courseId: { in: courseIds }, isPublished: true },
+        orderBy: [{ dueAt: 'asc' }, { createdAt: 'desc' }],
+        include: {
+          course: { select: { id: true, title: true, thumbnail: true } },
+          module: { select: { id: true, title: true, order: true } },
+          submissions: { where: { userId } },
+          _count: { select: { questions: true } },
+        },
+      }),
+      this.prisma.module.findMany({
+        where: { courseId: { in: courseIds }, isPublished: true },
+        orderBy: { order: 'asc' },
+        select: {
+          id: true,
+          courseId: true,
+          order: true,
+          lessons: { where: { isPublished: true }, select: { id: true } },
+        },
+      }),
+      this.prisma.assignment.findMany({
+        where: {
+          courseId: { in: courseIds },
+          type: 'QUIZ',
+          isPublished: true,
+          moduleId: { not: null },
+        },
+        select: { id: true, courseId: true, moduleId: true, passScore: true },
+      }),
+      this.prisma.assignmentSubmission.findMany({
+        where: {
+          userId,
+          assignmentId: {
+            in: (await this.prisma.assignment.findMany({
+              where: { courseId: { in: courseIds }, type: 'QUIZ', isPublished: true },
+              select: { id: true },
+            })).map((row) => row.id),
+          },
+        },
+        select: { assignmentId: true, score: true },
+      }),
+      this.prisma.lessonProgress.findMany({
+        where: { userId, isCompleted: true },
+        select: { lessonId: true },
+      }),
+    ]);
 
-    return assignments.map((a) => ({
-      ...a,
-      submission: a.submissions[0] || null,
-    }));
+    const completedLessons = new Set(progress.map((row) => row.lessonId));
+    const quizByModule = new Map(
+      quizzes
+        .filter((quiz) => quiz.moduleId)
+        .map((quiz) => [quiz.moduleId as string, quiz]),
+    );
+    const submissionByQuiz = new Map(
+      submissions.map((row) => [row.assignmentId, row]),
+    );
+
+    return assignments.map((a) => {
+      let locked = false;
+      let lockReason: string | null = null;
+
+      if (a.type === 'QUIZ' && a.moduleId) {
+        const currentModule = modules.find((module) => module.id === a.moduleId);
+        const previousModule = currentModule
+          ? modules.find(
+              (module) =>
+                module.courseId === a.courseId && module.order === currentModule.order - 1,
+            )
+          : undefined;
+
+        if (previousModule) {
+          const previousQuiz = quizByModule.get(previousModule.id);
+          const previousSubmission = previousQuiz
+            ? submissionByQuiz.get(previousQuiz.id)
+            : undefined;
+          const quizPassed =
+            previousQuiz &&
+            previousSubmission &&
+            typeof previousSubmission.score === 'number' &&
+            previousSubmission.score >= Number(previousQuiz.passScore || 6);
+          const allLessonsDone =
+            previousModule.lessons.length > 0 &&
+            previousModule.lessons.every((lesson) => completedLessons.has(lesson.id));
+
+          locked = previousQuiz ? !(quizPassed && allLessonsDone) : !allLessonsDone;
+          lockReason = locked
+            ? `Complete all lessons in ${previousModule.order - 1 > 0 ? 'the previous module' : 'the course'}${previousQuiz ? ' and pass its quiz' : ''} to unlock this quiz.`
+            : null;
+        }
+      }
+
+      return {
+        ...a,
+        submission: a.submissions[0] || null,
+        locked,
+        lockReason,
+      };
+    });
   }
 
   async findById(id: string, user: any) {

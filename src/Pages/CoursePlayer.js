@@ -25,6 +25,7 @@ import {
 import Navbar from '../Component/Navbar';
 import Footer from '../Component/Footer';
 import { useAuth } from '../AuthContext';
+import QuizRunner from '../Component/QuizRunner';
 
 const unwrap = (res) => (res?.data && res.data.data !== undefined ? res.data.data : res?.data);
 
@@ -188,6 +189,7 @@ const LessonContent = ({ lesson }) => {
 const StudyMode = ({
   course,
   courseId,
+  api,
   lesson,
   reading,
   enrollment,
@@ -201,6 +203,9 @@ const StudyMode = ({
   prevLesson,
   nextLesson,
   nextLocked,
+  moduleQuizId,
+  moduleQuizPassed,
+  onQuizSubmitted,
   progressPct,
   completedCount,
   totalLessons,
@@ -208,6 +213,7 @@ const StudyMode = ({
 }) => {
   const [seconds, setSeconds] = useState(25 * 60);
   const [speaking, setSpeaking] = useState(false);
+  const [quizOpen, setQuizOpen] = useState(false);
   const [running, setRunning] = useState(true);
   const [notes, setNotes] = useState(
     () => localStorage.getItem(`tweack-notes-${lesson?.id}`) || '',
@@ -398,6 +404,31 @@ const StudyMode = ({
           </div>
 
           <div className="card p-5">
+            <div className="flex items-center justify-between gap-2">
+              <h2 className="flex items-center gap-2 text-sm font-bold text-slate-900 dark:text-white">
+                <Award className="h-4 w-4 text-red-600" /> Module quiz
+              </h2>
+              {moduleQuizPassed && <span className="badge-success">Passed</span>}
+            </div>
+            <p className="mt-2 text-xs leading-relaxed text-slate-500 dark:text-slate-400">
+              {moduleQuizPassed
+                ? 'You passed this module. Retake any time to improve your score.'
+                : 'Pass this quiz with 6/10 or higher to unlock the next module.'}
+            </p>
+            {moduleQuizId ? (
+              <button
+                type="button"
+                onClick={() => setQuizOpen(true)}
+                className="btn-primary mt-3 w-full !py-2 text-xs"
+              >
+                {moduleQuizPassed ? 'Retake quiz' : 'Take quiz'} →
+              </button>
+            ) : (
+              <p className="mt-3 text-xs text-slate-400">No quiz is configured for this module.</p>
+            )}
+          </div>
+
+          <div className="card p-5">
             <h2 className="flex items-center gap-2 text-sm font-bold text-slate-900 dark:text-white">
               <Timer className="h-4 w-4 text-red-600" /> Focus timer
             </h2>
@@ -442,6 +473,17 @@ const StudyMode = ({
           )}
         </aside>
       </main>
+
+      {quizOpen && moduleQuizId && (
+        <QuizRunner
+          api={api}
+          assignmentId={moduleQuizId}
+          onClose={() => setQuizOpen(false)}
+          onSubmitted={async () => {
+            if (onQuizSubmitted) await onQuizSubmitted();
+          }}
+        />
+      )}
     </div>
   );
 };
@@ -519,6 +561,17 @@ const CoursePlayer = () => {
     load();
   }, [load]);
 
+  const refreshAccess = useCallback(async () => {
+    try {
+      const res = await api.get(`/courses/${courseId}/access`);
+      const data = unwrap(res);
+      if (data) setAccess(data);
+      return data;
+    } catch (error) {
+      return null;
+    }
+  }, [api, courseId]);
+
   const currentIndex = useMemo(
     () => lessons.findIndex((lesson) => lesson.id === lessonId),
     [lessons, lessonId]
@@ -528,6 +581,9 @@ const CoursePlayer = () => {
   const prevLesson = lessons[currentIndex - 1] || null;
   const nextAccess = access?.lessons?.find((item) => item.id === nextLesson?.id);
   const nextLocked = Boolean(nextLesson && nextAccess && !nextAccess.isUnlocked);
+  const currentModule = access?.modules?.find((item) => item.id === currentLesson?.moduleId);
+  const moduleQuizId = currentModule?.quizId || null;
+  const moduleQuizPassed = Boolean(currentModule?.quizPassed);
 
   const enrolled = !!enrollment || canManage;
   const accessLesson = access?.lessons?.find((item) => item.id === currentLesson?.id);
@@ -658,6 +714,7 @@ const CoursePlayer = () => {
       <StudyMode
         course={course}
         courseId={courseId}
+        api={api}
         lesson={currentLesson}
         reading={currentLesson.readingContent}
         enrollment={enrollment}
@@ -671,6 +728,9 @@ const CoursePlayer = () => {
         prevLesson={prevLesson}
         nextLesson={nextLesson}
         nextLocked={nextLocked}
+        moduleQuizId={moduleQuizId}
+        moduleQuizPassed={moduleQuizPassed}
+        onQuizSubmitted={refreshAccess}
         progressPct={progressPct}
         completedCount={completed.size}
         totalLessons={lessons.length}
