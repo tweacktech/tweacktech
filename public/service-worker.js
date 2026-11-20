@@ -5,11 +5,7 @@
    - Offline fallback page for navigations
    ========================================================================== */
 
-<<<<<<< HEAD
-const VERSION = 'v29';
-=======
-const VERSION = 'v17';
->>>>>>> 213fb2e (Add SQL and MySQL support to course tiers, enhance assignment retrieval with module and quiz data, lock course enrollment, and update lesson reading format)
+const VERSION = 'v30';
 const STATIC_CACHE = `tweacktech-static-${VERSION}`;
 const RUNTIME_CACHE = `tweacktech-runtime-${VERSION}`;
 const API_CACHE = `tweacktech-api-${VERSION}`;

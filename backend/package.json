@@ -25,7 +25,8 @@
     "seed:quizzes": "node scripts/seed-module-quizzes.js",
     "upgrade:quizzes": "node scripts/upgrade-module-quizzes.js",
     "upgrade:quiz-questions": "node scripts/upgrade-quiz-questions.js",
-    "upgrade:lessons": "node scripts/upgrade-lesson-content.js"
+    "upgrade:lessons": "node scripts/upgrade-lesson-content.js",
+    "unlock:free-courses": "node scripts/unlock-free-courses.js"
   },
   "dependencies": {
     "@nestjs/common": "^10.4.0",

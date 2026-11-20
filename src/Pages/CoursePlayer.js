@@ -430,7 +430,7 @@ const StudyMode = ({
             <p className="mt-2 text-xs leading-relaxed text-slate-500 dark:text-slate-400">
               {moduleQuizPassed
                 ? 'You passed this module. Retake any time to improve your score.'
-                : 'Pass this quiz with 6/10 or higher to unlock the next module.'}
+                : 'Pass this quiz with 80% (8/10) or higher to unlock the next module.'}
             </p>
             {moduleQuizId ? (
               <button

@@ -156,7 +156,6 @@ const escapeHtml = (value) =>
     .replace(/>/g, '&gt;')
     .replace(/"/g, '&quot;');
 
-<<<<<<< HEAD
 function buildReading(courseTitle, moduleTitle, lessonTitle, language) {
   return buildLessonHtml({
     title: lessonTitle,
@@ -164,38 +163,6 @@ function buildReading(courseTitle, moduleTitle, lessonTitle, language) {
     moduleTitle,
     language,
   });
-=======
-function buildReading(courseTitle, moduleTitle, lessonTitle, language, snippet) {
-  const langLabel = { PHP: 'PHP', Python: 'Python', Node: 'Node.js', SQL: 'SQL', MySQL: 'MySQL' }[language] || language;
-  return `<h1>${escapeHtml(lessonTitle)}</h1>
-<p class="lead">${escapeHtml(lessonTitle)} is one step in <em>${escapeHtml(moduleTitle)}</em> in ${escapeHtml(courseTitle)}. This guide follows the same simple pattern used throughout the course: learn the idea, see a working example, then try it yourself.</p>
-<h2>In simple terms</h2>
-<p>Use ${langLabel} to solve one small problem at a time. Start with the shortest version that works, run it, and only then add more detail. If you cannot explain what a line does in one sentence, slow down and test it.</p>
-<h2>Example</h2>
-<pre><code>${escapeHtml(snippet)}</code></pre>
-<p>The example above is complete and runnable. Copy it into your editor, run it, and compare the result with what you expected.</p>
-<h2>Try it yourself</h2>
-<ol>
-  <li>Type the example exactly as written and run it.</li>
-  <li>Change one value or condition and predict the new result before running it.</li>
-  <li>Add one small feature of your own, such as a second item or an extra check.</li>
-  <li>Break the example on purpose, read the error, and fix it.</li>
-</ol>
-<h2>How it works</h2>
-<ul>
-  <li>Read the code from top to bottom and name what each line does.</li>
-  <li>Notice the inputs, the action, and the output.</li>
-  <li>Keep names clear so the next reader understands your intent.</li>
-</ul>
-<h2>Common mistakes</h2>
-<ul>
-  <li>Copying without running — always test the example.</li>
-  <li>Changing several things at once — change one thing and re-run.</li>
-  <li>Ignoring error messages — they tell you exactly where to look.</li>
-</ul>
-<h2>Ready for the module quiz?</h2>
-<p>When every lesson in this module is complete, take the module quiz in Study mode or My assignments. You need 6 out of 10 to unlock the next module, and you can retake it whenever you want.</p>`;
->>>>>>> 213fb2e (Add SQL and MySQL support to course tiers, enhance assignment retrieval with module and quiz data, lock course enrollment, and update lesson reading format)
 }
 
 const tierCourses = [
@@ -251,8 +218,8 @@ async function main() {
         description: `${language === 'Node' ? 'Node.js' : language} ${level.toLowerCase()} course with practical, example-driven lessons. Build real features, debug them and understand why each decision matters.`,
         shortDescription: `${title} — hands-on ${language} lessons with examples`,
         isPublished: true,
-        enrollmentLocked: true,
-        enrollmentLockedMessage: 'Enrolment is currently closed while we prepare the courses. Please check back soon.',
+        enrollmentLocked: type !== CourseType.FREE,
+        enrollmentLockedMessage: 'Enrolment for this course is not currently available.',
         categoryId: backendCategory?.id || null,
         instructorId: instructor.id,
         requirements: JSON.stringify([
@@ -279,8 +246,8 @@ async function main() {
         shortDescription: `${title} — hands-on ${language} lessons with examples`,
         thumbnail: THUMBNAILS[language],
         isPublished: true,
-        enrollmentLocked: true,
-        enrollmentLockedMessage: 'Enrolment is currently closed while we prepare the courses. Please check back soon.',
+        enrollmentLocked: type !== CourseType.FREE,
+        enrollmentLockedMessage: 'Enrolment for this course is not currently available.',
         categoryId: backendCategory?.id || null,
         instructorId: instructor.id,
         requirements: JSON.stringify(['A computer with internet access', 'A code editor and terminal']),
