@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <link rel="icon" href="%PUBLIC_URL%/favicon.ico" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="theme-color" content="#dc2626" />
+    <meta name="color-scheme" content="light dark" />
+
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+    <meta name="apple-mobile-web-app-title" content="TweackTech" />
+    <meta name="mobile-web-app-capable" content="yes" />
+
+    <meta
+      name="description"
+      content="TweackTech (tech tweack) is a tech learning platform and talent hub founded by Meyor Dari. Learn coding, design and DevOps from expert mentors, earn certificates and get hired."
+    />
+    <meta
+      name="keywords"
+      content="tech tweack, TweackTech, Tweack tech, tweack, Meyor Dari, Meyor, Dari, learning management system, tech skills, programming courses, talent hub, developer jobs, certifications, React, Node.js, Python, DevOps, online learning, tech mentorship"
+    />
+    <meta name="author" content="Meyor Dari — TweackTech" />
+    <meta name="creator" content="Meyor Dari" />
+    <meta name="publisher" content="TweackTech" />
+    <meta name="application-name" content="TweackTech" />
+    <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1" />
+    <meta name="googlebot" content="index, follow, max-image-preview:large" />
+    <meta name="format-detection" content="telephone=no" />
+    <meta name="robots" content="index, follow, max-image-preview:large" />
+    <link rel="canonical" href="https://tweacktech.vercel.app/" />
+
+    <meta property="og:site_name" content="TweackTech" />
+    <meta property="og:title" content="TweackTech - Learn Tech Skills & Get Hired" />
+    <meta
+      property="og:description"
+      content="An LMS for tech skill knowledge and a talent hub for programmers. Learn, get certified, and connect with companies hiring developers."
+    />
+    <meta property="og:image" content="https://tweacktech.vercel.app/icon-512.png" />
+    <meta property="og:image:width" content="512" />
+    <meta property="og:image:height" content="512" />
+    <meta property="og:url" content="https://tweacktech.vercel.app/" />
+    <meta property="og:type" content="website" />
+    <meta property="og:locale" content="en_US" />
+    <meta property="og:image:alt" content="TweackTech — learn tech skills from expert mentors" />
+    <meta property="article:author" content="Meyor Dari — TweackTech" />
+
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:site" content="@tweacktech" />
+    <meta name="twitter:creator" content="@tweacktech" />
+    <meta name="twitter:title" content="TweackTech - Learn Tech Skills & Get Hired" />
+    <meta
+      name="twitter:description"
+      content="An LMS for tech skill knowledge and a talent hub for programmers."
+    />
+    <meta name="twitter:image" content="https://tweacktech.vercel.app/icon-512.png" />
+
+    <link rel="apple-touch-icon" href="%PUBLIC_URL%/icon-192.png" />
+    <link rel="icon" type="image/svg+xml" href="%PUBLIC_URL%/icon.svg" />
+    <link rel="manifest" href="%PUBLIC_URL%/manifest.json" />
+    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-5937965903229328"
+    crossorigin="anonymous"></script>
+    <meta name="google-adsense-account" content="ca-pub-5937965903229328">
+    <!-- Apply the saved theme before React paints to avoid a flash of the wrong mode. -->
+     
+    <script>
+      (function () {
+        try {
+          var stored = localStorage.getItem('tweacktech-theme') || 'system';
+          var dark =
+            stored === 'dark' ||
+            (stored === 'system' &&
+              window.matchMedia &&
+              window.matchMedia('(prefers-color-scheme: dark)').matches);
+          var root = document.documentElement;
+          root.classList.remove('light', 'dark');
+          root.classList.add(dark ? 'dark' : 'light');
+          root.setAttribute('data-theme', dark ? 'dark' : 'light');
+          root.style.colorScheme = dark ? 'dark' : 'light';
+        } catch (e) {}
+      })();
+    </script>
+
+    <script id="tweacktech-ld" type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@graph": [
+          {
+            "@type": "Organization",
+            "@id": "https://tweacktech.vercel.app/#organization",
+            "name": "TweackTech",
+            "alternateName": "tech tweack",
+            "url": "https://tweacktech.vercel.app",
+            "logo": "https://tweacktech.vercel.app/icon-512.png",
+            "founder": { "@type": "Person", "name": "Meyor Dari" }
+          },
+          {
+            "@type": "WebSite",
+            "@id": "https://tweacktech.vercel.app/#website",
+            "url": "https://tweacktech.vercel.app",
+            "name": "TweackTech",
+            "publisher": { "@id": "https://tweacktech.vercel.app/#organization" },
+            "potentialAction": {
+              "@type": "SearchAction",
+              "target": "https://tweacktech.vercel.app/courses?search={search_term_string}",
+              "query-input": "required name=search_term_string"
+            }
+          }
+        ]
+      }
+    </script>
+
+    <title>TweackTech - Learn Tech Skills & Get Hired</title>
+  </head>
+  <body>
+    <noscript>You need to enable JavaScript to run this app.</noscript>
+    <div id="root"></div>
+
+    <!--
+      Google AdSense: after your site is approved, paste your AdSense script
+      here. Keep the publisher ID only in this file or an environment variable;
+      never commit private credentials.
+    -->
+
+    <script>
+      // Only enable the service worker on a real deployment. During local
+      // development it caches webpack chunks and serves stale code after edits.
+      var localHosts = ['localhost', '127.0.0.1', '0.0.0.0', '[::1]'];
+      var isLocal = localHosts.indexOf(window.location.hostname) !== -1;
+
+      if ('serviceWorker' in navigator) {
+        if (isLocal) {
+          // Clean up any worker registered by an earlier run.
+          navigator.serviceWorker.getRegistrations().then(function (regs) {
+            regs.forEach(function (reg) {
+              reg.unregister();
+            });
+          });
+        } else {
+          window.addEventListener('load', function () {
+            navigator.serviceWorker
+              .register('/service-worker.js')
+              .catch(function (error) {
+                console.log('Service worker registration failed:', error);
+              });
+          });
+        }
+      }
+
+      window.addEventListener('beforeinstallprompt', function (event) {
+        event.preventDefault();
+        window.deferredPrompt = event;
+        window.dispatchEvent(new CustomEvent('pwa-install-available'));
+      });
+    </script>
+  </body>
+</html>
