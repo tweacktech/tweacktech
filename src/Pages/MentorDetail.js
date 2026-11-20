@@ -308,7 +308,7 @@ const MentorDetail = () => {
               </div>
             ) : (
               <div className="px-6 py-10 text-center text-sm text-slate-500 dark:text-slate-400">
-                New courses from {user.firstName} are coming soon.
+                Browse the full course catalogue for more lessons from our mentors.
               </div>
             )}
           </section>

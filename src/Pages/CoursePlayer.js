@@ -421,6 +421,31 @@ const StudyMode = ({
           )}
 
           <div className="card p-5">
+            <div className="flex items-center justify-between gap-2">
+              <h2 className="flex items-center gap-2 text-sm font-bold text-slate-900 dark:text-white">
+                <Award className="h-4 w-4 text-red-600" /> Module quiz
+              </h2>
+              {moduleQuizPassed && <span className="badge-success">Passed</span>}
+            </div>
+            <p className="mt-2 text-xs leading-relaxed text-slate-500 dark:text-slate-400">
+              {moduleQuizPassed
+                ? 'You passed this module. Retake any time to improve your score.'
+                : 'Pass this quiz with 6/10 or higher to unlock the next module.'}
+            </p>
+            {moduleQuizId ? (
+              <button
+                type="button"
+                onClick={() => setQuizOpen(true)}
+                className="btn-primary mt-3 w-full !py-2 text-xs"
+              >
+                {moduleQuizPassed ? 'Retake quiz' : 'Take quiz'} →
+              </button>
+            ) : (
+              <p className="mt-3 text-xs text-slate-400">No quiz is configured for this module.</p>
+            )}
+          </div>
+
+          <div className="card p-5">
             <h2 className="flex items-center gap-2 text-sm font-bold text-slate-900 dark:text-white">
               <Timer className="h-4 w-4 text-red-600" /> Focus timer
             </h2>

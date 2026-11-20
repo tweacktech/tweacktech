@@ -331,6 +331,25 @@ const buildRoutes = async () => {
   return routes;
 };
 
+const writeSitemap = (routes) => {
+  const staticPaths = [
+    '/', '/courses', '/mentors', '/talent', '/jobs', '/blog', '/about',
+    '/contact', '/support', '/faq', '/privacy', '/terms', '/cookies',
+  ];
+  const paths = [...new Set([...staticPaths, ...routes.map((route) => route.path)])];
+  const today = new Date().toISOString().slice(0, 10);
+  const xml = `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${paths
+    .map(
+      (routePath) =>
+        `  <url><loc>${SITE_URL}${routePath}</loc><lastmod>${today}</lastmod><changefreq>weekly</changefreq><priority>${
+          routePath === '/' ? '1.0' : '0.7'
+        }</priority></url>`,
+    )
+    .join('\n')}\n</urlset>\n`;
+  fs.writeFileSync(path.join(BUILD, 'sitemap.xml'), xml);
+  console.log(`[prerender] Sitemap includes ${paths.length} URLs.`);
+};
+
 const main = async () => {
   if (!fs.existsSync(INDEX)) {
     console.warn('[prerender] build/index.html not found — skipping');
@@ -349,6 +368,7 @@ const main = async () => {
       console.warn(`[prerender] Could not write ${routePath}: ${error.message}`);
     }
   });
+  writeSitemap(routes);
   console.log(`[prerender] Wrote ${written} shareable page${written === 1 ? '' : 's'} with custom metadata.`);
 };
 

@@ -139,7 +139,7 @@ const CourseDetail = () => {
     if (course?.enrollmentLocked) {
       setEnrollError(
         course.enrollmentLockedMessage ||
-          'Enrolment for this course is temporarily closed.',
+          'Enrolment for this course is not currently available.',
       );
       return;
     }
@@ -436,7 +436,7 @@ const CourseDetail = () => {
               {course.enrollmentLocked && (
                 <p className="mt-2 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs font-medium text-amber-800 dark:border-amber-900/60 dark:bg-amber-950/40 dark:text-amber-300">
                   {course.enrollmentLockedMessage ||
-                    'Enrolment is temporarily closed for this course.'}
+                    'Enrolment is not currently available for this course.'}
                 </p>
               )}
               <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">

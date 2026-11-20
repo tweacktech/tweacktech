@@ -249,7 +249,7 @@ const MentorsPage = () => {
             <div className="card mt-8 flex flex-col items-center gap-3 p-12 text-center">
               <Users className="h-9 w-9 text-slate-400" />
               <h3 className="text-base font-semibold text-slate-900 dark:text-white">
-                {mentors.length ? 'No mentors match that search' : 'Mentor profiles are coming soon'}
+                {mentors.length ? 'No mentors match that search' : 'No mentor profiles yet'}
               </h3>
               <p className="max-w-md text-sm text-slate-500 dark:text-slate-400">
                 {mentors.length

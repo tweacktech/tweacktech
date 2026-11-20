@@ -389,7 +389,7 @@ const JobDetail = () => {
                         Applications closed
                       </h2>
                       <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
-                        The hiring team is not accepting applications right now. Check back soon.
+                        This role is no longer accepting applications. Explore other open roles on the jobs board.
                       </p>
                     </div>
                   ) : (
