@@ -127,10 +127,10 @@ async function main() {
     where: { id: assignmentId },
     data: {
       maxScore: 10,
-      passScore: 6,
+      passScore: 8,
       autoGrade: true,
       isPublished: true,
-      description: 'Ten auto-marked questions on React fundamentals. Pass mark: 6/10.',
+      description: 'Ten auto-marked questions on React fundamentals. Pass mark: 8/10 (80%).',
       questions: {
         deleteMany: {},
         create: QUESTIONS.map((question, index) => ({

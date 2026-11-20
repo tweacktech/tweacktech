@@ -65,25 +65,54 @@ async function main() {
       return {
         prompt: `Which topic is covered in the lesson “${title}”?`,
         type: QuizQuestionType.SINGLE_CHOICE,
-        points: 2,
+        points: 1,
         order: index + 1,
         explanation: `Review the lesson “${title}” and its worked example before retaking the quiz.`,
         options: shuffleWithCorrectFirstAs(title, distractors, index % 4),
       };
     });
 
-    questions.push({
-      prompt: 'What should you do first when a worked example does not make sense?',
-      type: QuizQuestionType.SINGLE_CHOICE,
-      points: 2,
-      order: 5,
-      explanation: 'Re-run the example, change one value, and ask in the class chat if you are still stuck.',
-      options: [
-        { text: 'Skip the rest of the module', isCorrect: false },
-        { text: 'Re-run the example, change one value, then ask in the class chat', isCorrect: true },
-        { text: 'Memorise the answer without testing it', isCorrect: false },
-        { text: 'Close the course and try another subject', isCorrect: false },
-      ],
+    const extras = [
+      {
+        prompt: 'What should you do first when a worked example does not make sense?',
+        correct: 'Re-run the example, change one value, then ask in the class chat',
+        wrong: ['Skip the rest of the module', 'Memorise the answer without testing it', 'Close the course and try another subject'],
+      },
+      {
+        prompt: 'How many points do you need to pass a module quiz?',
+        correct: '8 out of 10 (80%)',
+        wrong: ['4 out of 10', '6 out of 10', '10 out of 10'],
+      },
+      {
+        prompt: 'What happens after you pass a module quiz?',
+        correct: 'The next module’s lessons unlock',
+        wrong: ['The course is deleted', 'Nothing changes', 'You are logged out'],
+      },
+      {
+        prompt: 'Can you retake a module quiz?',
+        correct: 'Yes, you can retake it any time',
+        wrong: ['No, one attempt only', 'Only after one year', 'Only an admin can allow it'],
+      },
+      {
+        prompt: 'What should you finish before taking the module quiz?',
+        correct: 'Every lesson in the current module',
+        wrong: ['Only the first lesson', 'Only the video lessons', 'Nothing, quizzes are independent'],
+      },
+    ];
+
+    extras.forEach((extra, index) => {
+      questions.push({
+        prompt: extra.prompt,
+        type: QuizQuestionType.SINGLE_CHOICE,
+        points: 1,
+        order: questions.length + 1,
+        explanation: extra.correct,
+        options: shuffleWithCorrectFirstAs(
+          extra.correct,
+          extra.wrong,
+          (index + 1) % 4,
+        ),
+      });
     });
 
     const assignment = await prisma.assignment.create({
@@ -91,12 +120,12 @@ async function main() {
         title: `Module ${module.order} quiz: ${module.title.replace(/^Module \d+: /, '')}`,
         description: `Auto-graded check for ${module.course.title} — ${module.title}.`,
         instructions:
-          'Answer all five questions. You need at least 6 out of 10 points to unlock the next module.',
+          'Answer all 10 questions. You need at least 80% (8 out of 10) to unlock the next module.',
         type: 'QUIZ',
         isPublished: true,
         autoGrade: true,
         maxScore: 10,
-        passScore: 6,
+        passScore: 8,
         courseId: module.course.id,
         moduleId: module.id,
         createdById: author.id,

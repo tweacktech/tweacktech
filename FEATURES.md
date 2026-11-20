@@ -369,3 +369,9 @@ Seeded NGN/GHS bank accounts are under **Admin → Payments → Bank accounts**.
   module's quiz is passed. Courses without module quizzes remain ungated.
 - Study mode renders lesson guides as formatted HTML, includes **Read aloud** (browser
   text-to-speech), and respects the module gate on **Next lesson**.
+
+### Quiz standard
+Every module quiz has exactly **10 single-choice questions** (1 point each), a
+**10-point score**, and an **80% pass mark (8/10)**. The next module stays locked until
+the previous module's lessons are complete and its quiz is passed at 80% or higher.
+Run `npm run upgrade:quizzes` in `backend/` to enforce this on an existing database.

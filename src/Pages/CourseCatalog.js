@@ -4,6 +4,7 @@ import { Award, BookOpen, Filter, Layers, Search, Sparkles, Users } from 'lucide
 import Navbar from '../Component/Navbar';
 import Footer from '../Component/Footer';
 import { useAuth } from '../AuthContext';
+import Pagination from '../Component/Pagination';
 import { useCurrency } from '../CurrencyContext';
 import { effectivePrice, isDiscountActive } from '../lib/coursePrice';
 
@@ -108,6 +109,8 @@ const CourseCard = ({ course }) => {
 const CourseCatalog = () => {
   const { api } = useAuth();
   const [courses, setCourses] = useState([]);
+  const [page, setPage] = useState(1);
+  const [meta, setMeta] = useState(null);
   const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -134,7 +137,7 @@ const CourseCatalog = () => {
     setLoading(true);
     setError('');
     try {
-      const params = new URLSearchParams({ limit: '60' });
+      const params = new URLSearchParams({ page: String(page), limit: '12' });
       if (searchQuery) params.set('search', searchQuery);
       if (selectedCategory !== 'All') params.set('categoryId', selectedCategory);
       if (selectedLevel !== 'All') params.set('level', selectedLevel);
@@ -143,13 +146,14 @@ const CourseCatalog = () => {
       const res = await api.get(`/courses?${params.toString()}`);
       const payload = unwrap(res);
       setCourses(payload?.data || []);
+      setMeta(payload?.meta || null);
     } catch (err) {
       setError(err.response?.data?.message || 'Unable to load courses.');
       setCourses([]);
     } finally {
       setLoading(false);
     }
-  }, [api, searchQuery, selectedCategory, selectedLevel, selectedType]);
+  }, [api, searchQuery, selectedCategory, selectedLevel, selectedType, page]);
 
   useEffect(() => {
     const timer = setTimeout(load, 250);
@@ -317,7 +321,9 @@ const CourseCatalog = () => {
             Create free account
           </Link>
         </div>
-      </main>
+        <Pagination meta={meta} onPage={setPage} />
+
+    </main>
 
       <Footer />
     </div>

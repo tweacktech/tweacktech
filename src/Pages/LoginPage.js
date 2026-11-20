@@ -5,14 +5,17 @@ import Navbar from '../Component/Navbar';
 import Footer from '../Component/Footer';
 import { useAuth } from '../AuthContext';
 import { getErrorMessage } from '../lib/apiError';
+import GoogleSignIn from '../Component/GoogleSignIn';
 
 const LoginPage = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
+  const [remember, setRemember] = useState(true);
+  const [googleError, setGoogleError] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
-  const { login, sessionNotice, clearSessionNotice } = useAuth();
+  const { login, googleLogin, sessionNotice, clearSessionNotice } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -21,11 +24,25 @@ const LoginPage = () => {
     setError('');
     setLoading(true);
     try {
-      await login(email.trim().toLowerCase(), password);
+      await login(email.trim().toLowerCase(), password, remember);
       const destination = location.state?.from || '/dashboard';
       navigate(destination, { replace: true });
     } catch (err) {
       setError(getErrorMessage(err, 'Unable to sign in. Check your email and password.'));
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleGoogle = async (idToken) => {
+    setGoogleError('');
+    setLoading(true);
+    try {
+      const account = await googleLogin(idToken);
+      const destination = location.state?.from || (account.role === 'STUDENT' ? '/dashboard' : '/admin');
+      navigate(destination, { replace: true });
+    } catch (err) {
+      setGoogleError(getErrorMessage(err, 'Google sign-in failed. Please try again.'));
     } finally {
       setLoading(false);
     }
@@ -166,6 +183,16 @@ const LoginPage = () => {
                 </div>
               </div>
 
+              <label className="flex cursor-pointer items-center gap-2 text-sm text-slate-600 dark:text-slate-300">
+                <input
+                  type="checkbox"
+                  checked={remember}
+                  onChange={(e) => setRemember(e.target.checked)}
+                  className="h-4 w-4 rounded border-slate-300 text-red-600"
+                />
+                Remember me on this device
+              </label>
+
               <button type="submit" disabled={loading} className="btn-primary w-full !py-3">
                 {loading ? (
                   <>
@@ -177,6 +204,14 @@ const LoginPage = () => {
                 )}
               </button>
             </form>
+
+            {googleError && (
+              <p className="mt-3 rounded-xl border border-red-200 bg-red-50 px-3 py-2 text-xs text-red-700 dark:border-red-900/60 dark:bg-red-950/40 dark:text-red-300">
+                {googleError}
+              </p>
+            )}
+
+            <GoogleSignIn onSuccess={handleGoogle} />
 
             {/* <div className="mt-6 border-t border-slate-200 dark:border-slate-800 pt-5">
               <p className="mb-2 text-center text-xs font-medium uppercase tracking-wider text-slate-400">

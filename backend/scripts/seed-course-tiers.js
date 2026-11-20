@@ -184,7 +184,7 @@ function buildReading(courseTitle, moduleTitle, lessonTitle, language, snippet) 
   <li>Ignoring error messages — they tell you exactly where to look.</li>
 </ul>
 <h2>Ready for the module quiz?</h2>
-<p>When every lesson in this module is complete, take the module quiz in Study mode or My assignments. You need 6 out of 10 to unlock the next module, and you can retake it whenever you want.</p>`;
+<p>When every lesson in this module is complete, take the module quiz in Study mode or My assignments. You need 80% (8 out of 10) to unlock the next module, and you can retake it whenever you want.</p>`;
 }
 
 const tierCourses = [

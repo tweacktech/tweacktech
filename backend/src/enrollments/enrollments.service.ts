@@ -284,6 +284,74 @@ export class EnrollmentsService {
     });
   }
 
+  private async assertCourseManager(
+    courseId: string,
+    user: { sub: string; role: Role },
+  ) {
+    const course = await this.prisma.course.findUnique({
+      where: { id: courseId },
+      select: {
+        id: true,
+        title: true,
+        instructorId: true,
+        instructors: { select: { userId: true } },
+      },
+    });
+    if (!course) throw new NotFoundException('Course not found');
+    const canManage =
+      user.role === Role.SUPERADMIN ||
+      user.role === Role.ADMIN ||
+      course.instructorId === user.sub ||
+      course.instructors.some((row) => row.userId === user.sub);
+    if (!canManage) {
+      throw new ForbiddenException('You only manage courses assigned to you');
+    }
+    return course;
+  }
+
+  async findCourseEnrollments(courseId: string, user: { sub: string; role: Role }) {
+    await this.assertCourseManager(courseId, user);
+    return this.prisma.enrollment.findMany({
+      where: { courseId },
+      orderBy: { enrolledAt: 'desc' },
+      include: {
+        user: {
+          select: { id: true, firstName: true, lastName: true, email: true, avatar: true },
+        },
+      },
+    });
+  }
+
+  async removeEnrollment(id: string, user: { sub: string; role: Role }) {
+    const enrollment = await this.prisma.enrollment.findUnique({
+      where: { id },
+      select: { id: true, courseId: true, userId: true },
+    });
+    if (!enrollment) throw new NotFoundException('Enrolment not found');
+    await this.assertCourseManager(enrollment.courseId, user);
+
+    await this.prisma.$transaction([
+      this.prisma.certificate.deleteMany({ where: { enrollmentId: id } }),
+      this.prisma.payment.updateMany({
+        where: { enrollmentId: id },
+        data: { enrollmentId: null },
+      }),
+      this.prisma.lessonProgress.deleteMany({ where: { enrollmentId: id } }),
+      this.prisma.enrollment.delete({ where: { id } }),
+    ]);
+
+    await this.notifications
+      .create({
+        userId: enrollment.userId,
+        type: 'ACCOUNT' as any,
+        title: 'Removed from a course',
+        body: 'You were removed from a course by your instructor.',
+      })
+      .catch(() => undefined);
+
+    return { removed: true };
+  }
+
   async getEnrollmentStats(courseId: string, userId: string, userRole: Role) {
     const where: any = { courseId };
     if (userRole !== Role.SUPERADMIN && userRole !== Role.ADMIN) {

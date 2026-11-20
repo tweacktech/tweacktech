@@ -1,5 +1,6 @@
 import {
   Controller,
+  Delete,
   Post,
   Get,
   Patch,
@@ -67,6 +68,25 @@ export class EnrollmentsController {
     @CurrentUser() user: any,
   ) {
     return this.enrollmentsService.markCompleted(id, user.sub, user.role);
+  }
+
+
+  @Get('course/:courseId')
+  @Roles(Role.SUPERADMIN, Role.ADMIN, Role.STAFF)
+  async courseEnrollments(
+    @Param('courseId', ParseUUIDPipe) courseId: string,
+    @CurrentUser() user: any,
+  ) {
+    return this.enrollmentsService.findCourseEnrollments(courseId, user);
+  }
+
+  @Delete(':id')
+  @Roles(Role.SUPERADMIN, Role.ADMIN, Role.STAFF)
+  async removeEnrollment(
+    @Param('id', ParseUUIDPipe) id: string,
+    @CurrentUser() user: any,
+  ) {
+    return this.enrollmentsService.removeEnrollment(id, user);
   }
 
   @Get('course/:courseId/stats')

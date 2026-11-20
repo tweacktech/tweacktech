@@ -1278,7 +1278,7 @@ export class SeedersService {
           description: 'A quick check of React fundamentals. Auto-marked on submit.',
           type: 'QUIZ',
           maxScore: 10,
-          passScore: 6,
+          passScore: 8,
           autoGrade: true,
           isPublished: true,
           dueAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),

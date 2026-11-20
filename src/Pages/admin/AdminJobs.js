@@ -51,6 +51,8 @@ const emptyForm = {
   deadline: '',
   isPublished: false,
   isFeatured: false,
+  applicationsOpen: false,
+  externalUrl: '',
 };
 
 const statusBadge = (status) => {
@@ -162,6 +164,8 @@ const AdminJobs = () => {
       deadline: job.deadline ? new Date(job.deadline).toISOString().slice(0, 10) : '',
       isPublished: !!job.isPublished,
       isFeatured: !!job.isFeatured,
+      applicationsOpen: !!job.applicationsOpen,
+      externalUrl: job.externalUrl || '',
     });
     setModalOpen(true);
   };
@@ -235,9 +239,33 @@ const AdminJobs = () => {
         title="Jobs"
         description="Manage the talent-hub job board. Grant MANAGE_JOBS to let admins post roles."
         actions={
-          <button type="button" onClick={openCreate} className="btn-primary">
-            <Plus className="h-4 w-4" /> New job
-          </button>
+          <>
+            <button
+              type="button"
+              onClick={async () => {
+                if (!window.confirm('Open applications for all jobs?')) return;
+                await api.patch('/jobs/applications/open', { open: true });
+                load();
+              }}
+              className="btn-secondary !py-2 text-xs"
+            >
+              Open all applications
+            </button>
+            <button
+              type="button"
+              onClick={async () => {
+                if (!window.confirm('Close applications for all jobs?')) return;
+                await api.patch('/jobs/applications/open', { open: false });
+                load();
+              }}
+              className="btn-secondary !py-2 text-xs"
+            >
+              Close all applications
+            </button>
+            <button type="button" onClick={openCreate} className="btn-primary">
+              <Plus className="h-4 w-4" /> New job
+            </button>
+          </>
         }
       />
 
@@ -449,6 +477,13 @@ const AdminJobs = () => {
             <Toggle label="Remote" checked={form.isRemote} onChange={(v) => setForm((p) => ({ ...p, isRemote: v }))} />
             <Toggle label="Published" checked={form.isPublished} onChange={(v) => setForm((p) => ({ ...p, isPublished: v }))} />
             <Toggle label="Featured" checked={form.isFeatured} onChange={(v) => setForm((p) => ({ ...p, isFeatured: v }))} />
+            <Toggle label="Accepting applications" checked={form.applicationsOpen} onChange={(v) => setForm((p) => ({ ...p, applicationsOpen: v }))} />
+            <div className="mt-3">
+              <Field label="External apply URL (optional)" htmlFor="job-external">
+                <input id="job-external" value={form.externalUrl} onChange={(e) => setForm((p) => ({ ...p, externalUrl: e.target.value }))} className="input-field" placeholder="https://employer.example/apply" />
+              </Field>
+              <p className="mt-1 text-[11px] text-slate-400">External roles redirect candidates instead of using the TweackTech application form.</p>
+            </div>
           </div>
 
           <div className="flex justify-end gap-2 border-t border-slate-100 dark:border-slate-800 pt-4">

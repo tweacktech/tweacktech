@@ -16,9 +16,27 @@ const TOKEN_KEY = 'tweacktech-token';
 const REFRESH_KEY = 'tweacktech-refresh-token';
 const PROFILE_KEY = 'tweacktech-profile';
 
+const getStore = () =>
+  typeof sessionStorage !== 'undefined' && sessionStorage.getItem(TOKEN_KEY)
+    ? sessionStorage
+    : localStorage;
+
+const readToken = () => getStore().getItem(TOKEN_KEY);
+const readRefreshToken = () => getStore().getItem(REFRESH_KEY);
+
+const writeTokens = (tokens, remember = true) => {
+  const store = remember ? localStorage : sessionStorage;
+  const other = remember ? sessionStorage : localStorage;
+  other.removeItem(TOKEN_KEY);
+  other.removeItem(REFRESH_KEY);
+  other.removeItem(PROFILE_KEY);
+  store.setItem(TOKEN_KEY, tokens.accessToken);
+  store.setItem(REFRESH_KEY, tokens.refreshToken);
+};
+
 const readCachedProfile = () => {
   try {
-    const raw = localStorage.getItem(PROFILE_KEY);
+    const raw = getStore().getItem(PROFILE_KEY);
     if (!raw) return null;
     const parsed = JSON.parse(raw);
     return parsed && typeof parsed === 'object' ? parsed : null;
@@ -58,20 +76,22 @@ export const AuthProvider = ({ children }) => {
   // Hydrate the last known profile immediately so returning users never see a
   // full-screen loader on refresh. The token is revalidated in the background.
   const [user, setUser] = useState(() => {
-    if (!localStorage.getItem(TOKEN_KEY)) return null;
+    if (!readToken()) return null;
     return readCachedProfile();
   });
-  const [token, setToken] = useState(() => localStorage.getItem(TOKEN_KEY));
+  const [token, setToken] = useState(() => readToken());
   const [loading, setLoading] = useState(
-    () => !(localStorage.getItem(TOKEN_KEY) && readCachedProfile()),
+    () => !(readToken() && readCachedProfile()),
   );
   const [sessionNotice, setSessionNotice] = useState('');
   const heartbeatBusy = useRef(false);
 
   const clearSession = useCallback((notice = '') => {
-    localStorage.removeItem(TOKEN_KEY);
-    localStorage.removeItem(REFRESH_KEY);
-    localStorage.removeItem(PROFILE_KEY);
+    [localStorage, sessionStorage].forEach((store) => {
+      store.removeItem(TOKEN_KEY);
+      store.removeItem(REFRESH_KEY);
+      store.removeItem(PROFILE_KEY);
+    });
     setToken(null);
     setUser(null);
     disconnectPusher();
@@ -82,19 +102,18 @@ export const AuthProvider = ({ children }) => {
   useEffect(() => {
     if (user) {
       try {
-        localStorage.setItem(PROFILE_KEY, JSON.stringify(user));
+        getStore().setItem(PROFILE_KEY, JSON.stringify(user));
       } catch (error) {
         /* storage full or unavailable — non-critical */
       }
     } else {
-      localStorage.removeItem(PROFILE_KEY);
+      getStore().removeItem(PROFILE_KEY);
     }
   }, [user]);
 
 
-  const saveSession = useCallback((tokens) => {
-    localStorage.setItem(TOKEN_KEY, tokens.accessToken);
-    localStorage.setItem(REFRESH_KEY, tokens.refreshToken);
+  const saveSession = useCallback((tokens, remember = true) => {
+    writeTokens(tokens, remember);
     setToken(tokens.accessToken);
   }, []);
 
@@ -107,7 +126,7 @@ export const AuthProvider = ({ children }) => {
     });
 
     instance.interceptors.request.use((config) => {
-      const current = localStorage.getItem(TOKEN_KEY);
+      const current = readToken();
       if (current) config.headers.Authorization = `Bearer ${current}`;
       // Let the browser set the multipart boundary for file uploads.
       if (typeof FormData !== 'undefined' && config.data instanceof FormData) {
@@ -139,7 +158,7 @@ export const AuthProvider = ({ children }) => {
         }
 
         if (isDatabaseOffline(error)) notifyOffline(error);
-        const refreshToken = localStorage.getItem(REFRESH_KEY);
+        const refreshToken = readRefreshToken();
 
         // Account disabled (or deleted): never keep a zombie session around.
         const body = error.response?.data || {};
@@ -159,8 +178,7 @@ export const AuthProvider = ({ children }) => {
             // Plain axios here, not `instance`, so a failed refresh can't loop.
             const res = await axios.post(`${API_URL}/auth/refresh`, { refreshToken });
             const tokens = unwrap(res.data);
-            localStorage.setItem(TOKEN_KEY, tokens.accessToken);
-            localStorage.setItem(REFRESH_KEY, tokens.refreshToken);
+            writeTokens(tokens, getStore() === localStorage);
             setToken(tokens.accessToken);
             original.headers.Authorization = `Bearer ${tokens.accessToken}`;
             return instance(original);
@@ -178,10 +196,22 @@ export const AuthProvider = ({ children }) => {
   }, [clearSession]);
 
   const login = useCallback(
-    async (email, password) => {
+    async (email, password, remember = true) => {
       const res = await api.post('/auth/login', { email, password });
       const data = unwrap(res.data);
-      saveSession(data.tokens);
+      saveSession(data.tokens, remember);
+      setUser(data.user);
+      setSessionNotice('');
+      return data.user;
+    },
+    [api, saveSession]
+  );
+
+  const googleLogin = useCallback(
+    async (idToken) => {
+      const res = await api.post('/auth/google', { idToken });
+      const data = unwrap(res.data);
+      saveSession(data.tokens, true);
       setUser(data.user);
       setSessionNotice('');
       return data.user;
@@ -225,7 +255,7 @@ export const AuthProvider = ({ children }) => {
   }, [clearSession]);
 
   const refreshUser = useCallback(async () => {
-    if (!localStorage.getItem(TOKEN_KEY)) return null;
+    if (!readToken()) return null;
     const res = await api.get('/auth/me');
     const profile = unwrap(res.data);
     setUser(profile);
@@ -409,6 +439,7 @@ export const AuthProvider = ({ children }) => {
     clearSessionNotice: () => setSessionNotice(''),
     login,
     register,
+    googleLogin,
     logout,
     refreshUser,
     forgotPassword,

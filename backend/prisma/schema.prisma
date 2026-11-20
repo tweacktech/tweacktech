@@ -662,6 +662,8 @@ model Job {
   deadline         DateTime?
   isPublished      Boolean       @default(false)
   isFeatured       Boolean       @default(false)
+  applicationsOpen Boolean       @default(false)
+  externalUrl      String?
   postedById       String
   postedBy         User          @relation("JobPoster", fields: [postedById], references: [id])
   applications     JobApplication[]

@@ -96,6 +96,7 @@ const AdminCourseBuilder = () => {
   const [saving, setSaving] = useState(false);
 
   const [invitations, setInvitations] = useState([]);
+  const [enrolled, setEnrolled] = useState([]);
   const [inviteOpen, setInviteOpen] = useState(false);
   const [inviteSearch, setInviteSearch] = useState('');
   const [candidates, setCandidates] = useState([]);
@@ -111,10 +112,11 @@ const AdminCourseBuilder = () => {
     setLoading(true);
     setError('');
     try {
-      const [courseRes, sessionRes, inviteRes] = await Promise.all([
+      const [courseRes, sessionRes, inviteRes, enrollmentRes] = await Promise.all([
         api.get(`/courses/admin/${id}`),
         api.get(`/courses/${id}/sessions`).catch(() => null),
         api.get(`/courses/${id}/invitations`).catch(() => null),
+        api.get(`/enrollments/course/${id}`).catch(() => null),
       ]);
       const data = unwrap(courseRes);
       setCourse(data);
@@ -122,6 +124,7 @@ const AdminCourseBuilder = () => {
       setCoIds((data.instructors || []).map((row) => row.userId));
       if (sessionRes) setSessions(unwrap(sessionRes) || []);
       if (inviteRes) setInvitations(unwrap(inviteRes) || []);
+      if (enrollmentRes) setEnrolled(unwrap(enrollmentRes) || []);
       const open = {};
       (data.modules || []).forEach((module) => {
         open[module.id] = true;
@@ -385,6 +388,20 @@ const AdminCourseBuilder = () => {
     0,
   );
 
+  const removeStudent = async (enrollment) => {
+    const name = `${enrollment.user?.firstName || ''} ${enrollment.user?.lastName || ''}`.trim();
+    if (!window.confirm(`Remove ${name} from this course? Their progress will be deleted.`)) return;
+    try {
+      await api.delete(`/enrollments/${enrollment.id}`);
+      setEnrolled((prev) => prev.filter((item) => item.id !== enrollment.id));
+      setCourse((prev) =>
+        prev ? { ...prev, _count: { ...prev._count, enrollments: Math.max(0, (prev._count?.enrollments || 1) - 1) } } : prev,
+      );
+    } catch (err) {
+      setError(getErrorMessage(err, 'Unable to remove that student.'));
+    }
+  };
+
   return (
     <div className="space-y-6 fade-in">
       <div className="flex flex-wrap items-center gap-2 text-sm text-slate-500 dark:text-slate-400">
@@ -493,6 +510,50 @@ const AdminCourseBuilder = () => {
           <button type="button" onClick={saveInstructors} disabled={savingInstructors} className="btn-primary !py-2">
             {savingInstructors ? 'Saving…' : 'Save instructors'}
           </button>
+        </div>
+      </section>
+
+      {/* Enrolled students */}
+      <section className="card p-5">
+        <div>
+          <h2 className="flex items-center gap-2 font-bold text-slate-900 dark:text-white">
+            <Users className="h-4 w-4 text-red-600" /> Enrolled students
+          </h2>
+          <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
+            Remove a student to revoke their access and clear their progress for this course.
+          </p>
+        </div>
+        <div className="mt-4 space-y-2">
+          {enrolled.length === 0 ? (
+            <p className="text-sm text-slate-400">No students enrolled yet.</p>
+          ) : (
+            enrolled.map((enrollment) => (
+              <div key={enrollment.id} className="flex flex-wrap items-center gap-3 rounded-xl border border-slate-200 p-3 dark:border-slate-800">
+                {enrollment.user?.avatar ? (
+                  <img src={enrollment.user.avatar} alt="" className="h-9 w-9 rounded-full object-cover" />
+                ) : (
+                  <span className="grid h-9 w-9 place-items-center rounded-full bg-slate-100 text-xs font-bold text-slate-600 dark:bg-slate-800 dark:text-slate-300">
+                    {`${enrollment.user?.firstName?.[0] || ''}${enrollment.user?.lastName?.[0] || ''}`}
+                  </span>
+                )}
+                <div className="min-w-0 flex-1">
+                  <p className="truncate text-sm font-semibold text-slate-900 dark:text-white">
+                    {enrollment.user?.firstName} {enrollment.user?.lastName}
+                  </p>
+                  <p className="truncate text-xs text-slate-500 dark:text-slate-400">
+                    {enrollment.user?.email} · {enrollment.status}
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => removeStudent(enrollment)}
+                  className="btn-secondary !border-red-200 !py-1.5 !text-red-600 text-xs dark:!border-red-900/60 dark:!text-red-400"
+                >
+                  <Trash2 className="h-3.5 w-3.5" /> Remove
+                </button>
+              </div>
+            ))
+          )}
         </div>
       </section>
 

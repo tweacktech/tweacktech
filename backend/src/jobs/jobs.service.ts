@@ -132,6 +132,8 @@ export class JobsService {
         deadline: data.deadline ? new Date(data.deadline) : null,
         isPublished: data.isPublished === true || data.isPublished === 'true',
         isFeatured: data.isFeatured === true || data.isFeatured === 'true',
+        applicationsOpen: data.applicationsOpen === true || data.applicationsOpen === 'true',
+        externalUrl: data.externalUrl || null,
         publishedAt:
           data.isPublished === true || data.isPublished === 'true'
             ? new Date()
@@ -172,6 +174,11 @@ export class JobsService {
         deadline: data.deadline === undefined ? undefined : data.deadline ? new Date(data.deadline) : null,
         isPublished: data.isPublished === undefined ? undefined : data.isPublished === true || data.isPublished === 'true',
         isFeatured: data.isFeatured === undefined ? undefined : data.isFeatured === true || data.isFeatured === 'true',
+        applicationsOpen:
+          data.applicationsOpen === undefined
+            ? undefined
+            : data.applicationsOpen === true || data.applicationsOpen === 'true',
+        externalUrl: data.externalUrl === undefined ? undefined : data.externalUrl || null,
       },
     });
   }
@@ -183,9 +190,22 @@ export class JobsService {
     return { deleted: true };
   }
 
+  async setAllApplications(open: boolean) {
+    const result = await this.prisma.job.updateMany({
+      data: { applicationsOpen: open },
+    });
+    return { updated: result.count };
+  }
+
   async apply(jobId: string, userId: string, data: any) {
     const job = await this.prisma.job.findUnique({ where: { id: jobId } });
     if (!job || !job.isPublished) throw new NotFoundException('Job not found');
+    if (!job.applicationsOpen) {
+      throw new BadRequestException('Applications for this role are currently closed');
+    }
+    if (job.externalUrl) {
+      throw new BadRequestException('Apply for this role through the external job link');
+    }
 
     const existing = await this.prisma.jobApplication.findUnique({
       where: { jobId_userId: { jobId, userId } },

@@ -145,6 +145,74 @@ export class AuthService {
     };
   }
 
+  async googleLogin(idToken: string) {
+    const clientId = this.config.get<string>('GOOGLE_CLIENT_ID');
+    if (!clientId) {
+      throw new BadRequestException('Google sign-in is not configured');
+    }
+    if (!idToken) throw new BadRequestException('Missing Google ID token');
+
+    const response = await fetch(
+      `https://oauth2.googleapis.com/tokeninfo?id_token=${encodeURIComponent(idToken)}`,
+    );
+    if (!response.ok) throw new UnauthorizedException('Invalid Google ID token');
+    const info = (await response.json()) as {
+      aud?: string;
+      email?: string;
+      email_verified?: string;
+      given_name?: string;
+      family_name?: string;
+      picture?: string;
+    };
+    if (info.aud !== clientId || !info.email) {
+      throw new UnauthorizedException('Google token was issued for another app');
+    }
+    if (info.email_verified !== 'true') {
+      throw new UnauthorizedException('Verify your Google email first');
+    }
+
+    const email = info.email.toLowerCase().trim();
+    let user = await this.prisma.user.findUnique({ where: { email } });
+    if (!user) {
+      const temporaryPassword = randomBytes(18).toString('base64url');
+      const saltRounds = parseInt(this.config.get('BCRYPT_SALT_ROUNDS', '10'), 10);
+      user = await this.prisma.user.create({
+        data: {
+          email,
+          password: await bcrypt.hash(temporaryPassword, saltRounds),
+          firstName: info.given_name || 'Google',
+          lastName: info.family_name || 'User',
+          avatar: info.picture || null,
+          role: Role.STUDENT,
+          emailVerified: true,
+          emailVerifiedAt: new Date(),
+          isActive: true,
+        },
+      });
+    }
+
+    await this.prisma.user.update({
+      where: { id: user.id },
+      data: { lastLoginAt: new Date() },
+    });
+
+    const tokens = await this.generateTokens(user.id, user.email, user.role);
+    return {
+      user: {
+        id: user.id,
+        email: user.email,
+        firstName: user.firstName,
+        lastName: user.lastName,
+        role: user.role,
+        permissions: user.permissions,
+        avatar: user.avatar,
+        isActive: user.isActive,
+        lastLoginAt: new Date(),
+      },
+      tokens,
+    };
+  }
+
   async refreshToken(refreshToken: string) {
     try {
       const payload = this.jwtService.verify<JwtPayload>(refreshToken, {

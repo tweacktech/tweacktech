@@ -5,6 +5,7 @@ import { Filter, Plus, RefreshCw, Search, User } from 'lucide-react';
 import Navbar from '../Component/Navbar';
 import Footer from '../Component/Footer';
 import { useAuth } from '../AuthContext';
+import Pagination from '../Component/Pagination';
 import { useCurrency } from '../CurrencyContext';
 import { getErrorMessage } from '../lib/apiError';
 import { publicName, publicInitials } from '../lib/displayName';
@@ -17,6 +18,8 @@ const TalentHub = () => {
   const { api, isAuthenticated, hasPermission } = useAuth();
   const { format } = useCurrency();
   const [profiles, setProfiles] = useState([]);
+  const [page, setPage] = useState(1);
+  const [meta, setMeta] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
@@ -27,14 +30,16 @@ const TalentHub = () => {
     setLoading(true);
     setError('');
     try {
-      const res = await api.get('/talent?limit=100');
-      setProfiles(unwrap(res)?.profiles || []);
+      const res = await api.get(`/talent?page=${page}&limit=12`);
+      const payload = unwrap(res);
+      setProfiles(payload?.profiles || []);
+      setMeta(payload?.meta || null);
     } catch (err) {
       setError(getErrorMessage(err, 'Unable to load the Talent Hub right now.'));
     } finally {
       setLoading(false);
     }
-  }, [api]);
+  }, [api, page]);
 
   useEffect(() => {
     load();
@@ -232,6 +237,8 @@ const TalentHub = () => {
             })}
           </div>
         )}
+
+        <Pagination meta={meta} onPage={setPage} />
 
         {!isAuthenticated && profiles.length > 0 && (
           <div className="card mt-8 flex flex-col items-center gap-2 p-8 text-center">

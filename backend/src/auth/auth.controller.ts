@@ -30,6 +30,13 @@ export class AuthController {
 
   constructor(private authService: AuthService) {}
 
+
+  @Public()
+  @Post('google')
+  async google(@Body() body: { idToken?: string }) {
+    return this.authService.googleLogin(body?.idToken || '');
+  }
+
   @Public()
   @Post('register')
   async register(@Body() body: RegisterDto) {

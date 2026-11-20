@@ -4,6 +4,7 @@ import { BookOpen, Clock, Newspaper, Search, Tag, User } from 'lucide-react';
 import Navbar from '../Component/Navbar';
 import Footer from '../Component/Footer';
 import { useAuth } from '../AuthContext';
+import Pagination from '../Component/Pagination';
 
 const unwrap = (res) => (res?.data && res.data.data !== undefined ? res.data.data : res?.data);
 
@@ -79,6 +80,8 @@ const ArticleCard = ({ post, featured }) => (
 const BlogList = () => {
   const { api } = useAuth();
   const [posts, setPosts] = useState([]);
+  const [page, setPage] = useState(1);
+  const [meta, setMeta] = useState(null);
   const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -89,7 +92,7 @@ const BlogList = () => {
     setLoading(true);
     setError('');
     try {
-      const params = new URLSearchParams({ limit: '30' });
+      const params = new URLSearchParams({ page: String(page), limit: '9' });
       if (search) params.set('search', search);
       if (categoryFilter !== 'all') params.set('categoryId', categoryFilter);
 
@@ -99,6 +102,7 @@ const BlogList = () => {
       ]);
       const postsPayload = unwrap(postsRes);
       setPosts(postsPayload?.posts || []);
+      setMeta(postsPayload?.meta || null);
       setCategories(unwrap(catsRes) || []);
     } catch (err) {
       setError(err.response?.data?.message || 'Unable to load the blog right now.');
@@ -106,7 +110,7 @@ const BlogList = () => {
     } finally {
       setLoading(false);
     }
-  }, [api, search, categoryFilter]);
+  }, [api, search, categoryFilter, page]);
 
   useEffect(() => {
     const timer = setTimeout(load, 250);
@@ -244,7 +248,9 @@ const BlogList = () => {
             </div>
           </div>
         )}
-      </main>
+        <Pagination meta={meta} onPage={setPage} />
+
+    </main>
 
       <Footer />
     </div>

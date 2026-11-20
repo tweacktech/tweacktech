@@ -102,6 +102,13 @@ export class JobsController {
     return this.jobsService.remove(id);
   }
 
+
+  @Patch('applications/open')
+  @Roles(Role.SUPERADMIN, Role.ADMIN)
+  async setAllApplications(@Body() body: { open?: boolean }) {
+    return this.jobsService.setAllApplications(body?.open === true);
+  }
+
   @Post(':id/apply')
   @UseGuards(JwtAuthGuard)
   async apply(@Param('id', ParseUUIDPipe) id: string, @Body() body: any, @CurrentUser() user: any) {

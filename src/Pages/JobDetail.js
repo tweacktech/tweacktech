@@ -9,6 +9,7 @@ import {
   DollarSign,
   ExternalLink,
   Globe,
+  Lock,
   MapPin,
   Send,
   Users,
@@ -353,6 +354,39 @@ const JobDetail = () => {
                       <Link to="/dashboard" className="btn-secondary mt-4 w-full">
                         View applications
                       </Link>
+                    </div>
+                  ) : job.externalUrl ? (
+                    <div className="text-center">
+                      <span className="mx-auto grid h-12 w-12 place-items-center rounded-2xl bg-red-100 dark:bg-red-950/60 text-red-600 dark:text-red-400">
+                        <ExternalLink className="h-6 w-6" />
+                      </span>
+                      <h2 className="mt-3 font-bold text-slate-900 dark:text-white">
+                        Apply on the employer site
+                      </h2>
+                      <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
+                        This role is posted by an external source. You will be redirected to
+                        complete your application there.
+                      </p>
+                      <a
+                        href={job.externalUrl}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="btn-primary mt-4 w-full"
+                      >
+                        <ExternalLink className="h-4 w-4" /> Go to application
+                      </a>
+                    </div>
+                  ) : !job.applicationsOpen ? (
+                    <div className="text-center">
+                      <span className="mx-auto grid h-12 w-12 place-items-center rounded-2xl bg-amber-100 dark:bg-amber-950/60 text-amber-600 dark:text-amber-400">
+                        <Lock className="h-6 w-6" />
+                      </span>
+                      <h2 className="mt-3 font-bold text-slate-900 dark:text-white">
+                        Applications closed
+                      </h2>
+                      <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
+                        The hiring team is not accepting applications right now. Check back soon.
+                      </p>
                     </div>
                   ) : (
                     <>

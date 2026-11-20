@@ -22,7 +22,8 @@
     "vercel-build": "prisma generate && npm run build",
     "prebuild": "node -e \"require('fs').rmSync('dist',{recursive:true,force:true})\"",
     "seed:tiers": "node scripts/seed-course-tiers.js",
-    "seed:quizzes": "node scripts/seed-module-quizzes.js"
+    "seed:quizzes": "node scripts/seed-module-quizzes.js",
+    "upgrade:quizzes": "node scripts/upgrade-module-quizzes.js"
   },
   "dependencies": {
     "@nestjs/common": "^10.4.0",

@@ -12,6 +12,7 @@ import {
 import Navbar from '../Component/Navbar';
 import Footer from '../Component/Footer';
 import { useAuth } from '../AuthContext';
+import Pagination from '../Component/Pagination';
 
 const JOB_TYPES = [
   { id: '', label: 'All types' },
@@ -51,6 +52,8 @@ const salaryRange = (job) => {
 const JobListings = () => {
   const { api } = useAuth();
   const [jobs, setJobs] = useState([]);
+  const [page, setPage] = useState(1);
+  const [meta, setMeta] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [search, setSearch] = useState('');
@@ -61,20 +64,21 @@ const JobListings = () => {
     setLoading(true);
     setError('');
     try {
-      const params = new URLSearchParams({ limit: '50' });
+      const params = new URLSearchParams({ page: String(page), limit: '12' });
       if (search) params.set('search', search);
       if (type) params.set('type', type);
       if (remoteOnly) params.set('isRemote', 'true');
       const res = await api.get(`/jobs?${params.toString()}`);
       const payload = res?.data?.data !== undefined ? res.data.data : res.data;
       setJobs(payload?.jobs || []);
+      setMeta(payload?.meta || null);
     } catch (err) {
       setError(err.response?.data?.message || 'Unable to load jobs right now.');
       setJobs([]);
     } finally {
       setLoading(false);
     }
-  }, [api, search, type, remoteOnly]);
+  }, [api, search, type, remoteOnly, page]);
 
   useEffect(() => {
     const timer = setTimeout(load, 250);
@@ -317,7 +321,9 @@ const JobListings = () => {
             </div>
           </aside>
         </div>
-      </main>
+        <Pagination meta={meta} onPage={setPage} />
+
+    </main>
 
       <Footer />
     </div>

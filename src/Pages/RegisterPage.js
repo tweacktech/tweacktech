@@ -12,6 +12,7 @@ import {
 import Navbar from '../Component/Navbar';
 import Footer from '../Component/Footer';
 import { useAuth } from '../AuthContext';
+import GoogleSignIn from '../Component/GoogleSignIn';
 import { getErrorMessage } from '../lib/apiError';
 
 const initialForm = {
@@ -28,11 +29,22 @@ const RegisterPage = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
-  const { register } = useAuth();
+  const { register, googleLogin } = useAuth();
   const navigate = useNavigate();
+  const [googleError, setGoogleError] = useState('');
 
   const update = (field) => (e) =>
     setForm((prev) => ({ ...prev, [field]: e.target.value }));
+
+  const handleGoogle = async (idToken) => {
+    setGoogleError('');
+    try {
+      await googleLogin(idToken);
+      navigate('/dashboard', { replace: true });
+    } catch (err) {
+      setGoogleError(getErrorMessage(err, 'Google sign-up failed. Please try again.'));
+    }
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -235,6 +247,14 @@ const RegisterPage = () => {
                 )}
               </button>
             </form>
+
+            {googleError && (
+              <p className="mt-3 rounded-xl border border-red-200 bg-red-50 px-3 py-2 text-xs text-red-700 dark:border-red-900/60 dark:bg-red-950/40 dark:text-red-300">
+                {googleError}
+              </p>
+            )}
+
+            <GoogleSignIn onSuccess={handleGoogle} text="signup_with" />
 
             <p className="mt-5 text-center text-xs text-slate-400">
               Instructor and staff accounts are created by a platform
