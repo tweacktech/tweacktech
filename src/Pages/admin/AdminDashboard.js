@@ -16,6 +16,7 @@ import {
   GraduationCap,
   LifeBuoy,
   Newspaper,
+  Sparkles,
   TrendingUp,
   UserCheck,
   Users,
@@ -57,6 +58,8 @@ const AdminDashboard = () => {
   const [loading, setLoading] = useState(true);
   const [overview, setOverview] = useState(null);
   const [staffData, setStaffData] = useState(null);
+  const [aiEnabled, setAiEnabled] = useState(true);
+  const [aiSaving, setAiSaving] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -81,6 +84,26 @@ const AdminDashboard = () => {
       cancelled = true;
     };
   }, [api, isAdmin]);
+
+  useEffect(() => {
+    if (!isAdmin) return;
+    api
+      .get('/ai/config')
+      .then((res) => setAiEnabled(unwrap(res)?.enabled !== false))
+      .catch(() => setAiEnabled(true));
+  }, [api, isAdmin]);
+
+  const toggleAiTutor = async () => {
+    setAiSaving(true);
+    try {
+      const res = await api.patch('/ai/config', { enabled: !aiEnabled });
+      setAiEnabled(unwrap(res)?.enabled !== false);
+    } catch {
+      // keep the current state; the admin can retry
+    } finally {
+      setAiSaving(false);
+    }
+  };
 
   if (loading) return <Loading label="Loading your dashboard…" />;
 
@@ -273,6 +296,40 @@ const AdminDashboard = () => {
         <StatCard label="Payments to approve" value={stats.awaitingPayments ?? 0} icon={Wallet} tone="red" hint="Awaiting verification" />
         <StatCard label="Open tickets" value={stats.openTickets ?? 0} icon={LifeBuoy} tone="blue" hint="Support queue" />
         <StatCard label="Upcoming sessions" value={stats.upcomingSessions ?? 0} icon={CalendarDays} tone="green" hint="Live classes scheduled" />
+      </div>
+
+      {/* Learning tools controls */}
+      <div className="card flex flex-col gap-4 p-5 sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex items-start gap-3">
+          <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-red-50 text-red-600 dark:bg-red-950/40 dark:text-red-400">
+            <Sparkles className="h-5 w-5" />
+          </span>
+          <div>
+            <h2 className="text-sm font-bold text-slate-900 dark:text-white">AI study partner</h2>
+            <p className="mt-1 max-w-xl text-xs text-slate-500 dark:text-slate-400">
+              Students can open an AI tutor in Study mode to have any lesson explained, get key
+              takeaways, take a practice quiz or ask a question. Turn it off to hide it everywhere.
+            </p>
+          </div>
+        </div>
+        <button
+          type="button"
+          onClick={toggleAiTutor}
+          disabled={aiSaving}
+          className={`inline-flex shrink-0 items-center gap-2 rounded-full px-4 py-2 text-xs font-bold transition disabled:opacity-50 ${
+            aiEnabled
+              ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-950/50 dark:text-emerald-300'
+              : 'bg-slate-200 text-slate-600 dark:bg-slate-800 dark:text-slate-300'
+          }`}
+          aria-pressed={aiEnabled}
+        >
+          <span
+            className={`h-2 w-2 rounded-full ${
+              aiEnabled ? 'bg-emerald-500' : 'bg-slate-400'
+            }`}
+          />
+          {aiSaving ? 'Saving…' : aiEnabled ? 'Enabled — click to lock' : 'Locked — click to enable'}
+        </button>
       </div>
 
       <div className="grid gap-6 xl:grid-cols-3">

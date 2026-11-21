@@ -1473,6 +1473,7 @@ export class SeedersService {
         { key: 'site_description', value: 'Learn tech skills and get hired', type: 'string' },
         { key: 'maintenance_mode', value: 'false', type: 'boolean' },
         { key: 'registration_enabled', value: 'true', type: 'boolean' },
+        { key: 'ai_tutor_enabled', value: 'true', type: 'boolean' },
         { key: 'contact_email', value: 'tweackchech@gmail.com', type: 'string' },
       ],
       skipDuplicates: true,

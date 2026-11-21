@@ -42,6 +42,21 @@ configured Neon database, and both the API and React client build successfully.
   robotic. Everything runs on the browser's built-in speech engine — offline
   and free.
 
+### Playground example fix, admin AI lock and quiz visibility
+- Setup lessons no longer use terminal commands (`python --version`,
+  `node --version`) as the playground's starter code — those caused
+  `NameError: name 'python' is not defined`. All 368 starter snippets are now
+  real, runnable code (verified: `Python is ready: 3.12.1`).
+- The authentication lesson's Python/JavaScript examples no longer depend on
+  `bcrypt` or `require('crypto')`, which are unavailable in the browser.
+- Admins can lock the AI study partner from the **AI study partner** card on
+  the admin dashboard. The flag is stored in `SiteSetting` (`ai_tutor_enabled`),
+  exposed through `GET/PATCH /api/ai/config`, enforced server-side and hidden
+  everywhere in the UI when off (students keep guides, playground and quizzes).
+- The module quiz card only appears when a quiz exists and has not been passed
+  ("Start quiz"). Passing it replaces the card with a small "Module quiz passed"
+  indicator instead of a permanent retake button.
+
 ### Locked lessons stay locked
 - Lesson locks are resolved from a single server-authoritative access record and
   fail closed when data is missing.

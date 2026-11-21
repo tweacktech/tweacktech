@@ -74,11 +74,53 @@ export class AiService {
 
   constructor(private readonly prisma: PrismaService) {}
 
+  /** Admin-controlled switch, stored in the existing SiteSetting table. */
+  async isTutorEnabled(): Promise<boolean> {
+    try {
+      const row = await this.prisma.siteSetting.findUnique({
+        where: { key: 'ai_tutor_enabled' },
+      });
+      if (!row) return true;
+      return String(row.value).toLowerCase() !== 'false';
+    } catch {
+      return true;
+    }
+  }
+
+  async setTutorEnabled(enabled: boolean) {
+    await this.prisma.siteSetting.upsert({
+      where: { key: 'ai_tutor_enabled' },
+      update: { value: String(enabled), type: 'boolean' },
+      create: {
+        key: 'ai_tutor_enabled',
+        value: String(enabled),
+        type: 'boolean',
+        description: 'Allow students to use the AI study partner in lessons',
+      },
+    });
+    return { enabled };
+  }
+
   async tutor(input: {
     lessonId: string;
     question?: string;
     mode?: TutorMode;
   }): Promise<TutorReply> {
+    const mode: TutorMode = ['explain', 'takeaways', 'quiz', 'ask'].includes(
+      String(input.mode || ''),
+    )
+      ? (input.mode as TutorMode)
+      : 'explain';
+    if (!(await this.isTutorEnabled())) {
+      return {
+        reply:
+          'The AI study partner is currently turned off by your administrator. You can still use the lesson guide, Code Playground and module quizzes.',
+        mode,
+        provider: 'lesson',
+        suggestions: [],
+      };
+    }
+
     const lesson = await this.prisma.lesson.findUnique({
       where: { id: input.lessonId },
       select: {
@@ -96,11 +138,6 @@ export class AiService {
     });
     if (!lesson) throw new NotFoundException('Lesson not found');
 
-    const mode: TutorMode = ['explain', 'takeaways', 'quiz', 'ask'].includes(
-      String(input.mode || ''),
-    )
-      ? (input.mode as TutorMode)
-      : 'explain';
     const question = String(input.question || '').trim().slice(0, 500);
 
     const body =

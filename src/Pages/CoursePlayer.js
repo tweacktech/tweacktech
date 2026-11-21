@@ -207,6 +207,7 @@ const StudyMode = ({
   certificate,
   aiTutor,
   setAiTutor,
+  aiEnabled,
   ide,
   onOpenIde,
   ideOpen,
@@ -259,15 +260,17 @@ const StudyMode = ({
               {course?.title} · focus mode
             </p>
           </div>
-          <button
-            type="button"
-            onClick={() => setAiTutor((value) => !value)}
-            className="btn-secondary !px-3 !py-2 text-xs"
-            aria-pressed={aiTutor}
-          >
-            <Sparkles className="h-4 w-4" />
-            <span className="hidden sm:inline">{aiTutor ? 'Hide AI tutor' : 'AI tutor'}</span>
-          </button>
+          {aiEnabled && (
+            <button
+              type="button"
+              onClick={() => setAiTutor((value) => !value)}
+              className="btn-secondary !px-3 !py-2 text-xs"
+              aria-pressed={aiTutor}
+            >
+              <Sparkles className="h-4 w-4" />
+              <span className="hidden sm:inline">{aiTutor ? 'Hide AI tutor' : 'AI tutor'}</span>
+            </button>
+          )}
           {ide?.code && (
             <button type="button" onClick={onOpenIde} className="btn-secondary !px-3 !py-2 text-xs">
               <Terminal className="h-4 w-4" />
@@ -378,7 +381,7 @@ const StudyMode = ({
         </section>
 
         <aside className="space-y-4">
-          {aiTutor && <AiTutor api={api} lessonId={lesson?.id} lessonTitle={lesson?.title} />}
+          {aiEnabled && aiTutor && <AiTutor api={api} lessonId={lesson?.id} lessonTitle={lesson?.title} />}
 
           <div className="card p-5">
             <div className="flex items-center justify-between">
@@ -393,32 +396,31 @@ const StudyMode = ({
             <p className="mt-2 text-xs text-slate-500 dark:text-slate-400">
               {completedCount} of {totalLessons} lessons complete
             </p>
+            {moduleQuizPassed && (
+              <p className="mt-2 inline-flex items-center gap-1 text-[11px] font-semibold text-emerald-600 dark:text-emerald-400">
+                <CheckCircle2 className="h-3.5 w-3.5" /> Module quiz passed
+              </p>
+            )}
           </div>
 
-          <div className="card p-5">
-            <div className="flex items-center justify-between gap-2">
+          {/* Only show a quiz card when the learner actually needs to start one. */}
+          {moduleQuizId && !moduleQuizPassed && (
+            <div className="card p-5">
               <h2 className="flex items-center gap-2 text-sm font-bold text-slate-900 dark:text-white">
                 <Award className="h-4 w-4 text-red-600" /> Module quiz
               </h2>
-              {moduleQuizPassed && <span className="badge-success">Passed</span>}
-            </div>
-            <p className="mt-2 text-xs leading-relaxed text-slate-500 dark:text-slate-400">
-              {moduleQuizPassed
-                ? 'You passed this module. Retake any time to improve your score.'
-                : 'Pass this quiz with 80% (8/10) or higher to unlock the next module.'}
-            </p>
-            {moduleQuizId ? (
+              <p className="mt-2 text-xs leading-relaxed text-slate-500 dark:text-slate-400">
+                Pass this quiz with 80% (8/10) or higher to unlock the next module.
+              </p>
               <button
                 type="button"
                 onClick={() => setQuizOpen(true)}
                 className="btn-primary mt-3 w-full !py-2 text-xs"
               >
-                {moduleQuizPassed ? 'Retake quiz' : 'Take quiz'} →
+                Start quiz →
               </button>
-            ) : (
-              <p className="mt-3 text-xs text-slate-400">No quiz is configured for this module.</p>
-            )}
-          </div>
+            </div>
+          )}
 
           <div className="card p-5">
             <h2 className="flex items-center gap-2 text-sm font-bold text-slate-900 dark:text-white">
@@ -504,10 +506,18 @@ const CoursePlayer = () => {
   const [markError, setMarkError] = useState('');
   const [studyMode, setStudyMode] = useState(false);
   const [aiTutor, setAiTutor] = useState(false);
+  const [aiEnabled, setAiEnabled] = useState(true);
   const [ideOpen, setIdeOpen] = useState(false);
 
   const canManage = ['SUPERADMIN', 'ADMIN', 'STAFF'].includes(user?.role);
   const enrolled = !!enrollment || canManage;
+
+  useEffect(() => {
+    api
+      .get('/ai/config')
+      .then((res) => setAiEnabled(unwrap(res)?.enabled !== false))
+      .catch(() => setAiEnabled(true));
+  }, [api]);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -769,6 +779,7 @@ const CoursePlayer = () => {
         certificate={certificate}
         aiTutor={aiTutor}
         setAiTutor={setAiTutor}
+        aiEnabled={aiEnabled}
         ide={ide}
         onOpenIde={() => setIdeOpen(true)}
         ideOpen={ideOpen}
@@ -860,16 +871,18 @@ const CoursePlayer = () => {
                       >
                         <BookOpen className="h-4 w-4" /> Study mode
                       </button>
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setAiTutor(true);
-                          setStudyMode(true);
-                        }}
-                        className="btn-primary !py-2 text-xs"
-                      >
-                        <Sparkles className="h-4 w-4" /> Learn with AI
-                      </button>
+                      {aiEnabled && (
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setAiTutor(true);
+                            setStudyMode(true);
+                          }}
+                          className="btn-primary !py-2 text-xs"
+                        >
+                          <Sparkles className="h-4 w-4" /> Learn with AI
+                        </button>
+                      )}
                       {ide?.code && (
                         <button
                           type="button"
