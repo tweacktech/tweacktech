@@ -4,6 +4,38 @@ This build adds the requested LMS, payments, chat, calendar, talent, permission,
 email and offline capabilities. It has been migrated and seeded against the
 configured Neon database, and both the API and React client build successfully.
 
+## Detailed lessons, Code Playground and AI tutor
+
+### Real, example-driven lesson guides
+- All 368 lesson guides were replaced with topic-specific, W3Schools-style
+  tutorials generated from `backend/scripts/lib/lesson-library.js` (40 topics).
+- Each lesson includes: a plain-language explanation, several runnable code
+  examples with expected output, a step-by-step walkthrough, common mistakes,
+  a practice task, and a summary.
+- Regenerate at any time with `npm run upgrade:lessons` from `backend/`.
+  `npm run seed:tiers` uses the same library for newly created lessons.
+- The AI study partner reads these richer guides, so its explanations and
+  answers are grounded in real lesson content.
+
+### Code Playground (in-browser IDE)
+- A **Code Playground** button on every lesson opens a full-screen editor with
+  line numbers, Run / Reset / Copy controls and a console or preview panel.
+- **JavaScript** runs in an isolated sandboxed iframe with `console.log` capture.
+- **Python** runs locally through Pyodide (WebAssembly, lazy-loaded on first run).
+- **SQL** runs through sql.js against seeded `students`, `courses` and
+  `enrollments` demo tables.
+- **PHP** shows the documented expected result because it needs a server runtime.
+- HTML/CSS lessons render a live preview.
+- The IDE starter code and expected output are read from the lesson's first
+  runnable example block, so every lesson has a ready-to-run snippet.
+
+### Locked lessons stay locked
+- Lesson locks are resolved from a single server-authoritative access record and
+  fail closed when data is missing.
+- Study mode closes automatically if the current lesson becomes locked.
+- The progress API enforces the same module-quiz gate as the UI, so locked
+  lessons cannot be completed by calling the endpoint directly.
+
 ## What was added
 
 ### Courses, instructors and scheduled content

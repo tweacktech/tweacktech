@@ -18,6 +18,7 @@ import {
   ShieldCheck,
   Sparkles,
   Square,
+  Terminal,
   Timer,
   Volume2,
   X,
@@ -29,6 +30,8 @@ import Breadcrumbs from '../Component/Breadcrumbs';
 import { useAuth } from '../AuthContext';
 import QuizRunner from '../Component/QuizRunner';
 import AiTutor from '../Component/AiTutor';
+import CodePlayground from '../Component/CodePlayground';
+import { detectLanguage, extractCode, extractOutput } from '../lib/lessonCode';
 
 const unwrap = (res) => (res?.data && res.data.data !== undefined ? res.data.data : res?.data);
 
@@ -216,6 +219,10 @@ const StudyMode = ({
   certificate,
   aiTutor,
   setAiTutor,
+  ide,
+  onOpenIde,
+  ideOpen,
+  setIdeOpen,
 }) => {
   const [seconds, setSeconds] = useState(25 * 60);
   const [speaking, setSpeaking] = useState(false);
@@ -306,6 +313,12 @@ const StudyMode = ({
             <Sparkles className="h-4 w-4" />
             <span className="hidden sm:inline">{aiTutor ? 'Hide AI tutor' : 'AI tutor'}</span>
           </button>
+          {ide?.code && (
+            <button type="button" onClick={onOpenIde} className="btn-secondary !px-3 !py-2 text-xs">
+              <Terminal className="h-4 w-4" />
+              <span className="hidden sm:inline">Code Playground</span>
+            </button>
+          )}
           <div className="hidden items-center gap-2 rounded-xl border border-slate-200 px-3 py-1.5 text-sm font-bold text-slate-700 dark:border-slate-700 dark:text-slate-200 sm:flex">
             <Timer className="h-4 w-4 text-red-600" />
             {minutes}:{secs}
@@ -357,6 +370,11 @@ const StudyMode = ({
                 {speaking ? <Square className="h-3.5 w-3.5" /> : <Volume2 className="h-3.5 w-3.5" />}
                 {speaking ? 'Stop reading' : 'Read aloud'}
               </button>
+              {ide?.code && (
+                <button type="button" onClick={onOpenIde} className="btn-primary !py-1.5 text-xs">
+                  <Terminal className="h-3.5 w-3.5" /> Try in Code Playground
+                </button>
+              )}
             </div>
             <div
               className="prose prose-slate mt-4 max-w-none text-sm leading-7 text-slate-600 dark:prose-invert dark:text-slate-300"
@@ -506,6 +524,14 @@ const StudyMode = ({
           }}
         />
       )}
+      <CodePlayground
+        open={ideOpen}
+        onClose={() => setIdeOpen(false)}
+        lessonTitle={lesson?.title}
+        language={ide?.language}
+        initialCode={ide?.code}
+        expectedOutput={ide?.expectedOutput}
+      />
     </div>
   );
 };
@@ -526,6 +552,7 @@ const CoursePlayer = () => {
   const [markError, setMarkError] = useState('');
   const [studyMode, setStudyMode] = useState(false);
   const [aiTutor, setAiTutor] = useState(false);
+  const [ideOpen, setIdeOpen] = useState(false);
 
   const canManage = ['SUPERADMIN', 'ADMIN', 'STAFF'].includes(user?.role);
   const enrolled = !!enrollment || canManage;
@@ -626,6 +653,16 @@ const CoursePlayer = () => {
   const prevLocked = prevLesson ? lessonIsLocked(prevLesson.id) : false;
   const nextLocked = nextLesson ? lessonIsLocked(nextLesson.id) : false;
   const accessLesson = access?.lessons?.find((item) => item.id === currentLesson?.id);
+
+  const ide = useMemo(() => {
+    if (!currentLesson) return null;
+    const detected = extractCode(currentLesson.readingContent);
+    return {
+      language: detected.language || detectLanguage(course?.title),
+      code: detected.code,
+      expectedOutput: extractOutput(currentLesson.readingContent),
+    };
+  }, [currentLesson, course?.title]);
 
   // A locked lesson can never remain in Study mode, even if a stale flag or a
   // quick navigation tries to force it open.
@@ -780,6 +817,10 @@ const CoursePlayer = () => {
         certificate={certificate}
         aiTutor={aiTutor}
         setAiTutor={setAiTutor}
+        ide={ide}
+        onOpenIde={() => setIdeOpen(true)}
+        ideOpen={ideOpen}
+        setIdeOpen={setIdeOpen}
       />
     );
   }
@@ -877,6 +918,15 @@ const CoursePlayer = () => {
                       >
                         <Sparkles className="h-4 w-4" /> Learn with AI
                       </button>
+                      {ide?.code && (
+                        <button
+                          type="button"
+                          onClick={() => setIdeOpen(true)}
+                          className="btn-secondary !py-2 text-xs"
+                        >
+                          <Terminal className="h-4 w-4" /> Code Playground
+                        </button>
+                      )}
                       {enrollment ? (
                         <button
                           type="button"
@@ -913,7 +963,7 @@ const CoursePlayer = () => {
                       <BookOpen className="h-4 w-4 text-red-600" /> Lesson reading guide
                     </h2>
                     <div
-                      className="mt-2 max-h-72 overflow-y-auto text-sm leading-7 text-slate-600 dark:text-slate-300"
+                      className="prose prose-slate mt-2 max-h-[30rem] overflow-y-auto text-sm leading-7 text-slate-600 dark:text-slate-300 dark:prose-invert"
                       dangerouslySetInnerHTML={
                         currentLesson.readingContent
                           ? safeHtml(currentLesson.readingContent)
@@ -923,13 +973,24 @@ const CoursePlayer = () => {
                             }
                       }
                     />
-                    <button
-                      type="button"
-                      onClick={() => setStudyMode(true)}
-                      className="mt-3 text-xs font-semibold text-red-600 dark:text-red-400"
-                    >
-                      Open in Study mode →
-                    </button>
+                    <div className="mt-3 flex flex-wrap items-center gap-4">
+                      <button
+                        type="button"
+                        onClick={() => setStudyMode(true)}
+                        className="text-xs font-semibold text-red-600 dark:text-red-400"
+                      >
+                        Open in Study mode →
+                      </button>
+                      {ide?.code && (
+                        <button
+                          type="button"
+                          onClick={() => setIdeOpen(true)}
+                          className="inline-flex items-center gap-1 text-xs font-semibold text-red-600 dark:text-red-400"
+                        >
+                          <Terminal className="h-3.5 w-3.5" /> Try this code in the playground →
+                        </button>
+                      )}
+                    </div>
                   </div>
 
                   <div className="mt-6 flex flex-wrap items-center justify-between gap-3 border-t border-slate-100 pt-4 dark:border-slate-800">
@@ -1094,6 +1155,15 @@ const CoursePlayer = () => {
           </aside>
         </div>
       </div>
+
+      <CodePlayground
+        open={ideOpen}
+        onClose={() => setIdeOpen(false)}
+        lessonTitle={currentLesson.title}
+        language={ide?.language}
+        initialCode={ide?.code}
+        expectedOutput={ide?.expectedOutput}
+      />
 
       <Footer />
     </div>
