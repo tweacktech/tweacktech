@@ -151,9 +151,13 @@ const LessonContent = ({ lesson }) => {
     );
   }
 
+  // No attachment: the reading guide below is the lesson, so do not render an
+  // empty placeholder that pushes real content off small screens.
+  if (!url) return null;
+
   // Slides / docs / links: show a friendly resource card.
   return (
-    <div className="rounded-2xl border border-slate-200 bg-white p-10 text-center dark:border-slate-800 dark:bg-slate-900">
+    <div className="rounded-2xl border border-slate-200 bg-white p-6 text-center dark:border-slate-800 dark:bg-slate-900 sm:p-10">
       <span className="mx-auto grid h-16 w-16 place-items-center rounded-2xl bg-red-50 text-red-600 dark:bg-red-950/50 dark:text-red-400">
         {lesson?.type === 'SLIDE' ? (
           <Presentation className="h-7 w-7" />
@@ -166,15 +170,9 @@ const LessonContent = ({ lesson }) => {
         {lesson?.description ||
           'Open the lesson resource to follow along. Slides, documents, and links open in a new tab.'}
       </p>
-      {url ? (
-        <a href={url} target="_blank" rel="noreferrer" className="btn-primary mt-5">
-          <ExternalLink className="h-4 w-4" /> Open lesson resource
-        </a>
-      ) : (
-        <p className="mt-4 text-xs text-slate-400">
-          No file was attached to this lesson. Check back soon.
-        </p>
-      )}
+      <a href={url} target="_blank" rel="noreferrer" className="btn-primary mt-5">
+        <ExternalLink className="h-4 w-4" /> Open lesson resource
+      </a>
     </div>
   );
 };
@@ -301,8 +299,8 @@ const StudyMode = ({
         </div>
       </header>
 
-      <main className="mx-auto grid max-w-7xl gap-5 p-4 lg:grid-cols-[minmax(0,1fr)_320px]">
-        <section className="space-y-5">
+      <main className="mx-auto grid w-full min-w-0 max-w-7xl grid-cols-1 gap-5 p-3 sm:p-4 lg:grid-cols-[minmax(0,1fr)_320px]">
+        <section className="min-w-0 max-w-full space-y-5">
           <LessonContent lesson={lesson} />
 
           <div className="card p-6">
@@ -319,9 +317,9 @@ const StudyMode = ({
             {markError && <p className="mt-3 text-sm text-red-600">{markError}</p>}
           </div>
 
-          <div className="card p-6">
+          <div className="card min-w-0 max-w-full overflow-hidden p-4 sm:p-6">
             <h2 className="flex items-center gap-2 text-lg font-bold text-slate-900 dark:text-white">
-              <BookOpen className="h-5 w-5 text-red-600" /> Reading guide
+              <BookOpen className="h-5 w-5 shrink-0 text-red-600" /> Reading guide
             </h2>
             <div className="mt-3 flex flex-wrap gap-2">
               <ReadAloud html={reading} lessonId={lesson?.id} compact />
@@ -332,7 +330,7 @@ const StudyMode = ({
               )}
             </div>
             <div
-              className="prose prose-slate mt-4 max-w-none text-sm leading-7 text-slate-600 dark:prose-invert dark:text-slate-300"
+              className="prose prose-slate mt-4 max-w-full overflow-x-auto break-words text-sm leading-7 text-slate-600 dark:prose-invert dark:text-slate-300"
               dangerouslySetInnerHTML={
                 reading
                   ? safeHtml(reading)
@@ -380,7 +378,7 @@ const StudyMode = ({
           </div>
         </section>
 
-        <aside className="space-y-4">
+        <aside className="min-w-0 max-w-full space-y-4">
           {aiEnabled && aiTutor && <AiTutor api={api} lessonId={lesson?.id} lessonTitle={lesson?.title} />}
 
           <div className="card p-5">
@@ -801,8 +799,8 @@ const CoursePlayer = () => {
           ]}
         />
 
-        <div className="mt-5 grid gap-6 lg:grid-cols-3">
-          <div className="space-y-5 lg:col-span-2">
+        <div className="mt-5 grid min-w-0 grid-cols-1 gap-6 lg:grid-cols-3">
+          <div className="min-w-0 max-w-full space-y-5 lg:col-span-2">
             {isLocked ? (
               <div className="card flex flex-col items-center gap-4 p-12 text-center">
                 <span className="grid h-16 w-16 place-items-center rounded-2xl bg-slate-100 text-slate-400 dark:bg-slate-800">
@@ -919,7 +917,7 @@ const CoursePlayer = () => {
                       <BookOpen className="h-4 w-4 text-red-600" /> Lesson reading guide
                     </h2>
                     <div
-                      className="prose prose-slate mt-2 max-h-[30rem] overflow-y-auto text-sm leading-7 text-slate-600 dark:text-slate-300 dark:prose-invert"
+                      className="prose prose-slate mt-2 max-h-[30rem] max-w-full overflow-x-auto overflow-y-auto break-words text-sm leading-7 text-slate-600 dark:text-slate-300 dark:prose-invert"
                       dangerouslySetInnerHTML={
                         currentLesson.readingContent
                           ? safeHtml(currentLesson.readingContent)
@@ -975,7 +973,7 @@ const CoursePlayer = () => {
             )}
           </div>
 
-          <aside className="space-y-4">
+          <aside className="min-w-0 max-w-full space-y-4">
             <div className="card p-5">
               <div className="flex items-center justify-between">
                 <h2 className="font-bold text-slate-900 dark:text-white">Course progress</h2>

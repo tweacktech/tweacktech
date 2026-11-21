@@ -5,7 +5,13 @@ import {
   Logger,
   NotFoundException,
 } from '@nestjs/common';
-import { ChatMemberRole, ChatRoomType, Prisma, Role } from '@prisma/client';
+import {
+  ChatMemberRole,
+  ChatRoomType,
+  EnrollmentStatus,
+  Prisma,
+  Role,
+} from '@prisma/client';
 import { PrismaService } from '../common/services/prisma.service';
 import { NotificationsService } from '../notifications/notifications.service';
 import { RealtimeService } from '../realtime/realtime.service';
@@ -102,7 +108,19 @@ export class ChatService {
       };
     });
 
-    return withUnread.sort(
+    // A completed course no longer has a student forum. Instructors and
+    // support staff keep their access so they can still help other learners.
+    const completed = await this.prisma.enrollment.findMany({
+      where: { userId: user.sub, status: EnrollmentStatus.COMPLETED },
+      select: { courseId: true },
+    });
+    const completedIds = new Set(completed.map((row) => row.courseId));
+    const visible = withUnread.filter((room) => {
+      if (isSupportStaff || room.type !== ChatRoomType.COURSE || !room.course) return true;
+      return !completedIds.has(room.course.id);
+    });
+
+    return visible.sort(
       (a, b) => new Date(b.lastMessageAt).getTime() - new Date(a.lastMessageAt).getTime(),
     );
   }
@@ -475,12 +493,27 @@ export class ChatService {
     const membership = await this.prisma.chatRoomMember.findUnique({
       where: { roomId_userId: { roomId: room.id, userId: user.sub } },
     });
-    if (membership) return membership;
 
     const supportStaff =
       user.role === Role.SUPERADMIN ||
       user.role === Role.ADMIN ||
       (user.permissions || []).includes('MANAGE_SUPPORT');
+
+    if (membership) {
+      if (room.type === ChatRoomType.COURSE && room.courseId && !supportStaff) {
+        const enrollment = await this.prisma.enrollment.findUnique({
+          where: {
+            userId_courseId: { userId: user.sub, courseId: room.courseId },
+          },
+          select: { status: true },
+        });
+        if (enrollment?.status === EnrollmentStatus.COMPLETED) {
+          throw new ForbiddenException('This course is complete, so its class forum is closed.');
+        }
+      }
+      return membership;
+    }
+
     if (room.type === ChatRoomType.SUPPORT && supportStaff) return null;
 
     if (room.type === ChatRoomType.COURSE && room.courseId) {
@@ -506,7 +539,10 @@ export class ChatService {
   private async ensureCourseRooms(user: any) {
     const [enrollments, instructed] = await Promise.all([
       this.prisma.enrollment.findMany({
-        where: { userId: user.sub },
+        where: {
+          userId: user.sub,
+          status: { not: EnrollmentStatus.COMPLETED },
+        },
         select: { courseId: true },
       }),
       this.prisma.course.findMany({
@@ -570,9 +606,9 @@ export class ChatService {
     if (user?.sub) {
       const enrolled = await this.prisma.enrollment.findUnique({
         where: { userId_courseId: { userId: user.sub, courseId } },
-        select: { id: true },
+        select: { id: true, status: true },
       });
-      if (enrolled) {
+      if (enrolled && enrolled.status !== EnrollmentStatus.COMPLETED) {
         await this.prisma.chatRoomMember.upsert({
           where: { roomId_userId: { roomId: room.id, userId: user.sub } },
           update: {},

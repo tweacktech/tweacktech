@@ -57,6 +57,29 @@ configured Neon database, and both the API and React client build successfully.
   ("Start quiz"). Passing it replaces the card with a small "Module quiz passed"
   indicator instead of a permanent retake button.
 
+### Mobile lesson layout and course forums
+- The navbar no longer forces a horizontal scroll on 320px phones: the wordmark
+  hides on very small screens, controls use an compact theme toggle and tighter
+  spacing. Verified across lessons, Study mode, chat, admin pages and modals —
+  zero horizontal overflow at 320px.
+- Lesson guides and Study mode use `min-w-0` grid children, wrapping text and
+  scrollable code blocks, so long content stays inside the viewport. The empty
+  "No file was attached" card no longer appears for text-only lessons.
+- Lesson-guide CSS was moved out of Tailwind's purged layer so code blocks keep
+  their dark background and horizontal scrolling in production builds.
+- Chat is now a standard grouped conversation list: **Course forums**, **Direct
+  messages**, **Groups** and **Support**. A course forum exists only while the
+  student is enrolled; completing a course hides it from the list and blocks
+  direct access server-side.
+
+### Real quiz questions
+- Replaced the trivial "Which topic is covered in lesson X?" questions with
+  genuine multiple-choice questions about the actual lesson content.
+- `backend/scripts/lib/quiz-library.js` holds two content questions for each of
+  the 40 lesson topics plus course-mechanics questions. `npm run upgrade:quiz-questions`
+  rebuilt all 92 module quizzes (10 one-point questions, 80% pass mark), and
+  `npm run seed:quizzes` uses the same library for new modules.
+
 ### Locked lessons stay locked
 - Lesson locks are resolved from a single server-authoritative access record and
   fail closed when data is missing.

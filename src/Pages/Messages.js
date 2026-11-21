@@ -318,6 +318,21 @@ const Messages = () => {
     [rooms, search],
   );
 
+  const groupedRooms = useMemo(() => {
+    const groups = [
+      { key: 'COURSE', label: 'Course forums' },
+      { key: 'DIRECT', label: 'Direct messages' },
+      { key: 'GROUP', label: 'Groups' },
+      { key: 'SUPPORT', label: 'Support' },
+    ];
+    return groups
+      .map((group) => ({
+        ...group,
+        rooms: visibleRooms.filter((room) => room.type === group.key),
+      }))
+      .filter((group) => group.rooms.length > 0);
+  }, [visibleRooms]);
+
   const otherMembers = (room) =>
     (room.members || []).filter((member) => member.id !== user?.id);
 
@@ -400,7 +415,12 @@ const Messages = () => {
                   </button>
                 </div>
               ) : (
-                visibleRooms.map((room) => {
+                groupedRooms.map((group) => (
+                  <div key={group.key}>
+                    <p className="sticky top-0 z-10 border-b border-slate-100 bg-slate-50/95 px-3 py-2 text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:border-slate-800 dark:bg-slate-900/95">
+                      {group.label}
+                    </p>
+                  {group.rooms.map((room) => {
                   const Icon = roomIcon(room.type);
                   const isActive = active?.id === room.id;
                   return (
@@ -447,7 +467,9 @@ const Messages = () => {
                       </span>
                     </button>
                   );
-                })
+                  })}
+                   </div>
+                ))
               )}
             </div>
             <button
