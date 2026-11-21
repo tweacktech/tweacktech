@@ -444,7 +444,7 @@ export class EnrollmentsService {
    *  - module.unlockAt / lesson.unlockAt (absolute dates)
    */
   private async assertLessonUnlocked(
-    enrollment: { id: string; courseId: string; enrolledAt: Date },
+    enrollment: { id: string; courseId: string; enrolledAt: Date; userId: string },
     lessonId: string,
   ) {
     const lesson = await this.prisma.lesson.findUnique({
@@ -453,6 +453,7 @@ export class EnrollmentsService {
         module: {
           select: {
             courseId: true,
+            order: true,
             unlockAfterDays: true,
             unlockAt: true,
           },
@@ -462,6 +463,44 @@ export class EnrollmentsService {
 
     if (!lesson || lesson.module.courseId !== enrollment.courseId) {
       throw new NotFoundException('Lesson not found in this course');
+    }
+
+    // Module quizzes gate the following module. This mirrors getAccess() so a
+    // lesson that the UI shows as locked can never be progressed via the API.
+    const previousModule = await this.prisma.module.findFirst({
+      where: {
+        courseId: enrollment.courseId,
+        isPublished: true,
+        order: { lt: lesson.module.order },
+      },
+      orderBy: { order: 'desc' },
+      select: { id: true },
+    });
+    if (previousModule) {
+      const quiz = await this.prisma.assignment.findFirst({
+        where: {
+          courseId: enrollment.courseId,
+          moduleId: previousModule.id,
+          type: 'QUIZ',
+        },
+        select: { id: true, passScore: true },
+      });
+      if (quiz) {
+        const submission = await this.prisma.assignmentSubmission.findFirst({
+          where: { userId: enrollment.userId, assignmentId: quiz.id },
+          select: { score: true },
+        });
+        const passed =
+          submission &&
+          typeof submission.score === 'number' &&
+          submission.score >= Number(quiz.passScore || 6);
+        if (!passed) {
+          throw new BadRequestException({
+            message: 'Pass the previous module quiz to unlock this lesson.',
+            code: 'MODULE_QUIZ_LOCKED',
+          });
+        }
+      }
     }
 
     if (lesson.isFree) return;

@@ -16,6 +16,7 @@ import {
   Presentation,
   RotateCcw,
   ShieldCheck,
+  Sparkles,
   Square,
   Timer,
   Volume2,
@@ -27,6 +28,7 @@ import Footer from '../Component/Footer';
 import Breadcrumbs from '../Component/Breadcrumbs';
 import { useAuth } from '../AuthContext';
 import QuizRunner from '../Component/QuizRunner';
+import AiTutor from '../Component/AiTutor';
 
 const unwrap = (res) => (res?.data && res.data.data !== undefined ? res.data.data : res?.data);
 
@@ -212,6 +214,8 @@ const StudyMode = ({
   completedCount,
   totalLessons,
   certificate,
+  aiTutor,
+  setAiTutor,
 }) => {
   const [seconds, setSeconds] = useState(25 * 60);
   const [speaking, setSpeaking] = useState(false);
@@ -293,6 +297,15 @@ const StudyMode = ({
               {course?.title} · focus mode
             </p>
           </div>
+          <button
+            type="button"
+            onClick={() => setAiTutor((value) => !value)}
+            className="btn-secondary !px-3 !py-2 text-xs"
+            aria-pressed={aiTutor}
+          >
+            <Sparkles className="h-4 w-4" />
+            <span className="hidden sm:inline">{aiTutor ? 'Hide AI tutor' : 'AI tutor'}</span>
+          </button>
           <div className="hidden items-center gap-2 rounded-xl border border-slate-200 px-3 py-1.5 text-sm font-bold text-slate-700 dark:border-slate-700 dark:text-slate-200 sm:flex">
             <Timer className="h-4 w-4 text-red-600" />
             {minutes}:{secs}
@@ -395,6 +408,8 @@ const StudyMode = ({
         </section>
 
         <aside className="space-y-4">
+          {aiTutor && <AiTutor api={api} lessonId={lesson?.id} lessonTitle={lesson?.title} />}
+
           <div className="card p-5">
             <div className="flex items-center justify-between">
               <h2 className="text-sm font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
@@ -510,8 +525,10 @@ const CoursePlayer = () => {
   const [marking, setMarking] = useState(false);
   const [markError, setMarkError] = useState('');
   const [studyMode, setStudyMode] = useState(false);
+  const [aiTutor, setAiTutor] = useState(false);
 
   const canManage = ['SUPERADMIN', 'ADMIN', 'STAFF'].includes(user?.role);
+  const enrolled = !!enrollment || canManage;
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -586,23 +603,35 @@ const CoursePlayer = () => {
   const currentLesson = currentIndex >= 0 ? lessons[currentIndex] : null;
   const nextLesson = lessons[currentIndex + 1] || null;
   const prevLesson = lessons[currentIndex - 1] || null;
-  const prevAccess = access?.lessons?.find((item) => item.id === prevLesson?.id);
-  const prevLocked = Boolean(prevLesson && prevAccess && !prevAccess.isUnlocked);
-  const nextAccess = access?.lessons?.find((item) => item.id === nextLesson?.id);
-  const nextLocked = Boolean(nextLesson && nextAccess && !nextAccess.isUnlocked);
   const currentModule = access?.modules?.find((item) => item.id === currentLesson?.moduleId);
   const moduleQuizId = currentModule?.quizId || null;
   const moduleQuizPassed = Boolean(currentModule?.quizPassed);
 
-  const enrolled = !!enrollment || canManage;
+  // Access data from the server is the single source of truth for locks. It
+  // fails closed: if a record is missing, an enrolled student's lesson stays
+  // locked rather than accidentally opening. Only staff and genuinely free
+  // previews bypass this check.
+  const lessonIsLocked = useCallback(
+    (id) => {
+      if (!id || canManage) return false;
+      const record = access?.lessons?.find((item) => item.id === id);
+      if (record) return !record.isUnlocked;
+      if (enrolled) return true;
+      return !lessons.find((item) => item.id === id)?.isFree;
+    },
+    [access, canManage, enrolled, lessons],
+  );
+
+  const isLocked = currentLesson ? lessonIsLocked(currentLesson.id) : false;
+  const prevLocked = prevLesson ? lessonIsLocked(prevLesson.id) : false;
+  const nextLocked = nextLesson ? lessonIsLocked(nextLesson.id) : false;
   const accessLesson = access?.lessons?.find((item) => item.id === currentLesson?.id);
-  const isLocked = currentLesson
-    ? enrolled
-      ? accessLesson
-        ? !accessLesson.isUnlocked
-        : !currentLesson.isFree && !canManage
-      : !currentLesson.isFree
-    : false;
+
+  // A locked lesson can never remain in Study mode, even if a stale flag or a
+  // quick navigation tries to force it open.
+  useEffect(() => {
+    if (studyMode && isLocked) setStudyMode(false);
+  }, [studyMode, isLocked]);
   const isCompleted = currentLesson ? completed.has(currentLesson.id) : false;
   const progressPct = access?.enrolled
     ? Math.round(access.progress || 0)
@@ -671,15 +700,7 @@ const CoursePlayer = () => {
   // lag behind the lessons a learner has actually worked through. A locked
   // target lesson is never navigable, even from Study mode.
   const goToNext = async (targetId) => {
-    if (targetId) {
-      const targetAccess = access?.lessons?.find((item) => item.id === targetId);
-      const targetLocked = enrolled
-        ? targetAccess
-          ? !targetAccess.isUnlocked
-          : false
-        : false;
-      if (targetLocked) return;
-    }
+    if (targetId && lessonIsLocked(targetId)) return;
     if (enrollment && currentLesson && !isCompleted && !courseCompleted) {
       const { ok } = await saveProgress({ refresh: false });
       if (!ok) return;
@@ -757,6 +778,8 @@ const CoursePlayer = () => {
         completedCount={completed.size}
         totalLessons={lessons.length}
         certificate={certificate}
+        aiTutor={aiTutor}
+        setAiTutor={setAiTutor}
       />
     );
   }
@@ -785,9 +808,12 @@ const CoursePlayer = () => {
                   This lesson is locked
                 </h2>
                 <p className="max-w-sm text-sm text-slate-500 dark:text-slate-400">
-                  {accessLesson?.unlockAt
+                  {!enrolled
+                    ? `Enroll in ${course.title} to unlock every lesson, assignment, and your certificate.`
+                    : accessLesson?.unlockAt &&
+                      new Date(accessLesson.unlockAt).getTime() > Date.now()
                     ? `This lesson unlocks ${new Date(accessLesson.unlockAt).toLocaleString()}.`
-                    : `Enroll in ${course.title} to unlock every lesson, assignment, and your certificate.`}
+                    : 'Pass the previous module quiz to unlock this lesson.'}
                 </p>
                 <div className="flex gap-2">
                   <Link to={`/courses/${courseId}`} className="btn-primary">
@@ -833,10 +859,23 @@ const CoursePlayer = () => {
                     <div className="flex flex-wrap items-center gap-2">
                       <button
                         type="button"
-                        onClick={() => setStudyMode(true)}
+                        onClick={() => {
+                          setAiTutor(false);
+                          setStudyMode(true);
+                        }}
                         className="btn-secondary !py-2 text-xs"
                       >
                         <BookOpen className="h-4 w-4" /> Study mode
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setAiTutor(true);
+                          setStudyMode(true);
+                        }}
+                        className="btn-primary !py-2 text-xs"
+                      >
+                        <Sparkles className="h-4 w-4" /> Learn with AI
                       </button>
                       {enrollment ? (
                         <button

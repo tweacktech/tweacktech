@@ -32,6 +32,7 @@ import { ActivityModule } from './activity/activity.module';
 import { ActivityInterceptor } from './activity/activity.interceptor';
 import { AttendanceModule } from './attendance/attendance.module';
 import { MentorsModule } from './mentors/mentors.module';
+import { AiModule } from './ai/ai.module';
 
 @Module({
   imports: [
@@ -66,6 +67,7 @@ import { MentorsModule } from './mentors/mentors.module';
     TalentModule,
     AttendanceModule,
     MentorsModule,
+    AiModule,
     SeedersModule,
   ],
   providers: [
