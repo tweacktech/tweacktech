@@ -475,3 +475,40 @@ body:has(.modal-overlay) {
 }
 
 img { max-width: 100%; }
+
+/* Content protection: text cannot be selected or dragged, except in form
+   fields where the learner still needs to type normally. */
+html {
+  -webkit-touch-callout: none;
+}
+body {
+  -webkit-user-select: none;
+  user-select: none;
+}
+input,
+textarea,
+select,
+[contenteditable="true"] {
+  -webkit-user-select: text;
+  user-select: text;
+}
+img,
+video {
+  -webkit-user-drag: none;
+  user-select: none;
+}
+
+/* Hide lesson content from printing / "Save as PDF". */
+@media print {
+  body * {
+    visibility: hidden !important;
+  }
+  body::after {
+    content: "TweackTech — printed copies are not available.";
+    visibility: visible !important;
+    position: absolute;
+    inset: 2rem;
+    font: 700 1.25rem system-ui, sans-serif;
+    color: #0f172a;
+  }
+}

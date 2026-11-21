@@ -57,6 +57,21 @@ configured Neon database, and both the API and React client build successfully.
   ("Start quiz"). Passing it replaces the card with a small "Module quiz passed"
   indicator instead of a permanent retake button.
 
+### Content protection
+- Production builds no longer emit source maps: `GENERATE_SOURCEMAP=false` is
+  set for local/Vercel builds and the post-build script deletes any `.map` files
+  that slip through. Verified 0 source maps in `build/`.
+- A site protection layer blocks right-click, text selection, copy/cut/paste,
+  dragging, printing and the common developer-tool shortcuts on page content,
+  while still allowing normal typing inside form fields and chat.
+- Lesson content is hidden from printed output, and a desktop developer-tools
+  heuristic shows a blocking overlay. Localhost and `?dev=1` remain exempt for
+  development.
+- Caveat: a browser app must deliver its code to the visitor, so these are
+  deterrents that stop casual copying and source inspection — they cannot make
+  reverse engineering mathematically impossible. Server-side rules remain the
+  real security boundary.
+
 ### Mobile lesson layout and course forums
 - The navbar no longer forces a horizontal scroll on 320px phones: the wordmark
   hides on very small screens, controls use an compact theme toggle and tighter

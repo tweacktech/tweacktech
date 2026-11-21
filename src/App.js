@@ -8,6 +8,7 @@ import ErrorBoundary from "./Component/ErrorBoundary";
 import OfflineBanner from "./Component/OfflineBanner";
 import SupportChatbot from "./Component/SupportChatbot";
 import NotificationToast from "./Component/NotificationToast";
+import SiteProtection from "./Component/SiteProtection";
 import { canAccessAdminPath } from "./lib/permissions";
 
 // Public pages
@@ -347,6 +348,7 @@ function AppRoutes() {
 function App() {
   return (
     <ThemeProvider>
+      <SiteProtection />
       <AuthProvider>
         <CurrencyProvider>
           <AppRoutes />

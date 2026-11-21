@@ -15,6 +15,25 @@ const path = require('path');
 
 const ROOT = path.resolve(__dirname, '..');
 const BUILD = path.join(ROOT, 'build');
+
+// Never let original source leak through source maps, even if an environment
+// variable was missed.
+const removeSourceMaps = () => {
+  if (!fs.existsSync(BUILD)) return 0;
+  let removed = 0;
+  const walk = (directory) => {
+    fs.readdirSync(directory, { withFileTypes: true }).forEach((entry) => {
+      const full = path.join(directory, entry.name);
+      if (entry.isDirectory()) walk(full);
+      else if (entry.name.endsWith('.map')) {
+        fs.rmSync(full, { force: true });
+        removed += 1;
+      }
+    });
+  };
+  walk(BUILD);
+  return removed;
+};
 const INDEX = path.join(BUILD, 'index.html');
 const API_URL = (
   process.env.REACT_APP_API_URL ||
@@ -313,6 +332,9 @@ const main = async () => {
   });
   console.log(`[prerender] Wrote ${written} shareable page${written === 1 ? '' : 's'} with custom metadata.`);
 };
+
+const mapsRemoved = removeSourceMaps();
+if (mapsRemoved) console.log(`[prerender] Removed ${mapsRemoved} source map files.`);
 
 main().catch((error) => {
   console.warn(`[prerender] Skipped: ${error.message}`);
