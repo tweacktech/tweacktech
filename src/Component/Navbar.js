@@ -125,12 +125,12 @@ const Navbar = () => {
   return (
     <header className="sticky top-0 z-50 border-b border-slate-200/80 dark:border-slate-800/80 bg-white/90 dark:bg-slate-950/90 backdrop-blur-xl">
       <div className="container-page">
-        <div className="flex h-16 items-center justify-between gap-3">
+        <div className="flex h-16 items-center justify-between gap-2 sm:gap-3">
           <Link to="/" className="flex items-center gap-2.5 shrink-0" aria-label="TweackTech home">
             <span className="grid h-9 w-9 place-items-center rounded-xl bg-gradient-to-br from-red-500 to-red-700 text-white shadow-lg shadow-red-600/25">
               <GraduationCap className="h-5 w-5" />
             </span>
-            <span className="text-lg font-extrabold tracking-tight text-slate-900 dark:text-white">
+            <span className="hidden text-lg font-extrabold tracking-tight text-slate-900 dark:text-white min-[360px]:inline">
               Tweack<span className="text-red-600 dark:text-red-500">Tech</span>
             </span>
           </Link>
