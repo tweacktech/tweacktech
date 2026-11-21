@@ -20,9 +20,10 @@ export const speechSupported = () =>
 export function htmlToSpeechText(html = '') {
   return String(html || '')
     .replace(/<(script|style|pre|code)[\s\S]*?<\/\1>/gi, ' ')
+    .replace(/<h[1-6][^>]*>[\s\S]*?<\/h[1-6]>/gi, ' ')
     .replace(/<\/(p|div|li|h[1-6]|tr|section)>/gi, '. ')
     .replace(/<br\s*\/?>/gi, '. ')
-    .replace(/<li[^>]*>/gi, 'Item: ')
+    .replace(/<li[^>]*>/gi, '')
     .replace(/<[^>]+>/g, ' ')
     .replace(/&nbsp;/gi, ' ')
     .replace(/&amp;/gi, '&')

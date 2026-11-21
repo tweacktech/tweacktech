@@ -6,22 +6,9 @@
  */
 require('dotenv').config({ path: require('path').join(__dirname, '..', '.env') });
 const { PrismaClient, QuizQuestionType } = require('@prisma/client');
+const { buildQuestionSet, buildOptions } = require('./lib/quiz-library');
 
 const prisma = new PrismaClient();
-
-const shuffleWithCorrectFirstAs = (correct, distractors, correctPosition) => {
-  const options = [];
-  let distractorIndex = 0;
-  for (let i = 0; i < 4; i += 1) {
-    if (i === correctPosition) {
-      options.push({ text: correct, isCorrect: true });
-    } else {
-      options.push({ text: distractors[distractorIndex % distractors.length], isCorrect: false });
-      distractorIndex += 1;
-    }
-  }
-  return options;
-};
 
 async function main() {
   const author = await prisma.user.findFirst({
@@ -52,68 +39,11 @@ async function main() {
     });
     if (existing) continue;
 
-    const lessonTitles = module.lessons.map((lesson) => lesson.title);
-    const pool = lessonTitles.length >= 4 ? lessonTitles : [
-      ...lessonTitles,
-      'Core concepts',
-      'Worked examples',
-      'Practice and review',
-    ];
-
-    const questions = lessonTitles.slice(0, 4).map((title, index) => {
-      const distractors = pool.filter((item) => item !== title).slice(0, 3);
-      return {
-        prompt: `Which topic is covered in the lesson “${title}”?`,
-        type: QuizQuestionType.SINGLE_CHOICE,
-        points: 1,
-        order: index + 1,
-        explanation: `Review the lesson “${title}” and its worked example before retaking the quiz.`,
-        options: shuffleWithCorrectFirstAs(title, distractors, index % 4),
-      };
-    });
-
-    const extras = [
-      {
-        prompt: 'What should you do first when a worked example does not make sense?',
-        correct: 'Re-run the example, change one value, then ask in the class chat',
-        wrong: ['Skip the rest of the module', 'Memorise the answer without testing it', 'Close the course and try another subject'],
-      },
-      {
-        prompt: 'How many points do you need to pass a module quiz?',
-        correct: '8 out of 10 (80%)',
-        wrong: ['4 out of 10', '6 out of 10', '10 out of 10'],
-      },
-      {
-        prompt: 'What happens after you pass a module quiz?',
-        correct: 'The next module’s lessons unlock',
-        wrong: ['The course is deleted', 'Nothing changes', 'You are logged out'],
-      },
-      {
-        prompt: 'Can you retake a module quiz?',
-        correct: 'Yes, you can retake it any time',
-        wrong: ['No, one attempt only', 'Only after one year', 'Only an admin can allow it'],
-      },
-      {
-        prompt: 'What should you finish before taking the module quiz?',
-        correct: 'Every lesson in the current module',
-        wrong: ['Only the first lesson', 'Only the video lessons', 'Nothing, quizzes are independent'],
-      },
-    ];
-
-    extras.forEach((extra, index) => {
-      questions.push({
-        prompt: extra.prompt,
-        type: QuizQuestionType.SINGLE_CHOICE,
-        points: 1,
-        order: questions.length + 1,
-        explanation: extra.correct,
-        options: shuffleWithCorrectFirstAs(
-          extra.correct,
-          extra.wrong,
-          (index + 1) % 4,
-        ),
-      });
-    });
+    const questions = buildQuestionSet(
+      module.title,
+      module.course.title,
+      module.lessons.map((lesson) => lesson.title),
+    );
 
     const assignment = await prisma.assignment.create({
       data: {
@@ -142,11 +72,7 @@ async function main() {
           order: question.order,
           explanation: question.explanation,
           options: {
-            create: question.options.map((option, index) => ({
-              text: option.text,
-              isCorrect: option.isCorrect,
-              order: index + 1,
-            })),
+            create: buildOptions(question, question.order - 1),
           },
         },
       });

@@ -883,15 +883,6 @@ const CoursePlayer = () => {
                           <Sparkles className="h-4 w-4" /> Learn with AI
                         </button>
                       )}
-                      {ide?.code && (
-                        <button
-                          type="button"
-                          onClick={() => setIdeOpen(true)}
-                          className="btn-secondary !py-2 text-xs"
-                        >
-                          <Terminal className="h-4 w-4" /> Code Playground
-                        </button>
-                      )}
                       {enrollment ? (
                         <button
                           type="button"
@@ -938,27 +929,13 @@ const CoursePlayer = () => {
                             }
                       }
                     />
-                    <div className="mt-3 flex flex-wrap items-center gap-4">
-                      <button
-                        type="button"
-                        onClick={() => setStudyMode(true)}
-                        className="text-xs font-semibold text-red-600 dark:text-red-400"
-                      >
-                        Open in Study mode →
-                      </button>
-                      {ide?.code && (
-                        <button
-                          type="button"
-                          onClick={() => setIdeOpen(true)}
-                          className="inline-flex items-center gap-1 text-xs font-semibold text-red-600 dark:text-red-400"
-                        >
-                          <Terminal className="h-3.5 w-3.5" /> Try this code in the playground →
-                        </button>
-                      )}
-                    </div>
-                    <div className="mt-3">
-                      <ReadAloud html={currentLesson.readingContent} lessonId={currentLesson.id} compact />
-                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setStudyMode(true)}
+                      className="mt-3 text-xs font-semibold text-red-600 dark:text-red-400"
+                    >
+                      Open in Study mode →
+                    </button>
                   </div>
 
                   <div className="mt-6 flex flex-wrap items-center justify-between gap-3 border-t border-slate-100 pt-4 dark:border-slate-800">
