@@ -57,6 +57,23 @@ configured Neon database, and both the API and React client build successfully.
   ("Start quiz"). Passing it replaces the card with a small "Module quiz passed"
   indicator instead of a permanent retake button.
 
+### Module-specific quizzes, staff preview and lesson editor
+- Quiz questions are now unique per module: selection is rotated by module
+  order, and extra questions are generated from each lesson's own text.
+  Verified 0 shared questions between module 1 and modules 2/3.
+- Staff-only **Quiz bank** at `/admin/quizzes` (`GET
+  /api/assignments/quizzes/overview`) lists every module quiz grouped by course
+  with its full answer key and explanations. It is read-only — no submissions
+  are created and students get 403.
+- Admin course builder now has an HTML editor for the reading guide with
+  heading/bold/italic/list/code/link tools and a live preview tab.
+
+### Continue button goes straight to the lesson
+- `GET /api/enrollments/my` now returns `nextLessonId` for each active course.
+  Dashboard "Continue" links open `/courses/:id/lessons/:nextLessonId` directly
+  instead of the course detail/enrolment page (completed courses fall back to
+  the course page).
+
 ### Content protection
 - Production builds no longer emit source maps: `GENERATE_SOURCEMAP=false` is
   set for local/Vercel builds and the post-build script deletes any `.map` files
