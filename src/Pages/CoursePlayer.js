@@ -24,6 +24,7 @@ import {
 } from 'lucide-react';
 import Navbar from '../Component/Navbar';
 import Footer from '../Component/Footer';
+import Breadcrumbs from '../Component/Breadcrumbs';
 import { useAuth } from '../AuthContext';
 import QuizRunner from '../Component/QuizRunner';
 
@@ -201,6 +202,7 @@ const StudyMode = ({
   onNext,
   onExit,
   prevLesson,
+  prevLocked,
   nextLesson,
   nextLocked,
   moduleQuizId,
@@ -358,9 +360,14 @@ const StudyMode = ({
 
           <div className="flex flex-wrap items-center justify-between gap-2">
             {prevLesson ? (
-              <Link to={`/courses/${courseId}/lessons/${prevLesson.id}`} className="btn-secondary">
+              <button
+                type="button"
+                onClick={() => onNext(prevLesson.id)}
+                disabled={prevLocked}
+                className="btn-secondary disabled:cursor-not-allowed disabled:opacity-40"
+              >
                 <ArrowLeft className="h-4 w-4" /> Previous
-              </Link>
+              </button>
             ) : (
               <span />
             )}
@@ -579,6 +586,8 @@ const CoursePlayer = () => {
   const currentLesson = currentIndex >= 0 ? lessons[currentIndex] : null;
   const nextLesson = lessons[currentIndex + 1] || null;
   const prevLesson = lessons[currentIndex - 1] || null;
+  const prevAccess = access?.lessons?.find((item) => item.id === prevLesson?.id);
+  const prevLocked = Boolean(prevLesson && prevAccess && !prevAccess.isUnlocked);
   const nextAccess = access?.lessons?.find((item) => item.id === nextLesson?.id);
   const nextLocked = Boolean(nextLesson && nextAccess && !nextAccess.isUnlocked);
   const currentModule = access?.modules?.find((item) => item.id === currentLesson?.moduleId);
@@ -659,8 +668,18 @@ const CoursePlayer = () => {
   };
 
   // "Next" always records completion before moving on, so progress can never
-  // lag behind the lessons a learner has actually worked through.
+  // lag behind the lessons a learner has actually worked through. A locked
+  // target lesson is never navigable, even from Study mode.
   const goToNext = async (targetId) => {
+    if (targetId) {
+      const targetAccess = access?.lessons?.find((item) => item.id === targetId);
+      const targetLocked = enrolled
+        ? targetAccess
+          ? !targetAccess.isUnlocked
+          : false
+        : false;
+      if (targetLocked) return;
+    }
     if (enrollment && currentLesson && !isCompleted && !courseCompleted) {
       const { ok } = await saveProgress({ refresh: false });
       if (!ok) return;
@@ -709,7 +728,9 @@ const CoursePlayer = () => {
     );
   }
 
-  if (studyMode && currentLesson) {
+  // A locked lesson must never open in Study mode, even if a stale URL or a
+  // stale `studyMode` flag tries to force it.
+  if (studyMode && currentLesson && !isLocked) {
     return (
       <StudyMode
         course={course}
@@ -726,6 +747,7 @@ const CoursePlayer = () => {
         onNext={goToNext}
         onExit={() => setStudyMode(false)}
         prevLesson={prevLesson}
+        prevLocked={prevLocked}
         nextLesson={nextLesson}
         nextLocked={nextLocked}
         moduleQuizId={moduleQuizId}
@@ -744,22 +766,13 @@ const CoursePlayer = () => {
       <Navbar />
 
       <div className="container-page py-6">
-        <nav className="flex flex-wrap items-center gap-2 text-sm text-slate-500 dark:text-slate-400">
-          <Link to="/courses" className="hover:text-red-600 dark:hover:text-red-400">
-            Courses
-          </Link>
-          <span>/</span>
-          <Link
-            to={`/courses/${courseId}`}
-            className="max-w-[200px] truncate hover:text-red-600 dark:hover:text-red-400"
-          >
-            {course.title}
-          </Link>
-          <span>/</span>
-          <span className="max-w-[220px] truncate font-medium text-slate-900 dark:text-white">
-            {currentLesson.title}
-          </span>
-        </nav>
+        <Breadcrumbs
+          items={[
+            { label: 'Courses', to: '/courses' },
+            { label: course.title, to: `/courses/${courseId}` },
+            { label: currentLesson.title },
+          ]}
+        />
 
         <div className="mt-5 grid gap-6 lg:grid-cols-3">
           <div className="space-y-5 lg:col-span-2">

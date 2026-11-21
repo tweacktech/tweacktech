@@ -14,6 +14,7 @@ import {
 } from 'lucide-react';
 import Navbar from '../Component/Navbar';
 import Footer from '../Component/Footer';
+import Breadcrumbs from '../Component/Breadcrumbs';
 import ShareButtons from '../Component/ShareButtons';
 import { useAuth } from '../AuthContext';
 import { useSeo } from '../Component/useSeo';
@@ -96,6 +97,9 @@ const TalentDetail = () => {
     <div className="min-h-screen bg-slate-50 transition-colors dark:bg-slate-950">
       <Navbar />
       <div className="container-page py-8">
+        <Breadcrumbs items={[{ label: 'Talent Hub', to: '/talent' }, { label: 'Profile' }]} className="mb-5" />
+
+
         <Link
           to="/talent"
           className="inline-flex items-center gap-1.5 text-sm font-medium text-slate-500 hover:text-red-600 dark:text-slate-400"

@@ -55,3 +55,15 @@ The current file publishes from `Filter Tech/AI + Pick One` only. To also publis
 news items, copy `Blog: Pick First Image` and `TweackTech: Publish Blog`, connect them after
 `Cloudflare FLUX Image5`, and change the article references in the HTTP node body from
 `$('Filter Tech/AI + Pick One')` to `$('Filter + Pick One')`.
+
+## Payload size note
+The workflow stores a logo inside two Code nodes as base64. Large inline images can make
+the n8n import API return **"request entity too large"**. Use the compact copy
+(`TweackTech_-_RSS_FLUX_Facebook_LinkedIn_Blog_v2(1)_compact.json` in Downloads) where
+that logo is replaced with a tiny 1×1 placeholder. The image-overlay nodes still run;
+replace `LOGO_B64` with a short hosted logo string if you want the watermark back.
+
+If a **413** happens when the workflow calls `/api/integrations/n8n/blog`, the generated
+image is too large to send as a base64 data URL through Vercel (~4.5 MB request limit).
+Send a hosted image URL in `featuredImage` instead, or compress the FLUX output before the
+publish node.

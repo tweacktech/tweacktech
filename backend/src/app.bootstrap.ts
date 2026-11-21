@@ -69,6 +69,9 @@ export async function configureApp(app: NestExpressApplication) {
   const allowOrigin = (origin?: string) => {
     if (!origin) return true; // same-origin, curl, server-to-server
     if (configuredOrigins.includes(origin)) return true;
+    // Local development/preview servers.
+    if (/^http:\/\/localhost:\d+$/i.test(origin)) return true;
+    if (/^http:\/\/127\.0\.0\.1:\d+$/i.test(origin)) return true;
     // Vercel gives every deployment a *.vercel.app hostname.
     if (/^https:\/\/[a-z0-9-]+\.vercel\.app$/i.test(origin)) return true;
     return false;

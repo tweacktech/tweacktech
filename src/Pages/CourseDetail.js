@@ -6,7 +6,6 @@ import {
   Award,
   BookOpen,
   CheckCircle2,
-  ChevronRight,
   Clock,
   Copy,
   CreditCard,
@@ -23,6 +22,7 @@ import {
 } from 'lucide-react';
 import Navbar from '../Component/Navbar';
 import Footer from '../Component/Footer';
+import Breadcrumbs from '../Component/Breadcrumbs';
 import ShareButtons from '../Component/ShareButtons';
 import { useAuth } from '../AuthContext';
 import { useSeo } from '../Component/useSeo';
@@ -307,17 +307,9 @@ const CourseDetail = () => {
       <Navbar />
 
       <div className="container-page py-6">
-        <nav className="flex flex-wrap items-center gap-2 text-sm text-slate-500 dark:text-slate-400">
-          <Link to="/" className="hover:text-red-600 dark:hover:text-red-400">
-            Home
-          </Link>
-          <ChevronRight className="h-4 w-4" />
-          <Link to="/courses" className="hover:text-red-600 dark:hover:text-red-400">
-            Courses
-          </Link>
-          <ChevronRight className="h-4 w-4" />
-          <span className="font-medium text-slate-900 dark:text-white">{course.title}</span>
-        </nav>
+        <Breadcrumbs
+          items={[{ label: 'Courses', to: '/courses' }, { label: course.title }]}
+        />
 
         <div className="mt-4 flex flex-wrap items-center gap-3">
           <Link

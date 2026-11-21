@@ -4,6 +4,7 @@ import { Link } from 'react-router-dom';
 import { Filter, Plus, RefreshCw, Search, User } from 'lucide-react';
 import Navbar from '../Component/Navbar';
 import Footer from '../Component/Footer';
+import Breadcrumbs from '../Component/Breadcrumbs';
 import { useAuth } from '../AuthContext';
 import Pagination from '../Component/Pagination';
 import { useCurrency } from '../CurrencyContext';
@@ -73,6 +74,9 @@ const TalentHub = () => {
     <div className="min-h-screen bg-slate-50 transition-colors duration-300 dark:bg-slate-950">
       <Navbar />
       <div className="container-page py-8">
+        <Breadcrumbs items={[{ label: 'Talent Hub' }]} className="mb-5" />
+
+
         <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
           <div>
             <span className="section-eyebrow">

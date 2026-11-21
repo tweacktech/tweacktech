@@ -11,6 +11,7 @@ import {
 } from 'lucide-react';
 import Navbar from '../Component/Navbar';
 import Footer from '../Component/Footer';
+import Breadcrumbs from '../Component/Breadcrumbs';
 import { useAuth } from '../AuthContext';
 import Pagination from '../Component/Pagination';
 
@@ -144,6 +145,9 @@ const JobListings = () => {
       </header>
 
       <main className="container-page py-10">
+        <Breadcrumbs items={[{ label: 'Jobs' }]} className="mb-5" />
+
+
         {error && (
           <div className="mb-6 rounded-xl border border-red-200 dark:border-red-900/60 bg-red-50 dark:bg-red-950/40 px-4 py-3 text-sm text-red-700 dark:text-red-400">
             {error}

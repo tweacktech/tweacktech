@@ -14,6 +14,7 @@ import {
 } from 'lucide-react';
 import Navbar from '../Component/Navbar';
 import Footer from '../Component/Footer';
+import Breadcrumbs from '../Component/Breadcrumbs';
 import { useAuth } from '../AuthContext';
 import { getErrorMessage } from '../lib/apiError';
 import { getPusher, pusherEnabled } from '../lib/pusher';
@@ -334,6 +335,9 @@ const Messages = () => {
     <div className="min-h-screen bg-slate-50 transition-colors dark:bg-slate-950">
       <Navbar />
       <div className="container-page py-6">
+        <Breadcrumbs items={[{ label: 'Dashboard', to: '/dashboard' }, { label: 'Messages' }]} className="mb-5" />
+
+
         <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
           <div>
             <span className="section-eyebrow">Messages</span>

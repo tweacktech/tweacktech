@@ -15,6 +15,7 @@ import {
 } from 'lucide-react';
 import Navbar from '../Component/Navbar';
 import Footer from '../Component/Footer';
+import Breadcrumbs from '../Component/Breadcrumbs';
 import { useAuth } from '../AuthContext';
 import { useCurrency } from '../CurrencyContext';
 import { getErrorMessage } from '../lib/apiError';
@@ -112,6 +113,9 @@ const Payments = () => {
     <div className="min-h-screen bg-slate-50 transition-colors dark:bg-slate-950">
       <Navbar />
       <div className="container-page py-8">
+        <Breadcrumbs items={[{ label: 'Dashboard', to: '/dashboard' }, { label: 'Payments' }]} className="mb-5" />
+
+
         <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
           <div>
             <span className="section-eyebrow">

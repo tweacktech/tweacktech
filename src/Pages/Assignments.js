@@ -14,6 +14,7 @@ import {
 } from 'lucide-react';
 import Navbar from '../Component/Navbar';
 import Footer from '../Component/Footer';
+import Breadcrumbs from '../Component/Breadcrumbs';
 import { useAuth } from '../AuthContext';
 import QuizRunner from '../Component/QuizRunner';
 import { getErrorMessage } from '../lib/apiError';
@@ -172,6 +173,10 @@ const Assignments = () => {
       <Navbar />
 
       <div className="container-page py-8">
+        <Breadcrumbs
+          items={[{ label: 'Dashboard', to: '/dashboard' }, { label: 'My assignments' }]}
+          className="mb-5"
+        />
         <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
           <div>
             <span className="section-eyebrow">Coursework</span>

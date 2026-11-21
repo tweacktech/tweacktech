@@ -296,7 +296,11 @@ const Dashboard = () => {
                 courses.slice(0, 4).map((course) => (
                   <div key={course.id} className="card p-4">
                     <div className="flex items-center gap-4">
-                      <div className="relative h-16 w-16 shrink-0 overflow-hidden rounded-xl bg-slate-100 dark:bg-slate-800">
+                      <Link
+                        to={`/courses/${course.id}`}
+                        className="relative h-16 w-16 shrink-0 overflow-hidden rounded-xl bg-slate-100 dark:bg-slate-800"
+                        aria-label={`Open ${course.title}`}
+                      >
                         {course.thumbnail ? (
                           <img loading="lazy" decoding="async" src={course.thumbnail} alt="" className="h-full w-full object-cover" />
                         ) : (
@@ -304,11 +308,14 @@ const Dashboard = () => {
                             <BookOpen className="h-5 w-5" />
                           </span>
                         )}
-                      </div>
+                      </Link>
                       <div className="min-w-0 flex-1">
-                        <h3 className="truncate font-bold text-slate-900 dark:text-white">
+                        <Link
+                          to={`/courses/${course.id}`}
+                          className="block truncate font-bold text-slate-900 hover:text-red-600 dark:text-white dark:hover:text-red-400"
+                        >
                           {course.title}
-                        </h3>
+                        </Link>
                         <p className="text-xs text-slate-500 dark:text-slate-400">
                           Last accessed {course.lastAccessed}
                         </p>
@@ -413,7 +420,11 @@ const Dashboard = () => {
               <div className="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
                 {courses.map((course) => (
                   <div key={course.id} className="card overflow-hidden card-hover">
-                    <div className="h-36 bg-slate-100 dark:bg-slate-800">
+                    <Link
+                      to={`/courses/${course.id}`}
+                      className="block h-36 bg-slate-100 dark:bg-slate-800"
+                      aria-label={`Open ${course.title}`}
+                    >
                       {course.thumbnail ? (
                         <img loading="lazy" decoding="async" src={course.thumbnail} alt="" className="h-full w-full object-cover" />
                       ) : (
@@ -421,11 +432,14 @@ const Dashboard = () => {
                           <BookOpen className="h-8 w-8" />
                         </span>
                       )}
-                    </div>
+                    </Link>
                     <div className="p-4">
-                      <h3 className="line-clamp-2 font-bold text-slate-900 dark:text-white">
+                      <Link
+                        to={`/courses/${course.id}`}
+                        className="line-clamp-2 font-bold text-slate-900 hover:text-red-600 dark:text-white dark:hover:text-red-400"
+                      >
                         {course.title}
-                      </h3>
+                      </Link>
                       <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
                         Last accessed {course.lastAccessed}
                       </p>

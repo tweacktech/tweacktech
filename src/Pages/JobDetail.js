@@ -16,6 +16,7 @@ import {
 } from 'lucide-react';
 import Navbar from '../Component/Navbar';
 import Footer from '../Component/Footer';
+import Breadcrumbs from '../Component/Breadcrumbs';
 import ShareButtons from '../Component/ShareButtons';
 import { useAuth } from '../AuthContext';
 import { useSeo } from '../Component/useSeo';
@@ -176,6 +177,9 @@ const JobDetail = () => {
       <Navbar />
 
       <div className="container-page py-8">
+        <Breadcrumbs items={[{ label: 'Jobs', to: '/jobs' }, { label: 'Details' }]} className="mb-5" />
+
+
         <Link
           to="/jobs"
           className="inline-flex items-center gap-1.5 text-sm font-medium text-slate-500 dark:text-slate-400 hover:text-red-600 dark:hover:text-red-400"
