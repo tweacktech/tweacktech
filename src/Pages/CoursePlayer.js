@@ -17,10 +17,8 @@ import {
   RotateCcw,
   ShieldCheck,
   Sparkles,
-  Square,
   Terminal,
   Timer,
-  Volume2,
   X,
   Youtube,
 } from 'lucide-react';
@@ -31,6 +29,7 @@ import { useAuth } from '../AuthContext';
 import QuizRunner from '../Component/QuizRunner';
 import AiTutor from '../Component/AiTutor';
 import CodePlayground from '../Component/CodePlayground';
+import ReadAloud from '../Component/ReadAloud';
 import { detectLanguage, extractCode, extractOutput } from '../lib/lessonCode';
 
 const unwrap = (res) => (res?.data && res.data.data !== undefined ? res.data.data : res?.data);
@@ -42,17 +41,6 @@ const safeHtml = (html) => ({
     .replace(/\son\w+="[^"]*"/gi, '')
     .replace(/javascript:/gi, ''),
 });
-
-const htmlToSpeechText = (html) =>
-  String(html || '')
-    .replace(/<[^>]+>/g, ' ')
-    .replace(/&nbsp;/g, ' ')
-    .replace(/&amp;/g, '&')
-    .replace(/&lt;/g, '<')
-    .replace(/&gt;/g, '>')
-    .replace(/&quot;/g, '"')
-    .replace(/\s+/g, ' ')
-    .trim();
 
 const youtubeId = (url) => {
   if (!url) return null;
@@ -225,44 +213,11 @@ const StudyMode = ({
   setIdeOpen,
 }) => {
   const [seconds, setSeconds] = useState(25 * 60);
-  const [speaking, setSpeaking] = useState(false);
   const [quizOpen, setQuizOpen] = useState(false);
   const [running, setRunning] = useState(true);
   const [notes, setNotes] = useState(
     () => localStorage.getItem(`tweack-notes-${lesson?.id}`) || '',
   );
-
-  useEffect(() => {
-    return () => {
-      if (typeof window !== 'undefined' && window.speechSynthesis) {
-        window.speechSynthesis.cancel();
-      }
-    };
-  }, []);
-
-  const stopSpeaking = () => {
-    if (typeof window !== 'undefined' && window.speechSynthesis) {
-      window.speechSynthesis.cancel();
-    }
-    setSpeaking(false);
-  };
-
-  const toggleSpeech = () => {
-    if (typeof window === 'undefined' || !window.speechSynthesis) return;
-    if (speaking) {
-      stopSpeaking();
-      return;
-    }
-    const text = htmlToSpeechText(reading);
-    if (!text) return;
-    const utterance = new SpeechSynthesisUtterance(text);
-    utterance.rate = 0.95;
-    utterance.onend = () => setSpeaking(false);
-    utterance.onerror = () => setSpeaking(false);
-    window.speechSynthesis.cancel();
-    window.speechSynthesis.speak(utterance);
-    setSpeaking(true);
-  };
 
   useEffect(() => {
     if (!running || seconds <= 0) return undefined;
@@ -288,7 +243,7 @@ const StudyMode = ({
   return (
     <div className="min-h-screen bg-slate-100 dark:bg-slate-950">
       <header className="sticky top-0 z-40 border-b border-slate-200 bg-white/95 px-4 py-3 backdrop-blur dark:border-slate-800 dark:bg-slate-900/95">
-        <div className="mx-auto flex max-w-7xl items-center gap-3">
+        <div className="mx-auto flex max-w-7xl flex-wrap items-center gap-2 sm:gap-3">
           <button
             type="button"
             onClick={onExit}
@@ -366,10 +321,7 @@ const StudyMode = ({
               <BookOpen className="h-5 w-5 text-red-600" /> Reading guide
             </h2>
             <div className="mt-3 flex flex-wrap gap-2">
-              <button type="button" onClick={toggleSpeech} className="btn-secondary !py-1.5 text-xs">
-                {speaking ? <Square className="h-3.5 w-3.5" /> : <Volume2 className="h-3.5 w-3.5" />}
-                {speaking ? 'Stop reading' : 'Read aloud'}
-              </button>
+              <ReadAloud html={reading} lessonId={lesson?.id} compact />
               {ide?.code && (
                 <button type="button" onClick={onOpenIde} className="btn-primary !py-1.5 text-xs">
                   <Terminal className="h-3.5 w-3.5" /> Try in Code Playground
@@ -990,6 +942,9 @@ const CoursePlayer = () => {
                           <Terminal className="h-3.5 w-3.5" /> Try this code in the playground →
                         </button>
                       )}
+                    </div>
+                    <div className="mt-3">
+                      <ReadAloud html={currentLesson.readingContent} lessonId={currentLesson.id} compact />
                     </div>
                   </div>
 

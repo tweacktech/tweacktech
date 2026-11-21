@@ -29,6 +29,19 @@ configured Neon database, and both the API and React client build successfully.
 - The IDE starter code and expected output are read from the lesson's first
   runnable example block, so every lesson has a ready-to-run snippet.
 
+### "Start reading" works across browsers (no AI, no API keys)
+- Replaced the single long `speechSynthesis` utterance with short, sentence-sized
+  chunks spoken one after another with a watchdog timer. Mobile browsers that
+  cut off long speech (iOS Safari, Chrome Android) now finish the whole lesson.
+- Added the iOS voice-unlock gesture, `voiceschanged` handling, `lang` and
+  natural voice selection (prefers on-device premium/natural English voices),
+  normalisation of stored voices, and a short pause between chunks.
+- Pause/Resume, Stop, a device-voice picker and Slow/Normal/Fast speed controls
+  are available next to **Start reading** on the lesson page and in Study mode.
+- Reading text skips code blocks and prefixes list items, so it sounds less
+  robotic. Everything runs on the browser's built-in speech engine — offline
+  and free.
+
 ### Locked lessons stay locked
 - Lesson locks are resolved from a single server-authoritative access record and
   fail closed when data is missing.
