@@ -39,6 +39,36 @@ export class AssignmentsService {
     private readonly certificates: CertificatesService,
   ) {}
 
+  /** Read-only overview for staff: never writes submissions or progress. */
+  async quizzesOverview() {
+    return this.prisma.assignment.findMany({
+      where: { type: 'QUIZ', moduleId: { not: null } },
+      orderBy: [{ course: { title: 'asc' } }, { module: { order: 'asc' } }],
+      select: {
+        id: true,
+        title: true,
+        maxScore: true,
+        passScore: true,
+        isPublished: true,
+        course: { select: { id: true, title: true } },
+        module: { select: { id: true, title: true, order: true } },
+        questions: {
+          orderBy: { order: 'asc' },
+          select: {
+            id: true,
+            prompt: true,
+            points: true,
+            explanation: true,
+            options: {
+              orderBy: { order: 'asc' },
+              select: { id: true, text: true, isCorrect: true },
+            },
+          },
+        },
+      },
+    });
+  }
+
   // -------------------------------------------------------------------------
   // Access
   // -------------------------------------------------------------------------

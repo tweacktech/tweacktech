@@ -8,6 +8,7 @@ import {
   Briefcase,
   CalendarCheck,
   ChevronDown,
+  ClipboardList,
   CreditCard,
   ExternalLink,
   GraduationCap,
@@ -34,6 +35,12 @@ const items = [
     icon: Award,
     permission: 'MANAGE_COURSES',
   },
+  {
+    to: '/admin/quizzes',
+    label: 'Quizzes',
+    icon: ClipboardList,
+    permission: 'MANAGE_COURSES',
+  },
   { to: '/admin/payments', label: 'Payments', icon: CreditCard, permission: 'MANAGE_PAYMENTS' },
   { to: '/admin/attendance', label: 'Attendance', icon: CalendarCheck, permission: 'MANAGE_COURSES' },
   { to: '/admin/activity', label: 'Activity log', icon: Activity, adminOnly: true },
@@ -49,7 +56,7 @@ const AdminLayout = () => {
   const { user, logout, hasPermission, isSuperAdmin } = useAuth();
   const [open, setOpen] = useState(false);
   const [coursesOpen, setCoursesOpen] = useState(() =>
-    ['/admin/courses', '/admin/assignments', '/admin/attendance'].some((item) =>
+    ['/admin/courses', '/admin/assignments', '/admin/quizzes', '/admin/attendance'].some((item) =>
       window.location.pathname.startsWith(item),
     ),
   );
@@ -127,7 +134,7 @@ const AdminLayout = () => {
         </p>
         <nav className="mt-2 space-y-1">
           {(() => {
-            const coursePaths = ['/admin/courses', '/admin/assignments', '/admin/attendance'];
+            const coursePaths = ['/admin/courses', '/admin/assignments', '/admin/quizzes', '/admin/attendance'];
             const courseItems = visible.filter((item) => coursePaths.includes(item.to));
             const otherItems = visible.filter((item) => !coursePaths.includes(item.to));
             const linkClass = ({ isActive }) =>

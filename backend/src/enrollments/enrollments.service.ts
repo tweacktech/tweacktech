@@ -132,14 +132,38 @@ export class EnrollmentsService {
             },
           },
           certificate: true,
+          lessons: { select: { lessonId: true, isCompleted: true } },
           _count: { select: { lessons: true } },
         },
       }),
       this.prisma.enrollment.count({ where: { userId } }),
     ]);
 
+    const courseIds = enrollments.map((enrollment) => enrollment.courseId);
+    const orderedLessons = courseIds.length
+      ? await this.prisma.lesson.findMany({
+          where: {
+            isPublished: true,
+            module: { isPublished: true, courseId: { in: courseIds } },
+          },
+          orderBy: [{ module: { order: 'asc' } }, { order: 'asc' }],
+          select: { id: true, module: { select: { courseId: true } } },
+        })
+      : [];
+
+    const enrollmentsWithNext = enrollments.map((enrollment) => {
+      const completedIds = new Set(
+        enrollment.lessons.filter((row) => row.isCompleted).map((row) => row.lessonId),
+      );
+      const next = orderedLessons.find(
+        (lesson) =>
+          lesson.module.courseId === enrollment.courseId && !completedIds.has(lesson.id),
+      );
+      return { ...enrollment, nextLessonId: next?.id || null };
+    });
+
     return {
-      enrollments,
+      enrollments: enrollmentsWithNext,
       meta: {
         total,
         page,

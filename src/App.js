@@ -56,6 +56,7 @@ const AdminUsers = lazy(() => import("./Pages/admin/AdminUsers"));
 const AdminCourses = lazy(() => import("./Pages/admin/AdminCourses"));
 const AdminCourseBuilder = lazy(() => import("./Pages/admin/AdminCourseBuilder"));
 const AdminAssignments = lazy(() => import("./Pages/admin/AdminAssignments"));
+const AdminQuizzes = lazy(() => import("./Pages/admin/AdminQuizzes"));
 const AdminBlog = lazy(() => import("./Pages/admin/AdminBlog"));
 const AdminJobs = lazy(() => import("./Pages/admin/AdminJobs"));
 const AdminSupport = lazy(() => import("./Pages/admin/AdminSupport"));
@@ -266,6 +267,14 @@ function AppRoutes() {
                 element={
                   <RequirePermission permission="MANAGE_COURSES">
                     <AdminAssignments />
+                  </RequirePermission>
+                }
+              />
+              <Route
+                path="quizzes"
+                element={
+                  <RequirePermission permission="MANAGE_COURSES">
+                    <AdminQuizzes />
                   </RequirePermission>
                 }
               />

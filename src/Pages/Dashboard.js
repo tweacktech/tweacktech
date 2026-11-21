@@ -89,6 +89,7 @@ const Dashboard = () => {
           thumbnail: enrollment.course?.thumbnail,
           progress: Math.round(enrollment.progress || 0),
           status: enrollment.status,
+          nextLessonId: enrollment.nextLessonId || null,
           lastAccessed: enrollment.lastAccessedAt
             ? formatDate(enrollment.lastAccessedAt)
             : 'Not started',
@@ -107,6 +108,11 @@ const Dashboard = () => {
       cancelled = true;
     };
   }, [api]);
+
+  const continueHref = (course) =>
+    course.nextLessonId
+      ? `/courses/${course.id}/lessons/${course.nextLessonId}`
+      : `/courses/${course.id}`;
 
   const pendingAssignments = assignments.filter((a) => !a.submission).length;
   const gradedAssignments = assignments.filter(
@@ -333,7 +339,7 @@ const Dashboard = () => {
                         </div>
                       </div>
                       <Link
-                        to={`/courses/${course.id}`}
+                        to={continueHref(course)}
                         className="btn-secondary hidden !px-3 !py-2 sm:inline-flex"
                       >
                         <PlayCircle className="h-4 w-4" /> Continue
@@ -455,7 +461,7 @@ const Dashboard = () => {
                           />
                         </div>
                       </div>
-                      <Link to={`/courses/${course.id}`} className="btn-primary mt-3 w-full !py-2">
+                      <Link to={continueHref(course)} className="btn-primary mt-3 w-full !py-2">
                         Continue
                       </Link>
                     </div>

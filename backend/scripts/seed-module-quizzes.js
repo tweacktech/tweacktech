@@ -43,6 +43,7 @@ async function main() {
       module.title,
       module.course.title,
       module.lessons.map((lesson) => lesson.title),
+      module.order || 1,
     );
 
     const assignment = await prisma.assignment.create({

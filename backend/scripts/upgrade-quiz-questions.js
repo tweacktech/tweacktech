@@ -25,6 +25,7 @@ async function upgradeQuiz(quiz) {
           module: {
             select: {
               title: true,
+              order: true,
               course: { select: { title: true } },
               lessons: {
                 where: { isPublished: true },
@@ -41,6 +42,7 @@ async function upgradeQuiz(quiz) {
         assignment.module.title,
         assignment.module.course.title,
         assignment.module.lessons.map((lesson) => lesson.title),
+        assignment.module.order || 1,
       );
 
       await prisma.quizQuestion.deleteMany({ where: { assignmentId: quiz.id } });

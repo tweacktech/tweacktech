@@ -34,6 +34,7 @@ import {
   formatDateTime,
 } from '../../Component/admin/AdminUI';
 import { getErrorMessage } from '../../lib/apiError';
+import HtmlEditor from '../../Component/admin/HtmlEditor';
 
 const unwrap = (res) => (res?.data && res.data.data !== undefined ? res.data.data : res?.data);
 
@@ -974,15 +975,13 @@ const AdminCourseBuilder = () => {
             htmlFor="lesson-reading"
             hint="Long-form text shown in Study mode. Use headings, bullet points and examples so the lesson teaches even without the video."
           >
-            <textarea
+            <HtmlEditor
               id="lesson-reading"
-              rows={8}
+              rows={12}
               value={lessonForm.readingContent}
-              onChange={(event) =>
-                setLessonForm((prev) => ({ ...prev, readingContent: event.target.value }))
+              onChange={(readingContent) =>
+                setLessonForm((prev) => ({ ...prev, readingContent }))
               }
-              className="input-field"
-              placeholder={'Overview\n...\n\nKey concepts\n- ...\n\nPractice\n...'}
             />
           </Field>
           <div className="grid gap-4 sm:grid-cols-4">

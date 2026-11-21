@@ -34,6 +34,13 @@ export class AssignmentsController {
     return this.assignmentsService.byCourse(courseId, user);
   }
 
+  /** Read-only staff preview: all module quizzes with questions and answers. */
+  @Get('quizzes/overview')
+  @Roles(Role.SUPERADMIN, Role.ADMIN, Role.STAFF)
+  async quizzesOverview() {
+    return this.assignmentsService.quizzesOverview();
+  }
+
   @Post('course/:courseId')
   @Roles(Role.SUPERADMIN, Role.ADMIN, Role.STAFF)
   async create(

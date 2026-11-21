@@ -439,35 +439,99 @@ const GENERAL = [
     'Quizzes gate the following module.'),
 ];
 
-const { resolveTopic } = require('./lesson-library');
+const { TOPICS, resolveTopic } = require('./lesson-library');
 
-function buildQuestionSet(moduleTitle, courseTitle, lessonTitles) {
+const STOP = new Set([
+  'this', 'that', 'with', 'from', 'your', 'their', 'into', 'when', 'then', 'than',
+  'each', 'every', 'most', 'some', 'other', 'which', 'what', 'will', 'have', 'has',
+  'are', 'was', 'were', 'not', 'you', 'for', 'and', 'the', 'use', 'using', 'one',
+]);
+
+const strip = (value) => String(value || '').replace(/<[^>]+>/g, '').replace(/\s+/g, ' ').trim();
+
+/** Keywords from every topic, used as believable wrong answers. */
+const KEYWORD_POOL = Array.from(
+  new Set(
+    Object.values(TOPICS).flatMap((topic) =>
+      [...(topic.what || []), ...(topic.summary || [])]
+        .map(strip)
+        .flatMap((line) => line.replace(/[^A-Za-z\s-]/g, '').split(/\s+/))
+        .filter((word) => word.length > 5 && !STOP.has(word.toLowerCase()))
+        .map((word) => word.toLowerCase()),
+    ),
+  ),
+);
+
+/** Build fill-in-the-blank questions straight from the lesson's own text. */
+function generatedQuestions(topicKey, seed) {
+  const topic = TOPICS[topicKey] || TOPICS.core;
+  const lines = [...(topic.what || []), ...(topic.summary || [])]
+    .map(strip)
+    .filter((line) => line.length > 45);
+  const questions = [];
+
+  lines.forEach((line, index) => {
+    const words = line
+      .replace(/[^A-Za-z0-9\s-]/g, '')
+      .split(/\s+/)
+      .filter((word) => word.length > 5 && !STOP.has(word.toLowerCase()));
+    if (!words.length) return;
+    const answer = words[(index + seed) % words.length];
+    const blanked = line.replace(new RegExp(`\\b${answer}\\b`, 'i'), '______');
+    if (blanked === line) return;
+
+    const distractors = KEYWORD_POOL.filter(
+      (word) => word !== answer.toLowerCase() && !line.toLowerCase().includes(word),
+    ).slice((index + seed) % 20, ((index + seed) % 20) + 3);
+    while (distractors.length < 3) distractors.push(`option${distractors.length}`);
+    questions.push({
+      prompt: `Complete this idea from the lesson: ${blanked}`,
+      correct: answer,
+      wrong: distractors,
+      explanation: line,
+    });
+  });
+  return questions;
+}
+
+function buildQuestionSet(moduleTitle, courseTitle, lessonTitles, moduleOrder = 1) {
   const picked = [];
   const seen = new Set();
+  const offset = moduleOrder * 3;
 
+  const add = (question) => {
+    if (!question || seen.has(question.prompt) || picked.length >= 10) return;
+    seen.add(question.prompt);
+    picked.push(question);
+  };
+
+  // Two hand-written questions per lesson, rotated by module so the same topic
+  // never produces the same questions in a different module.
   lessonTitles.forEach((title) => {
     const key = resolveTopic(title, courseTitle, moduleTitle);
     const bank = (TOPIC_QUESTIONS[key] || []).length ? TOPIC_QUESTIONS[key] : TOPIC_QUESTIONS.core;
-    for (let i = 0; i < 2 && picked.length < 10; i += 1) {
-      const question = bank[(picked.length + i) % bank.length];
-      if (!question || seen.has(question.prompt)) continue;
-      seen.add(question.prompt);
-      picked.push(question);
-    }
+    add(bank[offset % bank.length]);
+    add(bank[(offset + 1) % bank.length]);
   });
 
-  for (const question of GENERAL) {
-    if (picked.length >= 10) break;
-    if (seen.has(question.prompt)) continue;
-    seen.add(question.prompt);
-    picked.push(question);
-  }
+  // Fill remaining slots with questions generated from the lesson text.
+  lessonTitles.forEach((title) => {
+    const key = resolveTopic(title, courseTitle, moduleTitle);
+    const generated = generatedQuestions(key, offset);
+    generated.slice(0, 4).forEach(add);
+  });
 
-  let fallback = 0;
-  while (picked.length < 10) {
-    const question = GENERAL[fallback % GENERAL.length];
-    picked.push({ ...question, prompt: `${question.prompt} (${fallback + 1})` });
-    fallback += 1;
+  // At most one course-mechanics question, chosen by module position.
+  if (picked.length < 10) add(GENERAL[moduleOrder % GENERAL.length]);
+
+  // Final fallback: generate more questions from the lesson text with a
+  // different seed rather than repeating course-mechanics questions.
+  let seed = 11;
+  while (picked.length < 10 && seed < 80) {
+    const title = lessonTitles[seed % Math.max(lessonTitles.length, 1)] || 'Core Concepts';
+    const key = resolveTopic(title, courseTitle, moduleTitle);
+    generatedQuestions(key, offset + seed).forEach(add);
+    seed += 1;
   }
   return picked.slice(0, 10);
 }
