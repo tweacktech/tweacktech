@@ -150,7 +150,7 @@ const Navbar = () => {
             ))}
           </nav>
 
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1.5 sm:gap-2">
             <select
               value={selected}
               onChange={(event) => setCurrency(event.target.value)}
@@ -164,7 +164,7 @@ const Navbar = () => {
                 </option>
               ))}
             </select>
-            <ThemeToggle />
+            <ThemeToggle compact />
 
             {isAuthenticated ? (
               <>
@@ -193,7 +193,7 @@ const Navbar = () => {
                   <button
                     type="button"
                     onClick={() => setUserOpen((v) => !v)}
-                    className="flex items-center gap-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 p-1.5 pr-2 hover:border-red-300 dark:hover:border-red-700 transition-colors"
+                    className="flex items-center gap-1 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 p-1.5 hover:border-red-300 dark:hover:border-red-700 transition-colors sm:gap-2 sm:pr-2"
                     aria-haspopup="menu"
                     aria-expanded={userOpen}
                   >
@@ -293,7 +293,7 @@ const Navbar = () => {
             <button
               type="button"
               onClick={() => setMobileOpen((v) => !v)}
-              className="lg:hidden rounded-xl p-2 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800"
+              className="lg:hidden rounded-xl p-1.5 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 sm:p-2"
               aria-label="Toggle navigation menu"
               aria-expanded={mobileOpen}
             >
