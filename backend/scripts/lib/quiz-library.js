@@ -494,45 +494,78 @@ function generatedQuestions(topicKey, seed) {
   return questions;
 }
 
-function buildQuestionSet(moduleTitle, courseTitle, lessonTitles, moduleOrder = 1) {
+const hashString = (value) => {
+  let hash = 2166136261;
+  for (let index = 0; index < String(value).length; index += 1) {
+    hash ^= String(value).charCodeAt(index);
+    hash = Math.imul(hash, 16777619);
+  }
+  return Math.abs(hash);
+};
+
+/**
+ * Build 10 unique questions for one module. `usedPrompts` is shared across all
+ * modules of the same course so a question never appears twice in a course.
+ */
+function buildQuestionSet(
+  moduleTitle,
+  courseTitle,
+  lessonTitles,
+  moduleOrder = 1,
+  usedPrompts = new Set(),
+) {
   const picked = [];
-  const seen = new Set();
-  const offset = moduleOrder * 3;
+  const localSeen = new Set();
+  const shortModule = String(moduleTitle || '').replace(/^Module \d+:\s*/i, '').trim();
 
   const add = (question) => {
-    if (!question || seen.has(question.prompt) || picked.length >= 10) return;
-    seen.add(question.prompt);
-    picked.push(question);
+    if (!question || picked.length >= 10) return;
+    let prompt = question.prompt;
+    if (usedPrompts.has(prompt) || localSeen.has(prompt)) {
+      const tag = shortModule || `Module ${moduleOrder}`;
+      let suffix = 1;
+      prompt = `${question.prompt} [${tag}]`;
+      while (usedPrompts.has(prompt) || localSeen.has(prompt)) {
+        suffix += 1;
+        prompt = `${question.prompt} [${tag} ${suffix}]`;
+      }
+    }
+    localSeen.add(prompt);
+    usedPrompts.add(prompt);
+    picked.push({ ...question, prompt });
   };
 
-  // Two hand-written questions per lesson, rotated by module so the same topic
-  // never produces the same questions in a different module.
-  lessonTitles.forEach((title) => {
+  // Prefer questions generated from each lesson's own topic with a seed tied
+  // to the course + module + lesson, so repeated lesson titles still produce
+  // different questions in different modules.
+  lessonTitles.forEach((title, index) => {
+    const key = resolveTopic(title, courseTitle, moduleTitle);
+    const seed = hashString(`${courseTitle}|${moduleTitle}|${title}|${index}`);
+    for (let offset = 0; offset < 3 && picked.length < 10; offset += 1) {
+      const generated = generatedQuestions(key, seed + offset * 7);
+      if (generated.length) add(generated[(index + offset) % generated.length]);
+    }
+  });
+
+  // Hand-written topic questions fill any remaining slots.
+  lessonTitles.forEach((title, index) => {
+    if (picked.length >= 10) return;
     const key = resolveTopic(title, courseTitle, moduleTitle);
     const bank = (TOPIC_QUESTIONS[key] || []).length ? TOPIC_QUESTIONS[key] : TOPIC_QUESTIONS.core;
-    add(bank[offset % bank.length]);
-    add(bank[(offset + 1) % bank.length]);
+    const seed = hashString(`${courseTitle}|${moduleTitle}|${title}`);
+    add(bank[(seed + index) % bank.length]);
   });
 
-  // Fill remaining slots with questions generated from the lesson text.
-  lessonTitles.forEach((title) => {
-    const key = resolveTopic(title, courseTitle, moduleTitle);
-    const generated = generatedQuestions(key, offset);
-    generated.slice(0, 4).forEach(add);
-  });
-
-  // At most one course-mechanics question, chosen by module position.
-  if (picked.length < 10) add(GENERAL[moduleOrder % GENERAL.length]);
-
-  // Final fallback: generate more questions from the lesson text with a
-  // different seed rather than repeating course-mechanics questions.
+  // Final fallbacks: more generated questions, then course mechanics.
   let seed = 11;
-  while (picked.length < 10 && seed < 80) {
+  while (picked.length < 10 && seed < 60) {
     const title = lessonTitles[seed % Math.max(lessonTitles.length, 1)] || 'Core Concepts';
     const key = resolveTopic(title, courseTitle, moduleTitle);
-    generatedQuestions(key, offset + seed).forEach(add);
+    const generated = generatedQuestions(key, seed + moduleOrder * 13);
+    if (generated.length) add(generated[seed % generated.length]);
     seed += 1;
   }
+  if (picked.length < 10) add(GENERAL[moduleOrder % GENERAL.length]);
   return picked.slice(0, 10);
 }
 

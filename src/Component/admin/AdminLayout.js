@@ -59,14 +59,34 @@ const items = [
   { to: '/messages', label: 'Support chat', icon: MessageSquare, permission: 'MANAGE_SUPPORT' },
 ];
 
+// Compact collapsible groups — one row each until expanded.
+const NAV_GROUPS = [
+  {
+    label: 'Learning',
+    icon: BookOpen,
+    paths: ['/admin/courses', '/admin/assignments', '/admin/quizzes', '/admin/attendance', '/admin/testimonials'],
+  },
+  { label: 'People', icon: Users, paths: ['/admin/users', '/admin/talent', '/admin/mentors'] },
+  { label: 'Finance', icon: CreditCard, paths: ['/admin/payments'] },
+  { label: 'Insights', icon: Activity, paths: ['/admin/activity'] },
+  { label: 'Content', icon: Newspaper, paths: ['/admin/blog', '/admin/jobs'] },
+  {
+    label: 'Support',
+    icon: LifeBuoy,
+    paths: ['/admin/support', '/messages'],
+  },
+];
+
 const AdminLayout = () => {
   const { user, logout, hasPermission, isSuperAdmin } = useAuth();
   const [open, setOpen] = useState(false);
-  const [coursesOpen, setCoursesOpen] = useState(() =>
-    ['/admin/courses', '/admin/assignments', '/admin/quizzes', '/admin/attendance'].some((item) =>
-      window.location.pathname.startsWith(item),
-    ),
-  );
+  const [openGroups, setOpenGroups] = useState(() => {
+    const path = window.location.pathname;
+    const activeGroup = NAV_GROUPS.find((group) =>
+      group.paths.some((item) => path.startsWith(item)),
+    );
+    return activeGroup ? { [activeGroup.label]: true } : {};
+  });
   const [awaiting, setAwaiting] = useState(0);
   const location = useLocation();
   const navigate = useNavigate();
@@ -141,18 +161,16 @@ const AdminLayout = () => {
         </p>
         <nav className="mt-2 space-y-1">
           {(() => {
-            const coursePaths = ['/admin/courses', '/admin/assignments', '/admin/quizzes', '/admin/attendance'];
-            const courseItems = visible.filter((item) => coursePaths.includes(item.to));
-            const otherItems = visible.filter((item) => !coursePaths.includes(item.to));
             const linkClass = ({ isActive }) =>
-              `flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-colors ${
+              `flex items-center gap-3 rounded-xl px-3 py-2 text-xs font-semibold transition-colors ${
                 isActive
                   ? 'bg-red-50 text-red-600 dark:bg-red-950/50 dark:text-red-400'
                   : 'text-slate-600 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800'
               }`;
             const renderLink = ({ to, label, icon: Icon, end }) => (
               <NavLink key={to} to={to} end={end} className={linkClass}>
-                <Icon className="h-4 w-4" /> {label}
+                <Icon className="h-4 w-4 shrink-0" />
+                <span className="truncate">{label}</span>
                 {to === '/admin/payments' && awaiting > 0 && (
                   <span className="ml-auto rounded-full bg-amber-500 px-1.5 py-0.5 text-[10px] font-bold text-white">
                     {awaiting}
@@ -161,32 +179,47 @@ const AdminLayout = () => {
               </NavLink>
             );
 
+            const overview = visible.find((item) => item.to === '/admin');
             return (
               <>
-                {otherItems.slice(0, 2).map(renderLink)}
-                {courseItems.length > 0 && (
-                  <div>
-                    <button
-                      type="button"
-                      onClick={() => setCoursesOpen((value) => !value)}
-                      className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-slate-600 transition-colors hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800"
-                      aria-expanded={coursesOpen}
-                    >
-                      <BookOpen className="h-4 w-4" /> Manage courses
-                      <ChevronDown
-                        className={`ml-auto h-4 w-4 transition-transform ${
-                          coursesOpen ? 'rotate-180' : ''
+                {overview && renderLink(overview)}
+                {NAV_GROUPS.map((group) => {
+                  const groupItems = visible.filter((item) => group.paths.includes(item.to));
+                  if (!groupItems.length) return null;
+                  const open = Boolean(openGroups[group.label]);
+                  const active = groupItems.some((item) =>
+                    window.location.pathname.startsWith(item.to),
+                  );
+                  return (
+                    <div key={group.label}>
+                      <button
+                        type="button"
+                        onClick={() =>
+                          setOpenGroups((prev) => ({ ...prev, [group.label]: !prev[group.label] }))
+                        }
+                        aria-expanded={open}
+                        className={`flex w-full items-center gap-3 rounded-xl px-3 py-2 text-xs font-semibold transition-colors ${
+                          active && !open
+                            ? 'text-red-600 dark:text-red-400'
+                            : 'text-slate-600 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800'
                         }`}
-                      />
-                    </button>
-                    {coursesOpen && (
-                      <div className="ml-4 space-y-1 border-l border-slate-200 pl-2 dark:border-slate-700">
-                        {courseItems.map(renderLink)}
-                      </div>
-                    )}
-                  </div>
-                )}
-                {otherItems.slice(2).map(renderLink)}
+                      >
+                        <group.icon className="h-4 w-4 shrink-0" />
+                        <span>{group.label}</span>
+                        <ChevronDown
+                          className={`ml-auto h-3.5 w-3.5 transition-transform ${
+                            open ? 'rotate-180' : ''
+                          }`}
+                        />
+                      </button>
+                      {open && (
+                        <div className="ml-4 space-y-0.5 border-l border-slate-200 pl-2 dark:border-slate-700">
+                          {groupItems.map(renderLink)}
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
               </>
             );
           })()}

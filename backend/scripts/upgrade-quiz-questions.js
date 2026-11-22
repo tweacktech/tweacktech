@@ -16,7 +16,7 @@ const reconnect = async () => {
   await prisma.$connect();
 };
 
-async function upgradeQuiz(quiz) {
+async function upgradeQuiz(quiz, usedPrompts) {
   for (let attempt = 0; attempt < 4; attempt += 1) {
     try {
       const assignment = await prisma.assignment.findUnique({
@@ -43,6 +43,7 @@ async function upgradeQuiz(quiz) {
         assignment.module.course.title,
         assignment.module.lessons.map((lesson) => lesson.title),
         assignment.module.order || 1,
+        usedPrompts,
       );
 
       await prisma.quizQuestion.deleteMany({ where: { assignmentId: quiz.id } });
@@ -88,11 +89,14 @@ async function upgradeQuiz(quiz) {
 async function main() {
   const quizzes = await prisma.assignment.findMany({
     where: { type: 'QUIZ', moduleId: { not: null } },
-    select: { id: true },
+    select: { id: true, courseId: true, module: { select: { order: true } } },
+    orderBy: [{ courseId: 'asc' }, { module: { order: 'asc' } }],
   });
+  const usedByCourse = new Map();
   let updated = 0;
   for (const quiz of quizzes) {
-    if (await upgradeQuiz(quiz)) updated += 1;
+    if (!usedByCourse.has(quiz.courseId)) usedByCourse.set(quiz.courseId, new Set());
+    if (await upgradeQuiz(quiz, usedByCourse.get(quiz.courseId))) updated += 1;
   }
   const summary = await prisma.quizQuestion.groupBy({
     by: ['assignmentId'],

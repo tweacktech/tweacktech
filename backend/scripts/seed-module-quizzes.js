@@ -31,6 +31,7 @@ async function main() {
 
   let quizzesCreated = 0;
   let questionsCreated = 0;
+  const usedByCourse = new Map();
 
   for (const module of modules) {
     const existing = await prisma.assignment.findFirst({
@@ -39,11 +40,13 @@ async function main() {
     });
     if (existing) continue;
 
+    if (!usedByCourse.has(module.courseId)) usedByCourse.set(module.courseId, new Set());
     const questions = buildQuestionSet(
       module.title,
       module.course.title,
       module.lessons.map((lesson) => lesson.title),
       module.order || 1,
+      usedByCourse.get(module.courseId),
     );
 
     const assignment = await prisma.assignment.create({
