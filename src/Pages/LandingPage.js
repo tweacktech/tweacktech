@@ -280,8 +280,13 @@ const LandingPage = () => {
             <div className="relative mx-auto w-full max-w-lg">
               <div className="glass-panel rounded-3xl p-5 shadow-2xl shadow-slate-900/10">
                 <div className="relative overflow-hidden rounded-2xl">
-                  <img loading="lazy" decoding="async"
+                  <img
                     src="https://images.unsplash.com/photo-1522202176988-66273c2fd55f?q=80&w=1200&auto=format&fit=crop"
+                    srcSet="https://images.unsplash.com/photo-1522202176988-66273c2fd55f?q=80&w=640&auto=format&fit=crop 640w, https://images.unsplash.com/photo-1522202176988-66273c2fd55f?q=80&w=1200&auto=format&fit=crop 1200w"
+                    sizes="(max-width: 1024px) 92vw, 520px"
+                    loading="eager"
+                    fetchPriority="high"
+                    decoding="async"
                     alt="Developers learning together"
                     className="h-56 w-full object-cover sm:h-64"
                   />

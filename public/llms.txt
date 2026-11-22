@@ -1,0 +1,22 @@
+# TweackTech
+
+> TweackTech is a tech learning platform and talent hub founded by Meyor Dari. Students learn practical tech skills through detailed lessons, runnable code examples, module quizzes, certificates and a developer talent hub.
+
+## Learn
+
+- [Courses](https://tweacktech.vercel.app/courses): the full catalogue of beginner, intermediate and advanced tech courses.
+- [Student stories](https://tweacktech.vercel.app/testimonials): testimonies from learners who completed courses.
+- [Blog](https://tweacktech.vercel.app/blog): guides and career articles for developers.
+
+## Careers
+
+- [Talent Hub](https://tweacktech.vercel.app/talent): developer profiles and skills.
+- [Jobs](https://tweacktech.vercel.app/jobs): open developer roles.
+- [Mentors](https://tweacktech.vercel.app/mentors): verified tech mentors.
+
+## About
+
+- [About us](https://tweacktech.vercel.app/about): who we are and what we teach.
+- [Contact](https://tweacktech.vercel.app/contact): get in touch with the team.
+- [FAQ](https://tweacktech.vercel.app/faq): answers to common questions.
+- [Support](https://tweacktech.vercel.app/support): help centre and tickets.

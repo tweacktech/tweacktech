@@ -1,5 +1,3 @@
-import { jsPDF } from 'jspdf';
-
 const formatIssued = (value) =>
   value
     ? new Date(value).toLocaleDateString(undefined, { dateStyle: 'long' })
@@ -10,7 +8,7 @@ const formatIssued = (value) =>
  * The design mirrors the on-screen/print certificate: gold border, watermark,
  * official seal, certificate ID, verification URL and signature.
  */
-export const downloadCertificatePdf = ({
+export const downloadCertificatePdf = async ({
   studentName,
   courseTitle,
   certificateCode,
@@ -19,6 +17,9 @@ export const downloadCertificatePdf = ({
   score,
   verifyUrl,
 }) => {
+  // jsPDF is a large library only needed when a certificate is actually
+  // downloaded. Keep it out of the route bundle until that moment.
+  const { jsPDF } = await import('jspdf');
   const doc = new jsPDF({ orientation: 'landscape', unit: 'mm', format: 'a4' });
   const width = 297;
   const height = 210;

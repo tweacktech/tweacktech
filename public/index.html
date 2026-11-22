@@ -27,6 +27,7 @@
     <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1" />
     <meta name="googlebot" content="index, follow, max-image-preview:large" />
     <meta name="format-detection" content="telephone=no" />
+    <link rel="ard" href="/.well-known/ard.json" />
     <meta name="robots" content="index, follow, max-image-preview:large" />
     <link rel="canonical" href="https://tweacktech.vercel.app/" />
 
@@ -58,6 +59,19 @@
     <link rel="apple-touch-icon" href="%PUBLIC_URL%/icon-192.png" />
     <link rel="icon" type="image/svg+xml" href="%PUBLIC_URL%/icon.svg" />
     <link rel="manifest" href="%PUBLIC_URL%/manifest.json" />
+    <!-- The landing-page hero is the LCP image. In an SPA React discovers it
+         only after the bundle runs, so ask the browser to start it at parse
+         time with the same responsive candidates the <img> uses. -->
+    <link rel="preconnect" href="https://images.unsplash.com" />
+    <link rel="dns-prefetch" href="https://images.unsplash.com" />
+    <link
+      rel="preload"
+      as="image"
+      href="https://images.unsplash.com/photo-1522202176988-66273c2fd55f?q=80&w=1200&auto=format&fit=crop"
+      imagesrcset="https://images.unsplash.com/photo-1522202176988-66273c2fd55f?q=80&w=640&auto=format&fit=crop 640w, https://images.unsplash.com/photo-1522202176988-66273c2fd55f?q=80&w=1200&auto=format&fit=crop 1200w"
+      imagesizes="(max-width: 1024px) 92vw, 520px"
+      fetchpriority="high"
+    />
     <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-5937965903229328"
     crossorigin="anonymous"></script>
     <meta name="google-adsense-account" content="ca-pub-5937965903229328">

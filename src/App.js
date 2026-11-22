@@ -67,13 +67,13 @@ const AdminTalent = lazy(() => import("./Pages/admin/AdminTalent"));
 
 // Chunks worth warming once the app is idle. Navigation to these pages then
 // feels instant instead of waiting on a network round-trip.
-const PREFETCH_CHUNKS = [
-  () => import("./Pages/CourseCatalog"),
-  () => import("./Pages/CourseDetail"),
-  () => import("./Pages/Dashboard"),
-  () => import("./Pages/TalentHub"),
-  () => import("./Pages/JobListings"),
-  () => import("./Pages/LoginPage"),
+const PREFETCH_ROUTES = [
+  { path: "/courses/", load: () => import("./Pages/CourseDetail") },
+  { path: "/courses", load: () => import("./Pages/CourseCatalog") },
+  { path: "/dashboard", load: () => import("./Pages/Dashboard") },
+  { path: "/talent", load: () => import("./Pages/TalentHub") },
+  { path: "/jobs", load: () => import("./Pages/JobListings") },
+  { path: "/login", load: () => import("./Pages/LoginPage") },
 ];
 
 
@@ -156,22 +156,30 @@ const PageLoader = () => (
 function AppRoutes() {
   const { loading } = useAuth();
 
+  // Warm a route only when the visitor shows intent (hover or keyboard focus).
+  // Prefetching on page load downloads chunks that Lighthouse correctly reports
+  // as unused JavaScript on the landing page and creates long main-thread tasks.
   useEffect(() => {
-    const schedule = window.requestIdleCallback || ((cb) => window.setTimeout(cb, 1500));
-    let idleId;
-    const warm = () => {
-      PREFETCH_CHUNKS.forEach((load) => {
-        try {
-          load().catch(() => undefined);
-        } catch (error) {
-          /* chunk prefetch is best-effort */
-        }
-      });
+    const warmed = new Set();
+    const warm = (event) => {
+      const link = event.target?.closest?.("a[href]");
+      if (!link) return;
+      let path;
+      try {
+        path = new URL(link.href, window.location.href).pathname;
+      } catch {
+        return;
+      }
+      const route = PREFETCH_ROUTES.find((item) => path.startsWith(item.path));
+      if (!route || warmed.has(route.path)) return;
+      warmed.add(route.path);
+      route.load().catch(() => undefined);
     };
-    idleId = schedule(warm);
+    document.addEventListener("pointerover", warm, { passive: true });
+    document.addEventListener("focusin", warm);
     return () => {
-      if (window.cancelIdleCallback) window.cancelIdleCallback(idleId);
-      else window.clearTimeout(idleId);
+      document.removeEventListener("pointerover", warm);
+      document.removeEventListener("focusin", warm);
     };
   }, []);
 

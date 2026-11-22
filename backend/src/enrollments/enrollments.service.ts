@@ -155,11 +155,16 @@ export class EnrollmentsService {
       const completedIds = new Set(
         enrollment.lessons.filter((row) => row.isCompleted).map((row) => row.lessonId),
       );
-      const next = orderedLessons.find(
-        (lesson) =>
-          lesson.module.courseId === enrollment.courseId && !completedIds.has(lesson.id),
+      const courseLessons = orderedLessons.filter(
+        (lesson) => lesson.module.courseId === enrollment.courseId,
       );
-      return { ...enrollment, nextLessonId: next?.id || null };
+      const next = courseLessons.find((lesson) => !completedIds.has(lesson.id));
+      // Completed courses still open at the first lesson for review, so the
+      // student never lands on the sales/detail page after clicking Continue.
+      return {
+        ...enrollment,
+        nextLessonId: next?.id || courseLessons[0]?.id || null,
+      };
     });
 
     return {

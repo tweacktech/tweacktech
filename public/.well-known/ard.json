@@ -1,0 +1,19 @@
+{
+  "@context": "https://agenticresourcediscovery.org/context/v1",
+  "entries": [
+    {
+      "identifier": "urn:air:tweacktech.vercel.app:skills:course-catalogue",
+      "displayName": "TweackTech course catalogue guide",
+      "type": "application/agent-skills+md",
+      "url": "https://tweacktech.vercel.app/llms.txt",
+      "description": "Discover TweackTech courses, mentors, developer jobs, blog guides and support pages.",
+      "tags": ["education", "courses", "developer", "careers"],
+      "capabilities": ["CourseDiscovery", "MentorDiscovery", "JobDiscovery"],
+      "representativeQueries": [
+        "which Python courses can I learn on TweackTech",
+        "show me tech mentors and developer jobs",
+        "where can I read TweackTech learning guides"
+      ]
+    }
+  ]
+}

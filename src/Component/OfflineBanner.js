@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { AlertTriangle, RefreshCw, WifiOff, X } from 'lucide-react';
 
 const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5001/api';
@@ -8,6 +8,17 @@ const OfflineBanner = () => {
   const [message, setMessage] = useState('');
   const [retrying, setRetrying] = useState(false);
   const [dismissed, setDismissed] = useState(false);
+  const attempts = useRef(0);
+  const timer = useRef(null);
+
+  const markOnline = useCallback(() => {
+    attempts.current = 0;
+    if (timer.current) window.clearTimeout(timer.current);
+    setOffline(false);
+    setMessage('');
+    setDismissed(false);
+    window.dispatchEvent(new Event('tweack:online'));
+  }, []);
 
   useEffect(() => {
     const goOffline = () => {
@@ -15,10 +26,7 @@ const OfflineBanner = () => {
       setDismissed(false);
       setMessage('You are offline. Some cached pages may still work.');
     };
-    const goOnline = () => {
-      setOffline(false);
-      setMessage('');
-    };
+    const goOnline = () => markOnline();
     const service = (event) => {
       setOffline(true);
       setDismissed(false);
@@ -31,29 +39,57 @@ const OfflineBanner = () => {
     window.addEventListener('offline', goOffline);
     window.addEventListener('online', goOnline);
     window.addEventListener('tweack:offline', service);
+    // Do not listen for tweack:online here — markOnline() dispatches it, and
+    // listening to our own event would recurse forever.
     return () => {
       window.removeEventListener('offline', goOffline);
       window.removeEventListener('online', goOnline);
       window.removeEventListener('tweack:offline', service);
+      if (timer.current) window.clearTimeout(timer.current);
     };
+  }, [markOnline]);
+
+  const check = useCallback(async () => {
+    try {
+      const response = await fetch(`${API_URL}/health`, {
+        cache: 'no-store',
+        headers: { Accept: 'application/json' },
+      });
+      if (!response.ok) return false;
+      const body = await response.json().catch(() => ({}));
+      // The API wraps responses as { success, data: { status: 'ok' } }.
+      return body?.data?.status === 'ok' || body?.status === 'ok' || body?.success === true;
+    } catch {
+      return false;
+    }
   }, []);
 
-  const retry = async () => {
+  const retry = useCallback(async () => {
+    if (retrying) return;
     setRetrying(true);
-    try {
-      const response = await fetch(`${API_URL}/health`, { cache: 'no-store' });
-      const body = await response.json().catch(() => ({}));
-      if (response.ok && body?.status === 'ok') {
-        setOffline(false);
-        setMessage('');
-        window.dispatchEvent(new Event('tweack:online'));
-      }
-    } catch {
-      // stay offline
-    } finally {
-      setRetrying(false);
-    }
-  };
+    const healthy = await check();
+    setRetrying(false);
+    if (healthy) markOnline();
+    else setMessage('Still unreachable. We will keep trying automatically.');
+  }, [check, markOnline, retrying]);
+
+  // Auto-retry with backoff while the banner is visible.
+  useEffect(() => {
+    if (!offline || dismissed) return undefined;
+    const schedule = () => {
+      attempts.current += 1;
+      const delay = Math.min(1500 * 2 ** Math.min(attempts.current - 1, 4), 20000);
+      timer.current = window.setTimeout(async () => {
+        const healthy = await check();
+        if (healthy) markOnline();
+        else schedule();
+      }, delay);
+    };
+    schedule();
+    return () => {
+      if (timer.current) window.clearTimeout(timer.current);
+    };
+  }, [offline, dismissed, check, markOnline]);
 
   if (!offline || dismissed) return null;
 
@@ -73,7 +109,7 @@ const OfflineBanner = () => {
           type="button"
           onClick={retry}
           disabled={retrying}
-          className="hidden items-center gap-1.5 rounded-lg border border-amber-300 px-3 py-1.5 text-xs font-semibold hover:bg-amber-100 sm:inline-flex dark:border-amber-800 dark:hover:bg-amber-900/50"
+          className="inline-flex items-center gap-1.5 rounded-lg border border-amber-300 px-3 py-1.5 text-xs font-semibold hover:bg-amber-100 disabled:opacity-50 dark:border-amber-800 dark:hover:bg-amber-900/50"
         >
           <RefreshCw className={`h-3.5 w-3.5 ${retrying ? 'animate-spin' : ''}`} />
           {retrying ? 'Checking…' : 'Retry'}
@@ -81,7 +117,7 @@ const OfflineBanner = () => {
         <button
           type="button"
           onClick={() => setDismissed(true)}
-          className="rounded-lg p-1.5 hover:bg-amber-100 dark:hover:bg-amber-900/50"
+          className="rounded-lg p-1.5 hover:bg-amber-100 dark:hover:bg-slate-900/50"
           aria-label="Dismiss connection warning"
         >
           <X className="h-4 w-4" />
