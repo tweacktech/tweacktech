@@ -886,11 +886,21 @@ export class CoursesService {
       lessons,
       modules: course.modules.map((module) => {
         const quiz = quizByModule.get(module.id);
+        const submission = quiz
+          ? quizSubmissions.find((row) => row.assignmentId === quiz.id)
+          : null;
         return {
           id: module.id,
           title: module.title,
           quizId: quiz?.id || null,
           quizPassed: passedModules.has(module.id),
+          quizAttempted: Boolean(submission),
+          quizScore: typeof submission?.score === 'number' ? submission.score : null,
+          quizPassScore: quiz ? Number(quiz.passScore || 8) : null,
+          totalLessons: module.lessons.length,
+          completedLessons: lessons.filter(
+            (lesson) => lesson.moduleId === module.id && lesson.isCompleted,
+          ).length,
         };
       }),
       nextLessonId: nextLesson?.id || null,

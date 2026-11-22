@@ -198,6 +198,9 @@ const StudyMode = ({
   nextLocked,
   moduleQuizId,
   moduleQuizPassed,
+  currentModule,
+  showQuiz,
+  quizFailed,
   onQuizSubmitted,
   progressPct,
   completedCount,
@@ -401,49 +404,29 @@ const StudyMode = ({
             )}
           </div>
 
-          {/* Only show a quiz card when the learner actually needs to start one. */}
-          {moduleQuizId && !moduleQuizPassed && (
+          {/* One quiz card only, and only when the learner needs it: the module
+              is finished (time to move on) or a previous attempt failed. */}
+          {showQuiz && (
             <div className="card p-5">
               <h2 className="flex items-center gap-2 text-sm font-bold text-slate-900 dark:text-white">
                 <Award className="h-4 w-4 text-red-600" /> Module quiz
               </h2>
               <p className="mt-2 text-xs leading-relaxed text-slate-500 dark:text-slate-400">
-                Pass this quiz with 80% (8/10) or higher to unlock the next module.
+                {quizFailed
+                  ? `You scored ${currentModule?.quizScore ?? 0}/${currentModule?.quizPassScore ?? 8}. You need ${
+                      currentModule?.quizPassScore ?? 8
+                    } to unlock the next module — retake when you are ready.`
+                  : 'You have finished this module. Pass the quiz with 80% (8/10) or higher to unlock the next module.'}
               </p>
               <button
                 type="button"
                 onClick={() => setQuizOpen(true)}
                 className="btn-primary mt-3 w-full !py-2 text-xs"
               >
-                Start quiz →
+                {quizFailed ? 'Retake quiz' : 'Take quiz'} →
               </button>
             </div>
           )}
-
-          <div className="card p-5">
-            <div className="flex items-center justify-between gap-2">
-              <h2 className="flex items-center gap-2 text-sm font-bold text-slate-900 dark:text-white">
-                <Award className="h-4 w-4 text-red-600" /> Module quiz
-              </h2>
-              {moduleQuizPassed && <span className="badge-success">Passed</span>}
-            </div>
-            <p className="mt-2 text-xs leading-relaxed text-slate-500 dark:text-slate-400">
-              {moduleQuizPassed
-                ? 'You passed this module. Retake any time to improve your score.'
-                : 'Pass this quiz with 80% (8/10) or higher to unlock the next module.'}
-            </p>
-            {moduleQuizId ? (
-              <button
-                type="button"
-                onClick={() => setQuizOpen(true)}
-                className="btn-primary mt-3 w-full !py-2 text-xs"
-              >
-                {moduleQuizPassed ? 'Retake quiz' : 'Take quiz'} →
-              </button>
-            ) : (
-              <p className="mt-3 text-xs text-slate-400">No quiz is configured for this module.</p>
-            )}
-          </div>
 
           <div className="card p-5">
             <h2 className="flex items-center gap-2 text-sm font-bold text-slate-900 dark:text-white">
@@ -618,6 +601,19 @@ const CoursePlayer = () => {
   const currentModule = access?.modules?.find((item) => item.id === currentLesson?.moduleId);
   const moduleQuizId = currentModule?.quizId || null;
   const moduleQuizPassed = Boolean(currentModule?.quizPassed);
+  const moduleLessonsDone = Boolean(
+    currentModule &&
+      currentModule.totalLessons > 0 &&
+      currentModule.completedLessons >= currentModule.totalLessons,
+  );
+  const quizFailed = Boolean(
+    currentModule?.quizAttempted && !currentModule.quizPassed,
+  );
+  // Only offer the quiz when the module is finished (time to move on) or the
+  // student failed and needs a retake. Passing hides it completely.
+  const showQuiz = Boolean(
+    moduleQuizId && !moduleQuizPassed && (moduleLessonsDone || quizFailed),
+  );
 
   // Access data from the server is the single source of truth for locks. It
   // fails closed: if a record is missing, an enrolled student's lesson stays
@@ -795,6 +791,9 @@ const CoursePlayer = () => {
         nextLocked={nextLocked}
         moduleQuizId={moduleQuizId}
         moduleQuizPassed={moduleQuizPassed}
+        currentModule={currentModule}
+        showQuiz={showQuiz}
+        quizFailed={quizFailed}
         onQuizSubmitted={refreshAccess}
         progressPct={progressPct}
         completedCount={completed.size}
