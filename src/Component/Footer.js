@@ -33,6 +33,7 @@ const columns = [
       { to: '/about', label: 'About us' },
       { to: '/contact', label: 'Contact' },
       { to: '/support', label: 'Support centre' },
+      { to: '/testimonials', label: 'Student stories' },
       { to: '/faq', label: 'FAQ' },
     ],
   },

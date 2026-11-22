@@ -33,6 +33,7 @@ import { ActivityInterceptor } from './activity/activity.interceptor';
 import { AttendanceModule } from './attendance/attendance.module';
 import { MentorsModule } from './mentors/mentors.module';
 import { AiModule } from './ai/ai.module';
+import { TestimonialsModule } from './testimonials/testimonials.module';
 
 @Module({
   imports: [
@@ -68,6 +69,7 @@ import { AiModule } from './ai/ai.module';
     AttendanceModule,
     MentorsModule,
     AiModule,
+    TestimonialsModule,
     SeedersModule,
   ],
   providers: [

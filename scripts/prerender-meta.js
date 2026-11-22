@@ -218,6 +218,15 @@ const buildRoutes = async () => {
       },
     },
     {
+      path: '/testimonials',
+      seo: {
+        title: 'Student Testimonials',
+        description:
+          'Read real stories from TweackTech learners and share your own experience learning tech skills with us.',
+        keywords: 'student testimonials, tech learning reviews, TweackTech students',
+      },
+    },
+    {
       path: '/courses',
       seo: {
         title: 'Tech Courses',
@@ -334,7 +343,7 @@ const buildRoutes = async () => {
 const writeSitemap = (routes) => {
   const staticPaths = [
     '/', '/courses', '/mentors', '/talent', '/jobs', '/blog', '/about',
-    '/contact', '/support', '/faq', '/privacy', '/terms', '/cookies',
+    '/contact', '/support', '/testimonials', '/faq', '/privacy', '/terms', '/cookies',
   ];
   const paths = [...new Set([...staticPaths, ...routes.map((route) => route.path)])];
   const today = new Date().toISOString().slice(0, 10);

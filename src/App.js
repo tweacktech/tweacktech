@@ -57,6 +57,8 @@ const AdminCourses = lazy(() => import("./Pages/admin/AdminCourses"));
 const AdminCourseBuilder = lazy(() => import("./Pages/admin/AdminCourseBuilder"));
 const AdminAssignments = lazy(() => import("./Pages/admin/AdminAssignments"));
 const AdminQuizzes = lazy(() => import("./Pages/admin/AdminQuizzes"));
+const Testimonials = lazy(() => import("./Pages/Testimonials"));
+const AdminTestimonials = lazy(() => import("./Pages/admin/AdminTestimonials"));
 const AdminBlog = lazy(() => import("./Pages/admin/AdminBlog"));
 const AdminJobs = lazy(() => import("./Pages/admin/AdminJobs"));
 const AdminSupport = lazy(() => import("./Pages/admin/AdminSupport"));
@@ -193,6 +195,7 @@ function AppRoutes() {
             <Route path="/talent/:id" element={<TalentDetail />} />
             <Route path="/jobs" element={<JobListings />} />
             <Route path="/jobs/:jobId" element={<JobDetail />} />
+            <Route path="/testimonials" element={<Testimonials />} />
             <Route path="/blog" element={<BlogList />} />
             <Route path="/blog/:slug" element={<BlogDetail />} />
             <Route path="/support" element={<SupportPage />} />
@@ -275,6 +278,14 @@ function AppRoutes() {
                 element={
                   <RequirePermission permission="MANAGE_COURSES">
                     <AdminQuizzes />
+                  </RequirePermission>
+                }
+              />
+              <Route
+                path="testimonials"
+                element={
+                  <RequirePermission permission="MANAGE_COURSES">
+                    <AdminTestimonials />
                   </RequirePermission>
                 }
               />

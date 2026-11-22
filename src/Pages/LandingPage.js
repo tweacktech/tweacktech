@@ -22,6 +22,7 @@ import { useCurrency } from '../CurrencyContext';
 import { effectivePrice, isDiscountActive } from '../lib/coursePrice';
 import MentorCard from '../Component/MentorCard';
 import { useSeo } from '../Component/useSeo';
+import TestimonialWall from '../Component/TestimonialWall';
 
 const unwrap = (res) => (res?.data && res.data.data !== undefined ? res.data.data : res?.data);
 
@@ -361,6 +362,24 @@ const LandingPage = () => {
                 </p>
               </div>
             ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Student testimonies */}
+      <section className="border-y border-slate-200 bg-white py-16 dark:border-slate-800 dark:bg-slate-900 sm:py-20">
+        <div className="container-page">
+          <div className="mx-auto max-w-2xl text-center">
+            <span className="section-eyebrow">
+              <Sparkles className="h-3.5 w-3.5" /> Student stories
+            </span>
+            <h2 className="section-title mt-4">Learners who went further</h2>
+            <p className="section-subtitle">
+              Real stories from students who learned a skill, built a project and took the next step.
+            </p>
+          </div>
+          <div className="mt-12">
+            <TestimonialWall limit={6} />
           </div>
         </div>
       </section>

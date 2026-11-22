@@ -198,6 +198,7 @@ model User {
   mentorProfile     MentorProfile?
   attendanceRecords AttendanceRecord[] @relation("AttendanceStudent")
   markedAttendance  AttendanceRecord[] @relation("AttendanceMentor")
+  testimonials      Testimonial[]      @relation("TestimonialAuthor")
 
   @@index([email])
   @@index([role])
@@ -267,6 +268,7 @@ model Course {
   chatRooms         ChatRoom[]
   invitations       CourseInvitation[]
   attendanceRecords AttendanceRecord[]
+  testimonials      Testimonial[]     @relation("TestimonialCourse")
 
   createdAt         DateTime     @default(now())
   updatedAt         DateTime     @updatedAt
@@ -1005,6 +1007,26 @@ model MentorProfile {
 
   @@index([isPublished])
   @@index([isFeatured])
+}
+
+model Testimonial {
+  id          String   @id @default(uuid())
+  userId      String
+  user        User     @relation("TestimonialAuthor", fields: [userId], references: [id], onDelete: Cascade)
+  courseId    String?
+  course      Course?  @relation("TestimonialCourse", fields: [courseId], references: [id], onDelete: SetNull)
+  name        String
+  headline    String?
+  content     String
+  rating      Int      @default(5)
+  avatar      String?
+  isVisible   Boolean  @default(false)
+  isFeatured  Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([isVisible, isFeatured])
+  @@index([userId])
 }
 
 model AttendanceRecord {
