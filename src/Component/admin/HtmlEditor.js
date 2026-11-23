@@ -1,5 +1,6 @@
 import React, { useRef, useState } from 'react';
 import { Bold, Code2, Eye, Italic, Link2, List, ListOrdered, Pencil, Type } from 'lucide-react';
+import sanitizeHtml from '../../lib/sanitizeHtml';
 
 const TOOLS = [
   { label: 'H2', title: 'Heading', icon: Type, before: '<h2>', after: '</h2>' },
@@ -12,12 +13,7 @@ const TOOLS = [
   { label: 'Link', title: 'Link', icon: Link2, before: '<a href="https://">', after: '</a>' },
 ];
 
-const safeHtml = (html) => ({
-  __html: String(html || '')
-    .replace(/<script[\s\S]*?<\/script>/gi, '')
-    .replace(/\son\w+="[^"]*"/gi, '')
-    .replace(/javascript:/gi, ''),
-});
+const safeHtml = (html) => ({ __html: sanitizeHtml(html) });
 
 /** Small HTML editor with a live preview for lesson reading guides. */
 const HtmlEditor = ({ value, onChange, rows = 12, id = 'html-editor' }) => {

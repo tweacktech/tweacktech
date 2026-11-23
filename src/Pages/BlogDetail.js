@@ -6,6 +6,7 @@ import Footer from '../Component/Footer';
 import ShareButtons from '../Component/ShareButtons';
 import { useAuth } from '../AuthContext';
 import { useSeo } from '../Component/useSeo';
+import sanitizeHtml from '../lib/sanitizeHtml';
 
 const unwrap = (res) => (res?.data && res.data.data !== undefined ? res.data.data : res?.data);
 
@@ -181,7 +182,7 @@ const BlogDetail = () => {
 
           <div
             className="prose prose-slate mt-8 max-w-none dark:prose-invert prose-headings:font-bold prose-a:text-red-600 dark:prose-a:text-red-400"
-            dangerouslySetInnerHTML={{ __html: post.content }}
+            dangerouslySetInnerHTML={{ __html: sanitizeHtml(post.content) }}
           />
 
           {post.tags && (

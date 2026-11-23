@@ -137,9 +137,9 @@ const AdminUsers = () => {
       bio: target.bio || '',
       location: target.location || '',
       avatar: target.avatar || '',
-      permissions: isSuperAdmin
-        ? target.permissions || []
-        : (target.permissions || []).filter((item) => user?.permissions?.includes(item)),
+      // Never silently strip permissions the editor cannot see. Saving a name
+      // change must not rewrite a target's capabilities.
+      permissions: target.permissions || [],
     });
     setEditError('');
     setEditNotice('');
@@ -233,6 +233,9 @@ const AdminUsers = () => {
     try {
       const res = await api.patch(`/users/${target.id}/toggle-active`, { reason });
       const updated = unwrap(res);
+      if (typeof updated?.isActive !== 'boolean') {
+        throw new Error('The server did not confirm the status change.');
+      }
       setUsers((prev) =>
         prev.map((u) => (u.id === target.id ? { ...u, isActive: updated.isActive } : u))
       );
@@ -490,6 +493,7 @@ const AdminUsers = () => {
                             {resetSaving === u.id ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <KeyRound className="h-3.5 w-3.5" />}
                           </button>
                         )}
+                        {(isSuperAdmin || !['ADMIN', 'SUPERADMIN'].includes(u.role)) && (
                         <button
                           type="button"
                           onClick={() => toggleActive(u)}
@@ -498,6 +502,7 @@ const AdminUsers = () => {
                         >
                           {u.isActive ? <UserX className="h-3.5 w-3.5" /> : <ShieldCheck className="h-3.5 w-3.5" />}
                         </button>
+                        )}
                       </div>
                     </td>
                   </tr>
@@ -588,8 +593,8 @@ const AdminUsers = () => {
                 <select id="edit-role" value={editForm.role} onChange={(e) => setEditForm((prev) => ({ ...prev, role: e.target.value }))} className="input-field">
                   <option value="STUDENT">STUDENT</option>
                   <option value="STAFF">STAFF</option>
-                  <option value="ADMIN">ADMIN</option>
-                  <option value="SUPERADMIN">SUPERADMIN</option>
+                  {isSuperAdmin && <option value="ADMIN">ADMIN</option>}
+                  {isSuperAdmin && <option value="SUPERADMIN">SUPERADMIN</option>}
                 </select>
               </div>
               <div>

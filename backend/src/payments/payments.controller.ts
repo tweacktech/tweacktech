@@ -21,6 +21,7 @@ import { Roles } from '../common/decorators/roles.decorator';
 import { RequirePermissions } from '../common/decorators/permissions.decorator';
 import { Public } from '../common/decorators/public.decorator';
 import { CurrentUser } from '../common/decorators/current-user.decorator';
+import { InitializePaystackDto } from './dto/initialize-paystack.dto';
 
 @Controller('payments')
 @UseGuards(JwtAuthGuard)
@@ -89,16 +90,15 @@ export class PaymentsController {
 
   @Post('paystack/initialize')
   async initializePaystack(
-    @Body() body: { courseId: string; currency?: string; amount?: number },
+    @Body() body: InitializePaystackDto,
     @CurrentUser() user: any,
   ) {
     return this.paymentsService.initializePaystack(user.sub, body);
   }
 
-  @Public()
   @Post('paystack/verify')
   async verifyPaystack(@Body() body: { reference: string }, @CurrentUser() user: any) {
-    return this.paymentsService.verifyPaystack(body.reference, user?.sub);
+    return this.paymentsService.verifyPaystack(body.reference, user.sub);
   }
 
   @Public()

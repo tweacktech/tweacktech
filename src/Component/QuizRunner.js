@@ -20,6 +20,7 @@ const QuizRunner = ({ api, assignmentId, onClose, onSubmitted }) => {
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
   const [result, setResult] = useState(null);
+  const [score, setScore] = useState(null);
   const [reviewing, setReviewing] = useState(false);
   const [index, setIndex] = useState(0);
 
@@ -30,6 +31,7 @@ const QuizRunner = ({ api, assignmentId, onClose, onSubmitted }) => {
       const res = await api.get(`/assignments/${assignmentId}/quiz`);
       const data = unwrap(res);
       setQuiz(data);
+      setScore(data?.submission?.score ?? null);
       if (data?.submission?.quizResult) {
         setResult(data.result || null);
         setReviewing(true);
@@ -92,6 +94,11 @@ const QuizRunner = ({ api, assignmentId, onClose, onSubmitted }) => {
       const res = await api.post(`/assignments/${assignmentId}/submit-quiz`, { answers });
       const submission = unwrap(res);
       setResult(submission.result || null);
+      setScore(submission.score ?? null);
+      setQuiz((prev) => ({
+        ...prev,
+        submission: { ...(prev?.submission || {}), ...submission, quizResult: submission.result },
+      }));
       setReviewing(true);
       onSubmitted?.();
     } catch (err) {
@@ -155,14 +162,18 @@ const QuizRunner = ({ api, assignmentId, onClose, onSubmitted }) => {
             <div className="rounded-2xl border border-emerald-200 bg-emerald-50 p-5 text-center dark:border-emerald-900/60 dark:bg-emerald-950/30">
               <Award className="mx-auto h-10 w-10 text-emerald-600 dark:text-emerald-400" />
               <p className="mt-2 text-3xl font-extrabold text-slate-900 dark:text-white">
-                {quiz.submission?.score ?? result?.earnedPoints ?? 0}
+                {score ?? quiz.submission?.score ?? result?.earnedPoints ?? 0}
                 <span className="text-base font-semibold text-slate-500">
                   {' '}/ {quiz.maxScore}
                 </span>
               </p>
               <p className="mt-1 text-sm font-semibold text-emerald-700 dark:text-emerald-300">
                 {result?.percentage ?? quiz.submission?.result?.percentage ?? 0}% ·{' '}
-                {result?.passed === false ? 'Needs improvement' : 'Submitted'}
+                {result?.passed === false
+                  ? 'Needs improvement'
+                  : result?.passed === true
+                  ? 'Passed'
+                  : 'Submitted'}
               </p>
               {quiz.submission?.feedback && (
                 <p className="mt-1 text-xs text-emerald-700/80 dark:text-emerald-300/80">
@@ -195,11 +206,6 @@ const QuizRunner = ({ api, assignmentId, onClose, onSubmitted }) => {
                         <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
                           {item.isCorrect ? 'Correct' : 'Incorrect'} · {item.earned}/{item.points} points
                         </p>
-                        {!item.isCorrect && item.correctAnswers?.length > 0 && (
-                          <p className="mt-1 text-xs text-emerald-700 dark:text-emerald-400">
-                            Correct answer: {item.correctAnswers.join(', ')}
-                          </p>
-                        )}
                         {item.explanation && (
                           <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
                             {item.explanation}

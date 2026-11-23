@@ -15,6 +15,10 @@ import { MailService } from '../common/services/mail.service';
 import { NotificationsService } from '../notifications/notifications.service';
 import { RealtimeService } from '../realtime/realtime.service';
 import { CertificatesService } from '../certificates/certificates.service';
+import {
+  hasPassedQuiz,
+  quizPassScore,
+} from '../common/utils/quiz';
 
 const MANAGER_PERMISSIONS = ['MANAGE_COURSES', 'GRADE_ASSIGNMENTS'];
 
@@ -103,7 +107,62 @@ export class AssignmentsService {
     if (!enrollment) {
       throw new ForbiddenException('You are not enrolled in this course');
     }
+    // COMPLETED enrolments keep read/review access to their quizzes and notes.
+    if (!['ACTIVE', 'COMPLETED'].includes(enrollment.status)) {
+      throw new ForbiddenException('Your enrolment for this course is not active');
+    }
     return enrollment;
+  }
+
+  /**
+   * Server-side copy of the module quiz gate. The UI showing a lock is not
+   * enough — getQuiz() and submitQuiz() must reject direct API calls too.
+   */
+  private async assertModuleQuizUnlocked(
+    courseId: string,
+    moduleId: string | null,
+    userId: string,
+  ) {
+    if (!moduleId) return;
+    const current = await this.prisma.module.findUnique({
+      where: { id: moduleId },
+      select: { order: true, isPublished: true },
+    });
+    if (!current) return;
+
+    const previousModule = await this.prisma.module.findFirst({
+      where: {
+        courseId,
+        isPublished: true,
+        order: { lt: current.order },
+      },
+      orderBy: { order: 'desc' },
+      select: { id: true },
+    });
+    if (!previousModule) return;
+
+    const previousQuiz = await this.prisma.assignment.findFirst({
+      where: {
+        courseId,
+        moduleId: previousModule.id,
+        type: 'QUIZ',
+      },
+      select: { id: true, passScore: true },
+    });
+    if (!previousQuiz) return;
+
+    const submission = await this.prisma.assignmentSubmission.findUnique({
+      where: {
+        assignmentId_userId: { assignmentId: previousQuiz.id, userId },
+      },
+      select: { score: true },
+    });
+    if (!hasPassedQuiz(previousQuiz, submission?.score)) {
+      throw new BadRequestException({
+        message: `Score at least ${quizPassScore(previousQuiz)} on the previous module quiz to unlock this one.`,
+        code: 'MODULE_QUIZ_LOCKED',
+      });
+    }
   }
 
   // -------------------------------------------------------------------------
@@ -371,10 +430,7 @@ export class AssignmentsService {
             ? submissionByQuiz.get(previousQuiz.id)
             : undefined;
           const quizPassed =
-            previousQuiz &&
-            previousSubmission &&
-            typeof previousSubmission.score === 'number' &&
-            previousSubmission.score >= Number(previousQuiz.passScore || 6);
+            previousQuiz && hasPassedQuiz(previousQuiz, previousSubmission?.score);
           const allLessonsDone =
             previousModule.lessons.length > 0 &&
             previousModule.lessons.every((lesson) => completedLessons.has(lesson.id));
@@ -437,6 +493,7 @@ export class AssignmentsService {
       where: { id: assignmentId },
       include: {
         course: { select: { id: true, title: true } },
+        module: { select: { id: true } },
         questions: {
           orderBy: { order: 'asc' },
           include: { options: { orderBy: { order: 'asc' } } },
@@ -451,6 +508,11 @@ export class AssignmentsService {
     const isStudent = user.role === Role.STUDENT;
     if (isStudent) {
       await this.assertEnrolled(assignment.courseId, user.sub);
+      await this.assertModuleQuizUnlocked(
+        assignment.courseId,
+        assignment.moduleId,
+        user.sub,
+      );
     } else {
       await this.assertCourseAccess(assignment.courseId, user);
     }
@@ -735,6 +797,7 @@ export class AssignmentsService {
       where: { id: assignmentId },
       include: {
         course: { select: { title: true } },
+        module: { select: { id: true } },
         questions: { include: { options: { orderBy: { order: 'asc' } } } },
       },
     });
@@ -749,6 +812,7 @@ export class AssignmentsService {
     }
 
     await this.assertEnrolled(assignment.courseId, userId);
+    await this.assertModuleQuizUnlocked(assignment.courseId, assignment.moduleId, userId);
 
     const answerMap: Record<string, any> =
       answers && typeof answers === 'object' && !Array.isArray(answers)
@@ -795,9 +859,6 @@ export class AssignmentsService {
         earned: isCorrect ? Number(question.points) : 0,
         isCorrect,
         selected,
-        correctOptionIds: correctIds,
-        correctAnswers: correctOptions.map((option) => option.text),
-        explanation: question.explanation || null,
       };
     });
 
@@ -854,9 +915,7 @@ export class AssignmentsService {
       where: { id: userId },
       select: { firstName: true, email: true },
     });
-    const passed =
-      assignment.passScore === null ||
-      score >= Number(assignment.passScore || 0);
+    const passed = hasPassedQuiz(assignment, score);
     if (user) {
       await this.notifications.create({
         userId,

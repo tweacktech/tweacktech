@@ -93,8 +93,12 @@ export class UsersController {
   @Post(':id/reset-password')
   @Roles(Role.SUPERADMIN, Role.ADMIN)
   @RequirePermissions('MANAGE_USERS')
-  async resetPassword(@Param('id') id: string, @Body() body: { newPassword?: string }) {
-    return this.usersService.adminResetPassword(id, body);
+  async resetPassword(
+    @Param('id') id: string,
+    @Body() body: { newPassword?: string },
+    @CurrentUser() user: any,
+  ) {
+    return this.usersService.adminResetPassword(id, body, user);
   }
 
   @Patch(':id/role')

@@ -7,6 +7,7 @@
     "@testing-library/react": "^13.4.0",
     "@testing-library/user-event": "^13.5.0",
     "axios": "^1.7.8",
+    "dompurify": "^3.4.17",
     "jspdf": "^4.2.1",
     "lucide-react": "^0.462.0",
     "pusher-js": "^8.6.0",

@@ -11,6 +11,7 @@ import { EnrollmentStatus, Role } from '@prisma/client';
 import { CertificatesService } from '../certificates/certificates.service';
 import { NotificationsService } from '../notifications/notifications.service';
 import { MailService } from '../common/services/mail.service';
+import { hasPassedQuiz } from '../common/utils/quiz';
 
 @Injectable()
 export class EnrollmentsService {
@@ -519,10 +520,7 @@ export class EnrollmentsService {
           where: { userId: enrollment.userId, assignmentId: quiz.id },
           select: { score: true },
         });
-        const passed =
-          submission &&
-          typeof submission.score === 'number' &&
-          submission.score >= Number(quiz.passScore || 6);
+        const passed = hasPassedQuiz(quiz, submission?.score);
         if (!passed) {
           throw new BadRequestException({
             message: 'Pass the previous module quiz to unlock this lesson.',

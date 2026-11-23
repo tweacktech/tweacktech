@@ -7,7 +7,7 @@ import {
   ServiceUnavailableException,
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { createHmac, randomBytes } from 'crypto';
+import { createHmac, randomBytes, timingSafeEqual } from 'crypto';
 import {
   CourseType,
   PaymentStatus,
@@ -126,7 +126,6 @@ export class PaymentsService {
       discountEnd?: Date | null;
     },
     currency?: string,
-    requestedAmount?: number,
   ) {
     const target = (currency || course.currency || 'USD').toUpperCase();
     const basePrice = effectivePrice(course);
@@ -135,22 +134,38 @@ export class PaymentsService {
       course.currency || 'USD',
       target,
     );
-    const hasRequested = requestedAmount !== undefined && Number(requestedAmount) > 0;
-    const amount = hasRequested ? Number(requestedAmount) : converted.converted;
-    const base = hasRequested
-      ? await this.currencies.convert(amount, target, course.currency || 'USD')
-      : null;
 
+    // Never accept a client-supplied amount: it would let a student buy a paid
+    // course for a few cents because verification only checked gateway status.
     return {
-      amount: Number(amount.toFixed(2)),
+      amount: Number(converted.converted.toFixed(2)),
       currency: target,
-      // baseAmount is always expressed in the course's own currency.
-      baseAmount: Number(
-        (hasRequested ? base?.converted || 0 : basePrice).toFixed(2),
-      ),
+      baseAmount: Number(basePrice.toFixed(2)),
       baseCurrency: course.currency || 'USD',
       exchangeRate: converted.rate,
     };
+  }
+
+  /** Paystack reports amounts in the currency's minor unit (kobo/cents). */
+  private assertGatewayAmount(
+    payment: { amount: Prisma.Decimal | number; currency: string | null },
+    gateway: { amount?: number | string; currency?: string },
+  ) {
+    const expected = Math.round(Number(payment.amount) * 100);
+    const paid = Number(gateway.amount);
+    const expectedCurrency = String(payment.currency || '').toUpperCase();
+    const paidCurrency = String(gateway.currency || '').toUpperCase();
+
+    if (
+      !Number.isFinite(paid) ||
+      paid !== expected ||
+      (paidCurrency && paidCurrency !== expectedCurrency)
+    ) {
+      throw new BadRequestException({
+        message: 'The amount confirmed by the gateway does not match the course price.',
+        code: 'PAYMENT_AMOUNT_MISMATCH',
+      });
+    }
   }
 
   // -------------------------------------------------------------------------
@@ -173,7 +188,7 @@ export class PaymentsService {
       orderBy: { createdAt: 'desc' },
     });
 
-    const price = await this.pricing(course, data.currency, data.amount);
+    const price = await this.pricing(course, data.currency);
 
     const payment = existing
       ? await this.prisma.payment.update({
@@ -536,7 +551,7 @@ export class PaymentsService {
     const user = await this.prisma.user.findUnique({ where: { id: userId } });
     if (!user) throw new NotFoundException('User not found');
 
-    const price = await this.pricing(course, data.currency, data.amount);
+    const price = await this.pricing(course, data.currency);
     const currency = price.currency;
     if (!['NGN', 'GHS', 'ZAR', 'KES', 'USD'].includes(currency)) {
       throw new BadRequestException(
@@ -664,6 +679,7 @@ export class PaymentsService {
         code: 'PAYSTACK_NOT_SUCCESSFUL',
       });
     }
+    this.assertGatewayAmount(payment, payload.data);
 
     return this.completePayment(payment.id, {
       method: PAYSTACK,
@@ -677,9 +693,17 @@ export class PaymentsService {
 
     const raw = Buffer.isBuffer(rawBody) ? rawBody : Buffer.from(rawBody);
     const expected = createHmac('sha512', key).update(raw).digest('hex');
-    if (expected !== signature) {
+    const provided = Buffer.from(signature);
+    const expectedBuffer = Buffer.from(expected);
+    if (
+      provided.length !== expectedBuffer.length ||
+      !timingSafeEqual(provided, expectedBuffer)
+    ) {
       this.logger.warn('Rejected Paystack webhook with invalid signature');
-      return { received: false };
+      throw new BadRequestException({
+        message: 'Invalid webhook signature',
+        code: 'INVALID_WEBHOOK_SIGNATURE',
+      });
     }
 
     let event: any;
@@ -694,6 +718,7 @@ export class PaymentsService {
         where: { reference: event.data.reference, paymentMethod: PAYSTACK },
       });
       if (payment) {
+        this.assertGatewayAmount(payment, event.data);
         await this.completePayment(payment.id, {
           method: PAYSTACK,
           gatewayResponse: event.data,

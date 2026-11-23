@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { normalizeImageUrl } from '../../lib/image';
+import { readToken } from '../../lib/token';
 import { Link, NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom';
 import {
   Activity,
@@ -99,7 +100,7 @@ const AdminLayout = () => {
     if (!isSuperAdmin && !hasPermission('MANAGE_PAYMENTS')) return undefined;
     let cancelled = false;
     const load = () => {
-      const token = localStorage.getItem('tweacktech-token');
+      const token = readToken();
       fetch(
         `${process.env.REACT_APP_API_URL || 'http://localhost:5001/api'}/payments?status=AWAITING_APPROVAL&limit=1`,
         { headers: token ? { Authorization: `Bearer ${token}` } : {} },

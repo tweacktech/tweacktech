@@ -31,16 +31,12 @@ import AiTutor from '../Component/AiTutor';
 import CodePlayground from '../Component/CodePlayground';
 import ReadAloud from '../Component/ReadAloud';
 import { detectLanguage, extractCode, extractOutput } from '../lib/lessonCode';
+import sanitizeHtml from '../lib/sanitizeHtml';
 
 const unwrap = (res) => (res?.data && res.data.data !== undefined ? res.data.data : res?.data);
 
-// Lesson guides are stored as HTML. Render them safely and strip tags for TTS.
-const safeHtml = (html) => ({
-  __html: String(html || '')
-    .replace(/<script[\s\S]*?<\/script>/gi, '')
-    .replace(/\son\w+="[^"]*"/gi, '')
-    .replace(/javascript:/gi, ''),
-});
+// Lesson guides are authored as HTML by admins; sanitize before rendering.
+const safeHtml = (html) => ({ __html: sanitizeHtml(html) });
 
 const youtubeId = (url) => {
   if (!url) return null;

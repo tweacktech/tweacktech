@@ -547,17 +547,31 @@ export class UsersService {
     });
   }
 
-  async adminResetPassword(userId: string, data?: { newPassword?: string }) {
+  async adminResetPassword(
+    userId: string,
+    data?: { newPassword?: string },
+    actor?: any,
+  ) {
     const user = await this.prisma.user.findUnique({
       where: { id: userId },
-      select: { id: true, email: true, firstName: true, lastName: true },
+      select: { id: true, email: true, role: true, firstName: true, lastName: true },
     });
     if (!user) throw new NotFoundException('User not found');
 
+    const actorIsSuperAdmin = actor?.role === Role.SUPERADMIN;
+    if (!actorIsSuperAdmin && user.role === Role.SUPERADMIN) {
+      throw new ForbiddenException('Only a superadmin can reset a superadmin password');
+    }
+    if (!actorIsSuperAdmin && user.role === Role.ADMIN) {
+      throw new ForbiddenException('Only a superadmin can reset an admin password');
+    }
+
+    // A custom password may only be chosen by a superadmin; everyone else gets
+    // a generated one so an ADMIN cannot set a known password on any account.
     const temporaryPassword =
-      data?.newPassword && data.newPassword.length >= 8
+      actorIsSuperAdmin && data?.newPassword && data.newPassword.length >= 8
         ? data.newPassword
-        : randomBytes(6).toString('base64url');
+        : randomBytes(9).toString('base64url');
     const saltRounds = parseInt(this.config.get('BCRYPT_SALT_ROUNDS', '10'), 10);
     const password = await bcrypt.hash(temporaryPassword, saltRounds);
 

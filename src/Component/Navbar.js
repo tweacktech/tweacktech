@@ -1,5 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { normalizeImageUrl } from '../lib/image';
+import { readToken } from '../lib/token';
 import { Link, NavLink, useLocation, useNavigate } from 'react-router-dom';
 import {
   Award,
@@ -62,9 +63,9 @@ const Navbar = () => {
     }
     let cancelled = false;
     const loadUnread = () => {
-      // The AuthContext axios instance is not exposed here; use a lightweight
-      // fetch with the stored token, and fail silently when offline.
-      const token = localStorage.getItem('tweacktech-token');
+      // Use the shared token reader so sessions that chose not to be remembered
+      // (sessionStorage) still get unread counts.
+      const token = readToken();
       if (!token) return;
       fetch(`${process.env.REACT_APP_API_URL || 'http://localhost:5001/api'}/chat/unread-count`, {
         headers: { Authorization: `Bearer ${token}` },

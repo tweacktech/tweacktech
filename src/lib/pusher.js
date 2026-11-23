@@ -1,9 +1,9 @@
 import Pusher from 'pusher-js';
+import { readToken } from './token';
 
 const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5001/api';
 const KEY = process.env.REACT_APP_PUSHER_KEY;
 const CLUSTER = process.env.REACT_APP_PUSHER_CLUSTER || 'eu';
-const TOKEN_KEY = 'tweacktech-token';
 
 let client = null;
 
@@ -27,7 +27,7 @@ export const getPusher = () => {
       transport: 'ajax',
       endpoint: `${API_URL}/pusher/auth`,
       headersProvider: () => {
-        const token = localStorage.getItem(TOKEN_KEY);
+        const token = readToken();
         return token ? { Authorization: `Bearer ${token}` } : {};
       },
     },

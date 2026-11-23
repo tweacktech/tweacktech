@@ -11,20 +11,18 @@ import axios from 'axios';
 import { getErrorMessage, isDatabaseOffline, notifyOffline } from './lib/apiError';
 import { disconnectPusher, getPusher } from './lib/pusher';
 
+import {
+  TOKEN_KEY,
+  REFRESH_KEY,
+  PROFILE_KEY,
+  getTokenStore as getStore,
+  readToken,
+} from './lib/token';
+
 const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5001/api';
-const TOKEN_KEY = 'tweacktech-token';
-const REFRESH_KEY = 'tweacktech-refresh-token';
-const PROFILE_KEY = 'tweacktech-profile';
+const readRefreshToken = () => getStore()?.getItem(REFRESH_KEY) || null;
 
-const getStore = () =>
-  typeof sessionStorage !== 'undefined' && sessionStorage.getItem(TOKEN_KEY)
-    ? sessionStorage
-    : localStorage;
-
-const readToken = () => getStore().getItem(TOKEN_KEY);
-const readRefreshToken = () => getStore().getItem(REFRESH_KEY);
-
-const writeTokens = (tokens, remember = true) => {
+const writeTokens = (tokens, remember = false) => {
   const store = remember ? localStorage : sessionStorage;
   const other = remember ? sessionStorage : localStorage;
   other.removeItem(TOKEN_KEY);
@@ -112,7 +110,7 @@ export const AuthProvider = ({ children }) => {
   }, [user]);
 
 
-  const saveSession = useCallback((tokens, remember = true) => {
+  const saveSession = useCallback((tokens, remember = false) => {
     writeTokens(tokens, remember);
     setToken(tokens.accessToken);
   }, []);
@@ -196,7 +194,7 @@ export const AuthProvider = ({ children }) => {
   }, [clearSession]);
 
   const login = useCallback(
-    async (email, password, remember = true) => {
+    async (email, password, remember = false) => {
       const res = await api.post('/auth/login', { email, password });
       const data = unwrap(res.data);
       saveSession(data.tokens, remember);
@@ -211,7 +209,7 @@ export const AuthProvider = ({ children }) => {
     async (idToken) => {
       const res = await api.post('/auth/google', { idToken });
       const data = unwrap(res.data);
-      saveSession(data.tokens, true);
+      saveSession(data.tokens);
       setUser(data.user);
       setSessionNotice('');
       return data.user;
