@@ -1659,7 +1659,7 @@ ${list(topic.practice?.steps || [], true)}
 ${list(topic.summary)}
 
 <h2>Ready for the module quiz?</h2>
-<p>When every lesson in this module is complete, open Study mode or My assignments and take the module quiz. You need 80% (8 out of 10) to unlock the next module, and you can retake it whenever you want. Use the <strong>AI study partner</strong> in Study mode if you want any part of this lesson explained differently.</p>
+<p>Use the <strong>Take quiz</strong> or <strong>Retake quiz</strong> button on this page whenever you want to test yourself — there is no need to finish every lesson first. You need 80% (8 out of 10) to unlock the next module, and you can retake the quiz as many times as you like. Use the <strong>AI study partner</strong> in Study mode if you want any part of this lesson explained differently.</p>
 </article>`;
 }
 

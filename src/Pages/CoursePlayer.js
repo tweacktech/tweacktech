@@ -379,15 +379,26 @@ const StudyMode = ({
               <span />
             )}
             {nextLesson ? (
-              <button
-                type="button"
-                onClick={() => onNext(nextLesson.id)}
-                disabled={marking || nextLocked}
-                className="btn-primary"
-              >
-                {marking ? 'Saving…' : nextLocked ? 'Pass module quiz to continue' : 'Next lesson'}{' '}
-                {nextLocked ? <Lock className="h-4 w-4" /> : <ArrowRight className="h-4 w-4" />}
-              </button>
+              nextLocked && moduleQuizId ? (
+                <button
+                  type="button"
+                  onClick={() => setQuizOpen(true)}
+                  disabled={marking}
+                  className="btn-primary"
+                >
+                  <Award className="h-4 w-4" /> {quizFailed ? 'Retake module quiz' : 'Take module quiz'}
+                </button>
+              ) : (
+                <button
+                  type="button"
+                  onClick={() => onNext(nextLesson.id)}
+                  disabled={marking || nextLocked}
+                  className="btn-primary"
+                >
+                  {marking ? 'Saving…' : nextLocked ? 'Pass module quiz to continue' : 'Next lesson'}{' '}
+                  {nextLocked ? <Lock className="h-4 w-4" /> : <ArrowRight className="h-4 w-4" />}
+                </button>
+              )
             ) : (
               <button
                 type="button"

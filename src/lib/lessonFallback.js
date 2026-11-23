@@ -54,7 +54,7 @@ export const fallbackGuide = (lesson, courseTitle) => {
   `);
 };
 
-const cacheKey = (courseId) => `tweack-guides-${courseId}`;
+const cacheKey = (courseId) => `tweack-guides-v2-${courseId}`;
 
 export const cacheLessonGuides = (courseId, lessons) => {
   if (!courseId || !Array.isArray(lessons)) return;
