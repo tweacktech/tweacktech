@@ -316,8 +316,11 @@ export class CoursesService {
       canReadLessons = Boolean(enrollment);
     }
     if (!canReadLessons) {
+      // Free preview lessons stay readable for everyone; everything else
+      // requires an enrolment.
       course.modules.forEach((module) =>
         module.lessons.forEach((lesson) => {
+          if (lesson.isFree) return;
           lesson.readingContent = null;
           lesson.contentUrl = null;
         }),

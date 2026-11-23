@@ -462,7 +462,7 @@ const KEYWORD_POOL = Array.from(
   ),
 );
 
-/** Build fill-in-the-blank questions straight from the lesson's own text. */
+/** Build short knowledge questions from the lesson's own text. */
 function generatedQuestions(topicKey, seed) {
   const topic = TOPICS[topicKey] || TOPICS.core;
   const lines = [...(topic.what || []), ...(topic.summary || [])]
@@ -485,7 +485,7 @@ function generatedQuestions(topicKey, seed) {
     ).slice((index + seed) % 20, ((index + seed) % 20) + 3);
     while (distractors.length < 3) distractors.push(`option${distractors.length}`);
     questions.push({
-      prompt: `Complete this idea from the lesson: ${blanked}`,
+      prompt: `Which word belongs in the blank? ${blanked}`,
       correct: answer,
       wrong: distractors,
       explanation: line,

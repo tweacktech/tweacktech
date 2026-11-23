@@ -217,6 +217,28 @@ const StudyMode = ({
     () => localStorage.getItem(`tweack-notes-${lesson?.id}`) || '',
   );
 
+  // Focus mode: block accidental refreshes so the study session is not lost.
+  // The Exit button remains the only intentional way out.
+  useEffect(() => {
+    const blockReload = (event) => {
+      const key = String(event.key || '').toLowerCase();
+      if (key === 'f5' || ((event.ctrlKey || event.metaKey) && key === 'r')) {
+        event.preventDefault();
+        event.stopPropagation();
+      }
+    };
+    const warnOnLeave = (event) => {
+      event.preventDefault();
+      event.returnValue = '';
+    };
+    window.addEventListener('keydown', blockReload, true);
+    window.addEventListener('beforeunload', warnOnLeave);
+    return () => {
+      window.removeEventListener('keydown', blockReload, true);
+      window.removeEventListener('beforeunload', warnOnLeave);
+    };
+  }, []);
+
   useEffect(() => {
     if (!running || seconds <= 0) return undefined;
     const timer = setInterval(() => setSeconds((value) => Math.max(0, value - 1)), 1000);
@@ -412,7 +434,7 @@ const StudyMode = ({
                   ? `You scored ${currentModule?.quizScore ?? 0}/${currentModule?.quizPassScore ?? 8}. You need ${
                       currentModule?.quizPassScore ?? 8
                     } to unlock the next module — retake when you are ready.`
-                  : 'You have finished this module. Pass the quiz with 80% (8/10) or higher to unlock the next module.'}
+                  : 'Pass the quiz with 80% (8/10) or higher to unlock the next module. You can take it now or come back later.'}
               </p>
               <button
                 type="button"
@@ -510,6 +532,7 @@ const CoursePlayer = () => {
   const [aiTutor, setAiTutor] = useState(false);
   const [aiEnabled, setAiEnabled] = useState(true);
   const [ideOpen, setIdeOpen] = useState(false);
+  const [quizOpen, setQuizOpen] = useState(false);
 
   const canManage = ['SUPERADMIN', 'ADMIN', 'STAFF'].includes(user?.role);
   const enrolled = !!enrollment || canManage;
@@ -597,19 +620,13 @@ const CoursePlayer = () => {
   const currentModule = access?.modules?.find((item) => item.id === currentLesson?.moduleId);
   const moduleQuizId = currentModule?.quizId || null;
   const moduleQuizPassed = Boolean(currentModule?.quizPassed);
-  const moduleLessonsDone = Boolean(
-    currentModule &&
-      currentModule.totalLessons > 0 &&
-      currentModule.completedLessons >= currentModule.totalLessons,
-  );
   const quizFailed = Boolean(
     currentModule?.quizAttempted && !currentModule.quizPassed,
   );
-  // Only offer the quiz when the module is finished (time to move on) or the
-  // student failed and needs a retake. Passing hides it completely.
-  const showQuiz = Boolean(
-    moduleQuizId && !moduleQuizPassed && (moduleLessonsDone || quizFailed),
-  );
+  // Make the module quiz available as soon as the learner is on a lesson in
+  // that module — no need to mark every lesson complete first. A failed quiz
+  // stays available for a retake; a passed quiz is hidden.
+  const showQuiz = Boolean(moduleQuizId && !moduleQuizPassed);
 
   // Access data from the server is the single source of truth for locks. It
   // fails closed: if a record is missing, an enrolled student's lesson stays
@@ -968,15 +985,26 @@ const CoursePlayer = () => {
                       <span />
                     )}
                     {nextLesson ? (
-                      <button
-                        type="button"
-                        onClick={() => goToNext(nextLesson.id)}
-                        disabled={marking || nextLocked}
-                        className="btn-primary"
-                      >
-                        {marking ? 'Saving…' : nextLocked ? 'Pass module quiz to continue' : 'Next lesson'}{' '}
-                        {nextLocked ? <Lock className="h-4 w-4" /> : <ArrowRight className="h-4 w-4" />}
-                      </button>
+                      nextLocked && moduleQuizId ? (
+                        <button
+                          type="button"
+                          onClick={() => setQuizOpen(true)}
+                          disabled={marking}
+                          className="btn-primary"
+                        >
+                          <Award className="h-4 w-4" /> {quizFailed ? 'Retake module quiz' : 'Take module quiz'}
+                        </button>
+                      ) : (
+                        <button
+                          type="button"
+                          onClick={() => goToNext(nextLesson.id)}
+                          disabled={marking || nextLocked}
+                          className="btn-primary"
+                        >
+                          {marking ? 'Saving…' : nextLocked ? 'Pass module quiz to continue' : 'Next lesson'}{' '}
+                          {nextLocked ? <Lock className="h-4 w-4" /> : <ArrowRight className="h-4 w-4" />}
+                        </button>
+                      )
                     ) : (
                       <button
                         type="button"
@@ -1008,6 +1036,28 @@ const CoursePlayer = () => {
                 {completed.size} of {lessons.length} lessons complete
               </p>
             </div>
+
+            {showQuiz && !studyMode && (
+              <div className="card p-5">
+                <h2 className="flex items-center gap-2 text-sm font-bold text-slate-900 dark:text-white">
+                  <Award className="h-4 w-4 text-red-600" /> Module quiz
+                </h2>
+                <p className="mt-2 text-xs leading-relaxed text-slate-500 dark:text-slate-400">
+                  {quizFailed
+                    ? `You scored ${currentModule?.quizScore ?? 0}/${currentModule?.quizPassScore ?? 8}. You need ${
+                        currentModule?.quizPassScore ?? 8
+                      } to unlock the next module — retake when you are ready.`
+                    : 'Pass the quiz with 80% (8/10) or higher to unlock the next module. You can take it now.'}
+                </p>
+                <button
+                  type="button"
+                  onClick={() => setQuizOpen(true)}
+                  className="btn-primary mt-3 w-full !py-2 text-xs"
+                >
+                  {quizFailed ? 'Retake quiz' : 'Take quiz'} →
+                </button>
+              </div>
+            )}
 
             <div className="card overflow-hidden">
               <div className="border-b border-slate-100 p-4 dark:border-slate-800">
@@ -1118,6 +1168,18 @@ const CoursePlayer = () => {
           </aside>
         </div>
       </div>
+
+      {quizOpen && moduleQuizId && (
+        <QuizRunner
+          api={api}
+          assignmentId={moduleQuizId}
+          onClose={() => setQuizOpen(false)}
+          onSubmitted={async () => {
+            setQuizOpen(false);
+            await refreshAccess();
+          }}
+        />
+      )}
 
       <CodePlayground
         open={ideOpen}

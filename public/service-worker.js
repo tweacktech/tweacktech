@@ -5,7 +5,7 @@
    - Offline fallback page for navigations
    ========================================================================== */
 
-const VERSION = 'v36';
+const VERSION = 'v37';
 const STATIC_CACHE = `tweacktech-static-${VERSION}`;
 const RUNTIME_CACHE = `tweacktech-runtime-${VERSION}`;
 const API_CACHE = `tweacktech-api-${VERSION}`;
@@ -149,7 +149,10 @@ self.addEventListener('fetch', (event) => {
   }
 
   // API: network first, cache last successful response for offline reading.
+  // Never cache authenticated responses — they are user-specific, and a stale
+  // copy can keep serving old lesson content after a deployment.
   if (url.pathname.startsWith('/api/')) {
+    if (request.headers.has('Authorization')) return;
     event.respondWith(networkFirst(request, API_CACHE, 8000));
     return;
   }
