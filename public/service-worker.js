@@ -5,11 +5,12 @@
    - Offline fallback page for navigations
    ========================================================================== */
 
-const VERSION = 'v34';
+const VERSION = 'v35';
 const STATIC_CACHE = `tweacktech-static-${VERSION}`;
 const RUNTIME_CACHE = `tweacktech-runtime-${VERSION}`;
 const API_CACHE = `tweacktech-api-${VERSION}`;
 const IMAGE_CACHE = `tweacktech-images-${VERSION}`;
+const ASSET_MANIFEST = '/sw-assets.json';
 
 const PRECACHE = [
   '/',
@@ -47,25 +48,41 @@ const putInCache = (cacheName, request, response) =>
 
 const isCacheable = (response) => response && response.status === 200;
 
+const precacheUrls = async (urls, cacheName) => {
+  const cache = await caches.open(cacheName);
+  await Promise.all(
+    [...new Set(urls)].map(async (url) => {
+      try {
+        const response = await fetch(url, { cache: 'reload' });
+        if (isCacheable(response)) await cache.put(url, cleanResponse(response));
+      } catch {
+        // One failed asset must not abort the whole offline install.
+      }
+    })
+  );
+};
+
 self.addEventListener('install', (event) => {
   event.waitUntil(
-    caches
-      .open(STATIC_CACHE)
-      .then((cache) =>
-        Promise.all(
-          PRECACHE.map(async (url) => {
-            try {
-              const response = await fetch(url, { cache: 'reload' });
-              if (isCacheable(response)) {
-                await cache.put(url, cleanResponse(response.clone()));
-              }
-            } catch {
-              // Ignore individual precache failures; the app still works online.
-            }
-          })
-        )
-      )
-      .then(() => self.skipWaiting())
+    (async () => {
+      // The build writes sw-assets.json with every hashed JS/CSS chunk. Without
+      // this, navigating offline to a route the visitor never opened while
+      // online fails to load its lazy chunk and the React error boundary shows.
+      let urls = PRECACHE;
+      try {
+        const response = await fetch(ASSET_MANIFEST, { cache: 'no-store' });
+        if (response.ok) {
+          const manifest = await response.json();
+          if (Array.isArray(manifest.urls) && manifest.urls.length) urls = manifest.urls;
+        }
+      } catch {
+        // Fall back to the small shell list on a partially deployed build.
+      }
+      await precacheUrls(urls, STATIC_CACHE);
+      // Must be last: activating mid-install terminates this callback and
+      // would abandon the precache.
+      await self.skipWaiting();
+    })()
   );
 });
 
@@ -88,7 +105,23 @@ self.addEventListener('activate', (event) => {
 });
 
 self.addEventListener('message', (event) => {
-  if (event.data === 'SKIP_WAITING') self.skipWaiting();
+  const data = event.data;
+  if (data === 'SKIP_WAITING') {
+    self.skipWaiting();
+    return;
+  }
+  // Let the page ask the worker to cache extra URLs (e.g. a lesson opened
+  // while online) so they remain readable after the connection drops.
+  if (data && data.type === 'CACHE_URLS' && Array.isArray(data.urls)) {
+    event.waitUntil(
+      (async () => {
+        const cache = await caches.open(STATIC_CACHE);
+        const keys = await cache.keys();
+        if (keys.length >= data.urls.length) return; // install already precached them
+        await precacheUrls(data.urls, STATIC_CACHE);
+      })(),
+    );
+  }
 });
 
 const isStaticAsset = (request, url) =>

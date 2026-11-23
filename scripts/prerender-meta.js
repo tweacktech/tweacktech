@@ -340,6 +340,40 @@ const buildRoutes = async () => {
   return routes;
 };
 
+/**
+ * The service worker cannot know CRA's hashed chunk names from a static file in
+ * public/. Write the full build asset list at build time so the SW can precache
+ * every route chunk — otherwise going offline and opening an unvisited page
+ * fails to load its lazy chunk and the app falls into the error boundary.
+ */
+const writeSwAssets = () => {
+  const urls = [
+    '/',
+    '/offline.html',
+    '/manifest.json',
+    '/icon.svg',
+    '/icon-192.png',
+    '/icon-512.png',
+    '/favicon.ico',
+    '/llms.txt',
+    '/.well-known/ard.json',
+    '/sw-assets.json',
+  ];
+  const walk = (directory, prefix) => {
+    fs.readdirSync(directory, { withFileTypes: true }).forEach((entry) => {
+      const full = path.join(directory, entry.name);
+      if (entry.isDirectory()) walk(full, `${prefix}/${entry.name}`);
+      else urls.push(`${prefix}/${entry.name}`);
+    });
+  };
+  if (fs.existsSync(path.join(BUILD, 'static'))) walk(path.join(BUILD, 'static'), '/static');
+  fs.writeFileSync(
+    path.join(BUILD, 'sw-assets.json'),
+    JSON.stringify({ generatedAt: Date.now(), urls: [...new Set(urls)] }),
+  );
+  console.log(`[prerender] Service worker asset list: ${new Set(urls).size} files.`);
+};
+
 const writeSitemap = (routes) => {
   const staticPaths = [
     '/', '/courses', '/mentors', '/talent', '/jobs', '/blog', '/about',
@@ -378,6 +412,7 @@ const main = async () => {
     }
   });
   writeSitemap(routes);
+  writeSwAssets();
   console.log(`[prerender] Wrote ${written} shareable page${written === 1 ? '' : 's'} with custom metadata.`);
 };
 
