@@ -146,6 +146,15 @@ const DashboardRoute = () => {
   return <Dashboard />;
 };
 
+// Navigating to the next lesson (or any page) should start at the top.
+const ScrollToTop = () => {
+  const { pathname } = useLocation();
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, [pathname]);
+  return null;
+};
+
 const PageLoader = () => (
   <div className="flex items-center justify-center min-h-screen bg-slate-50 dark:bg-slate-950">
     <Loader />
@@ -186,6 +195,7 @@ function AppRoutes() {
 
   return (
     <BrowserRouter>
+      <ScrollToTop />
       <OfflineBanner />
       <ErrorBoundary>
         <Suspense fallback={<PageLoader />}>

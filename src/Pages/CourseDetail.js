@@ -119,6 +119,41 @@ const CourseDetail = () => {
     load();
   }, [load]);
 
+  // Finish an enrolment the visitor started before being asked to sign in.
+  useEffect(() => {
+    if (!isAuthenticated || !courseId || loading) return undefined;
+    let pending = null;
+    try {
+      pending = sessionStorage.getItem('tweack-intent-enroll');
+    } catch {
+      /* storage may be unavailable */
+    }
+    if (pending !== courseId) return undefined;
+    try {
+      sessionStorage.removeItem('tweack-intent-enroll');
+    } catch {
+      /* ignore */
+    }
+    let cancelled = false;
+    (async () => {
+      try {
+        await api.post(`/enrollments/enroll/${courseId}`);
+        const res = await api.get(`/courses/${courseId}/access`);
+        const access = unwrap(res);
+        if (!cancelled && access?.nextLessonId) {
+          navigate(`/courses/${courseId}/lessons/${access.nextLessonId}`, { replace: true });
+        }
+      } catch (err) {
+        if (!cancelled) {
+          setEnrollError(getErrorMessage(err, 'Unable to complete your enrolment.'));
+        }
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [isAuthenticated, courseId, loading, api, navigate]);
+
   const modules = useMemo(() => course?.modules || [], [course]);
   const lessonCount = useMemo(
     () => modules.reduce((sum, m) => sum + (m.lessons?.length || 0), 0),
@@ -131,8 +166,25 @@ const CourseDetail = () => {
     return null;
   }, [modules]);
 
+  // "Continue learning" must resume the last lesson, not restart at lesson one.
+  const resumeHref = useMemo(() => {
+    let saved = null;
+    try {
+      saved = localStorage.getItem(`tweack-last-lesson-${courseId}`);
+    } catch {
+      /* storage may be unavailable */
+    }
+    const id = courseAccess?.nextLessonId || saved || firstLesson?.id;
+    return id ? `/courses/${courseId}/lessons/${id}` : `/courses/${courseId}`;
+  }, [courseAccess?.nextLessonId, courseId, firstLesson?.id]);
+
   const handleEnroll = async () => {
     if (!isAuthenticated) {
+      try {
+        sessionStorage.setItem('tweack-intent-enroll', courseId);
+      } catch {
+        /* storage may be unavailable */
+      }
       navigate('/login', { state: { from: `/courses/${courseId}` } });
       return;
     }
@@ -454,7 +506,7 @@ const CourseDetail = () => {
                       You have completed this course. Lessons are open for review.
                     </div>
                     <Link
-                      to={firstLesson ? `/courses/${courseId}/lessons/${firstLesson.id}` : `/courses/${courseId}`}
+                      to={resumeHref}
                       className="btn-primary w-full !py-3"
                     >
                       <PlayCircle className="h-5 w-5" /> Review lessons
@@ -470,7 +522,7 @@ const CourseDetail = () => {
                   </div>
                 ) : (
                   <Link
-                    to={firstLesson ? `/courses/${courseId}/lessons/${firstLesson.id}` : `/courses/${courseId}`}
+                    to={resumeHref}
                     className="btn-primary mt-4 w-full !py-3"
                   >
                     <PlayCircle className="h-5 w-5" /> Continue learning

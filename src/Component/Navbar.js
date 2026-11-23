@@ -282,7 +282,11 @@ const Navbar = () => {
               </>
             ) : (
               <div className="hidden sm:flex items-center gap-2">
-                <Link to="/login" className="btn-ghost !px-4 !py-2">
+                <Link
+                  to="/login"
+                  state={{ from: `${location.pathname}${location.search}` }}
+                  className="btn-ghost !px-4 !py-2"
+                >
                   Sign in
                 </Link>
                 <Link to="/register" className="btn-primary !px-4 !py-2">
@@ -358,7 +362,11 @@ const Navbar = () => {
                 </>
               ) : (
                 <>
-                  <Link to="/login" className="btn-secondary w-full">
+                  <Link
+                    to="/login"
+                    state={{ from: `${location.pathname}${location.search}` }}
+                    className="btn-secondary w-full"
+                  >
                     Sign in
                   </Link>
                   <Link to="/register" className="btn-primary w-full">

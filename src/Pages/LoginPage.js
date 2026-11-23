@@ -25,8 +25,7 @@ const LoginPage = () => {
     setLoading(true);
     try {
       await login(email.trim().toLowerCase(), password, remember);
-      const destination = location.state?.from || '/dashboard';
-      navigate(destination, { replace: true });
+      navigate(location.state?.from || '/dashboard', { replace: true });
     } catch (err) {
       setError(getErrorMessage(err, 'Unable to sign in. Check your email and password.'));
     } finally {
@@ -39,8 +38,10 @@ const LoginPage = () => {
     setLoading(true);
     try {
       const account = await googleLogin(idToken);
-      const destination = location.state?.from || (account.role === 'STUDENT' ? '/dashboard' : '/admin');
-      navigate(destination, { replace: true });
+      navigate(
+        location.state?.from || (account.role === 'STUDENT' ? '/dashboard' : '/admin'),
+        { replace: true },
+      );
     } catch (err) {
       setGoogleError(getErrorMessage(err, 'Google sign-in failed. Please try again.'));
     } finally {

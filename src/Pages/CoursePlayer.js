@@ -32,6 +32,11 @@ import CodePlayground from '../Component/CodePlayground';
 import ReadAloud from '../Component/ReadAloud';
 import { detectLanguage, extractCode, extractOutput } from '../lib/lessonCode';
 import sanitizeHtml from '../lib/sanitizeHtml';
+import {
+  fallbackGuide,
+  cacheLessonGuides,
+  cachedGuide,
+} from '../lib/lessonFallback';
 
 const unwrap = (res) => (res?.data && res.data.data !== undefined ? res.data.data : res?.data);
 
@@ -355,10 +360,7 @@ const StudyMode = ({
               dangerouslySetInnerHTML={
                 reading
                   ? safeHtml(reading)
-                  : {
-                      __html:
-                        'The instructor has not added a reading guide yet. Use the lesson description and video, then ask a question in the class chat.',
-                    }
+                  : { __html: fallbackGuide(lesson, course?.title) }
               }
             />
           </div>
@@ -566,6 +568,7 @@ const CoursePlayer = () => {
         }))
       );
       setLessons(flat);
+      cacheLessonGuides(courseId, flat);
 
       if (accessRes) {
         const accessData = unwrap(accessRes);
@@ -615,6 +618,22 @@ const CoursePlayer = () => {
     [lessons, lessonId]
   );
   const currentLesson = currentIndex >= 0 ? lessons[currentIndex] : null;
+  const storedGuide =
+    currentLesson?.readingContent || cachedGuide(courseId, currentLesson?.id);
+  const guideHtml = storedGuide
+    ? safeHtml(storedGuide)
+    : { __html: fallbackGuide(currentLesson, course?.title) };
+
+  // Remember where the learner was so "Continue learning" resumes here.
+  useEffect(() => {
+    if (!currentLesson?.id || !courseId) return;
+    try {
+      localStorage.setItem(`tweack-last-lesson-${courseId}`, currentLesson.id);
+    } catch {
+      /* storage may be unavailable */
+    }
+  }, [currentLesson?.id, courseId]);
+
   const nextLesson = lessons[currentIndex + 1] || null;
   const prevLesson = lessons[currentIndex - 1] || null;
   const currentModule = access?.modules?.find((item) => item.id === currentLesson?.moduleId);
@@ -789,7 +808,7 @@ const CoursePlayer = () => {
         courseId={courseId}
         api={api}
         lesson={currentLesson}
-        reading={currentLesson.readingContent}
+        reading={storedGuide || fallbackGuide(currentLesson, course?.title)}
         enrollment={enrollment}
         isCompleted={isCompleted}
         courseCompleted={courseCompleted}
@@ -955,14 +974,7 @@ const CoursePlayer = () => {
                     </h2>
                     <div
                       className="prose prose-slate mt-2 max-h-[30rem] max-w-full overflow-x-auto overflow-y-auto break-words text-sm leading-7 text-slate-600 dark:text-slate-300 dark:prose-invert"
-                      dangerouslySetInnerHTML={
-                        currentLesson.readingContent
-                          ? safeHtml(currentLesson.readingContent)
-                          : {
-                              __html:
-                                'Your instructor has not added a reading guide yet. Use the description and video, then ask a question in the class chat.',
-                            }
-                      }
+                      dangerouslySetInnerHTML={guideHtml}
                     />
                     <button
                       type="button"
