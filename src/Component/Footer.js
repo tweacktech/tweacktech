@@ -1,13 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import {
-  Github,
-  GraduationCap,
-  Linkedin,
-  Mail,
-  MapPin,
-  Twitter,
-} from 'lucide-react';
+import { GraduationCap, Mail, MapPin } from 'lucide-react';
 
 const columns = [
   {
@@ -80,23 +73,11 @@ const Footer = () => {
                 Lagos, Nigeria · Remote-first
               </p>
             </div>
-            <div className="mt-5 flex gap-3">
-              {[
-                { href: 'https://github.com', icon: Github, label: 'GitHub' },
-                { href: 'https://twitter.com', icon: Twitter, label: 'Twitter' },
-                { href: 'https://linkedin.com', icon: Linkedin, label: 'LinkedIn' },
-              ].map(({ href, icon: Icon, label }) => (
-                <a
-                  key={label}
-                  href={href}
-                  target="_blank"
-                  rel="noreferrer noopener"
-                  aria-label={label}
-                  className="grid h-9 w-9 place-items-center rounded-lg border border-slate-200 dark:border-slate-800 text-slate-500 dark:text-slate-400 hover:border-red-300 dark:hover:border-red-700 hover:text-red-600 dark:hover:text-red-400 transition-colors"
-                >
-                  <Icon className="h-4 w-4" />
-                </a>
-              ))}
+            <div className="mt-5 flex flex-wrap gap-x-4 gap-y-2 text-sm text-slate-500 dark:text-slate-400">
+              <Link to="/about" className="hover:text-red-600">About</Link>
+              <Link to="/contact" className="hover:text-red-600">Contact</Link>
+              <Link to="/support" className="hover:text-red-600">Support</Link>
+              <Link to="/faq" className="hover:text-red-600">FAQ</Link>
             </div>
           </div>
 

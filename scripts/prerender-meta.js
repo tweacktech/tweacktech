@@ -237,12 +237,13 @@ const buildRoutes = async () => {
     },
   ];
 
-  const [mentors, courses, blog, jobs, talent] = await Promise.all([
+  const [mentors, courses, blog, jobs, talent, testimonials] = await Promise.all([
     fetchJson('/mentors?limit=60'),
     fetchJson('/courses?limit=100'),
     fetchJson('/blog?limit=100'),
     fetchJson('/jobs?limit=100'),
     fetchJson('/talent?limit=100'),
+    fetchJson('/testimonials'),
   ]);
 
   (Array.isArray(mentors) ? mentors : []).forEach((mentor) => {
@@ -262,7 +263,7 @@ const buildRoutes = async () => {
         url: `/mentors/${mentor.userId}`,
         type: 'profile',
         author: `${mentorName} · Meyor Dari`,
-        keywords: `${(mentor.skills || []).join(', ')}, ${mentorName}, tech mentor`,
+        keywords: `${arr(mentor.skills).join(', ')}, ${mentorName}, tech mentor`,
       },
     });
   });
@@ -332,12 +333,68 @@ const buildRoutes = async () => {
         image: profile.avatar || profile.user?.avatar,
         url: `/talent/${profile.id}`,
         author: AUTHOR,
-        keywords: `${(profile.skills || []).join(', ')}, TweackTech talent hub, Meyor Dari`,
+        keywords: `${arr(profile.skills).join(', ')}, TweackTech talent hub, Meyor Dari`,
       },
     });
   });
 
-  return routes;
+  // Publish the free preview lessons as full static articles at their real
+  // lesson URLs. This gives crawlers and reviewers substantial original content
+  // without exposing any paid-course material.
+  const lessonPages = await Promise.all(
+    (courses?.data || []).map(async (course) => {
+      const detail = await fetchJson(`/courses/${course.id}`);
+      return (detail?.modules || []).flatMap((module) =>
+        arr(module.lessons)
+          .filter((lesson) => lesson.isFree && lesson.readingContent)
+          .map((lesson) => ({
+            path: `/courses/${course.id}/lessons/${lesson.id}`,
+            seo: {
+              title: `${lesson.title} — ${course.title}`,
+              description: plain(lesson.description || lesson.readingContent).slice(0, 180),
+              url: `/courses/${course.id}/lessons/${lesson.id}`,
+              type: 'article',
+              keywords: `${lesson.title}, ${course.title}, free tech lesson, TweackTech`,
+            },
+            content: article(
+              `${lesson.title} — ${course.title}`,
+              lesson.description || `A free lesson from ${course.title}.`,
+              [['Lesson guide', `<div style="color:#334155">${safeArticle(lesson.readingContent)}</div>`]],
+            ),
+          })),
+      );
+    }),
+  );
+  lessonPages.flat().forEach((route) => routes.push(route));
+
+  // Public informational pages need real crawlable content too, not just meta.
+  [
+    ['/', 'TweackTech - Learn Tech Skills & Get Hired', 'TweackTech is a tech learning platform and talent hub. Learn coding, design and DevOps, build projects, earn certificates and get hired.'],
+    ['/blog', 'TweackTech Blog - Developer Guides & Career Advice', 'Practical programming tutorials, learning roadmaps and career articles for developers.'],
+    ['/jobs', 'Developer Jobs - TweackTech Job Board', 'Discover developer roles and apply through the TweackTech talent hub.'],
+    ['/talent', 'Developer Talent Hub - TweackTech', 'Discover verified developer profiles, skills and availability on TweackTech.'],
+    ['/about', 'About TweackTech', 'Learn about our mission to make practical tech education accessible to everyone.'],
+    ['/contact', 'Contact TweackTech', 'Get in touch with the TweackTech team for courses, partnerships and support.'],
+    ['/support', 'TweackTech Support Centre', 'Answers about accounts, courses, payments, certificates and technical issues.'],
+    ['/faq', 'Frequently Asked Questions - TweackTech', 'Answers about free courses, module quizzes, certificates, offline study and the talent hub.'],
+    ['/privacy', 'Privacy Policy - TweackTech', 'How TweackTech collects, uses and protects your information.'],
+    ['/terms', 'Terms of Service - TweackTech', 'The rules for using the TweackTech learning platform and talent hub.'],
+    ['/cookies', 'Cookie Policy - TweackTech', 'What TweackTech stores in your browser and why.'],
+  ].forEach(([path, title, description]) =>
+    routes.push({ path, seo: { title, description, url: path } }),
+  );
+
+  return {
+    routes,
+    data: {
+      courses: courses?.data || [],
+      blog: blog?.posts || [],
+      jobs: jobs?.jobs || [],
+      mentors: Array.isArray(mentors) ? mentors : [],
+      talent: talent?.profiles || [],
+      testimonials: Array.isArray(testimonials) ? testimonials : testimonials?.testimonials || [],
+    },
+  };
 };
 
 /**
@@ -393,19 +450,652 @@ const writeSitemap = (routes) => {
   console.log(`[prerender] Sitemap includes ${paths.length} URLs.`);
 };
 
+/* -------------------------------------------------------------------------
+ * Static content prerendering.
+ * The React app renders client-side, so without this crawlers and AdSense
+ * reviewers only see an empty <div id="root">. Every public page gets
+ * substantial, readable HTML in the initial response.
+ * ------------------------------------------------------------------------- */
+const esc = (value) =>
+  String(value ?? '')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;');
+const plain = (value) =>
+  String(value ?? '')
+    .replace(/<[^>]*>/g, ' ')
+    .replace(/&nbsp;/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
+// Some API fields are stored as JSON strings rather than arrays.
+const arr = (value) => {
+  if (Array.isArray(value)) return value;
+  if (typeof value === 'string') {
+    try {
+      const parsed = JSON.parse(value);
+      return Array.isArray(parsed) ? parsed : [];
+    } catch {
+      return [];
+    }
+  }
+  return [];
+};
+const safeArticle = (value) =>
+  String(value ?? '')
+    .replace(/<script[\s\S]*?<\/script>/gi, '')
+    .replace(/\son\w+\s*=\s*(?:"[^"]*"|'[^']*'|[^\s>]+)/gi, '')
+    .replace(/javascript:/gi, '');
+
+const staticNav = `
+<nav aria-label="Main navigation" style="background:#0f172a;color:#fff;padding:14px 20px;font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif">
+  <div style="max-width:1000px;margin:0 auto;display:flex;flex-wrap:wrap;gap:18px">
+    <a href="/" style="color:#fff;font-weight:700;text-decoration:none">TweackTech</a>
+    <a href="/courses" style="color:#cbd5e1;text-decoration:none">Courses</a>
+    <a href="/mentors" style="color:#cbd5e1;text-decoration:none">Mentors</a>
+    <a href="/talent" style="color:#cbd5e1;text-decoration:none">Talent Hub</a>
+    <a href="/jobs" style="color:#cbd5e1;text-decoration:none">Jobs</a>
+    <a href="/blog" style="color:#cbd5e1;text-decoration:none">Blog</a>
+    <a href="/testimonials" style="color:#cbd5e1;text-decoration:none">Student stories</a>
+    <a href="/about" style="color:#cbd5e1;text-decoration:none">About</a>
+    <a href="/contact" style="color:#cbd5e1;text-decoration:none">Contact</a>
+    <a href="/faq" style="color:#cbd5e1;text-decoration:none">FAQ</a>
+  </div>
+</nav>`;
+
+const article = (heading, intro, sections) => `
+${staticNav}
+<main class="prerender-page" style="max-width:1000px;margin:0 auto;padding:32px 20px 64px;color:#0f172a;font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif;line-height:1.75">
+  <h1 style="font-size:32px;line-height:1.2;margin:0 0 16px">${esc(heading)}</h1>
+  <p style="font-size:18px;color:#475569;margin:0 0 24px">${esc(intro)}</p>
+  ${sections
+    .map(
+      ([headingText, body]) =>
+        `<section style="margin-top:34px"><h2 style="font-size:22px;margin:0 0 10px">${esc(
+          headingText,
+        )}</h2><div style="color:#334155">${body}</div></section>`,
+    )
+    .join('')}
+</main>
+<footer style="border-top:1px solid #e2e8f0;padding:24px 20px;text-align:center;color:#64748b;font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif;font-size:13px">
+  <div style="max-width:1000px;margin:0 auto;display:flex;flex-wrap:wrap;gap:16px;justify-content:center">
+    <a href="/privacy" style="color:#64748b">Privacy policy</a>
+    <a href="/terms" style="color:#64748b">Terms of service</a>
+    <a href="/cookies" style="color:#64748b">Cookie policy</a>
+    <a href="/support" style="color:#64748b">Support centre</a>
+    <a href="/contact" style="color:#64748b">Contact</a>
+  </div>
+  <p style="margin:12px 0 0">© ${new Date().getFullYear()} TweackTech Learning Institute · Lagos, Nigeria · Remote-first</p>
+</footer>`;
+
+const paragraph = (text) => `<p style="margin:0 0 14px">${esc(text)}</p>`;
+const list = (items) =>
+  `<ul style="margin:0 0 14px;padding-left:22px">${items
+    .map((item) => `<li style="margin-bottom:8px">${esc(item)}</li>`)
+    .join('')}</ul>`;
+const card = (title, description, meta = '') =>
+  `<article style="border:1px solid #e2e8f0;border-radius:12px;padding:16px;margin-bottom:12px"><h3 style="margin:0 0 6px;font-size:17px">${esc(
+    title,
+  )}</h3>${description ? `<p style="margin:0;color:#475569">${esc(plain(description))}</p>` : ''}${
+    meta ? `<p style="margin:6px 0 0;font-size:13px;color:#64748b">${esc(meta)}</p>` : ''
+  }</article>`;
+
+const staticContent = (path, data) => {
+  const { courses = [], blog = [], jobs = [], mentors = [], talent = [], testimonials = [] } = data;
+
+  if (path === '/') {
+    return article(
+      'TweackTech — Learn tech skills, get certified, get hired',
+      'TweackTech is a practical learning platform and developer talent hub. Learn coding, design and DevOps from working professionals, build real projects, earn a certificate and connect with companies hiring developers.',
+      [
+        [
+          'Learn by building, not just watching',
+          paragraph(
+            'Every course is split into short modules with written guides, runnable code examples, video lessons and hands-on practice tasks. You can study at your own pace, take notes, use the built-in Code Playground and ask the AI study partner to explain anything you do not understand.',
+          ) +
+            paragraph(
+              'Each module ends with a ten-question quiz. Score at least eight out of ten to unlock the next module, and retake the quiz as often as you need. Completing a course unlocks a certificate you can share and verify online.',
+            ),
+        ],
+        [
+          'Courses for beginners and experienced developers',
+          paragraph(
+            'Our catalogue covers beginner fundamentals through advanced engineering across React, Node.js, Python, PHP, MySQL, SQL, Go, TypeScript, DevOps, UI/UX design and system design. Several courses are free to start so anyone can explore the platform before enrolling.',
+          ),
+          list([
+            'Beginner tracks introduce variables, types, loops, functions and your first program.',
+            'Intermediate tracks cover strings, arrays, objects, error handling and reusable code.',
+            'Advanced tracks focus on architecture, testing, performance and production workflows.',
+          ]),
+        ],
+        [
+          'A talent hub for developers',
+          paragraph(
+            'The TweackTech talent hub lets developers publish a profile with skills, availability, hourly rates and portfolio links. Companies can discover talent, and mentors can share their expertise with learners. Verified mentors are highlighted so students know who is guiding them.',
+          ),
+        ],
+        [
+          'Developer jobs and career growth',
+          paragraph(
+            'Browse curated developer roles, filter by location and level, and apply directly through the job board. Career articles on the TweackTech blog cover interviews, portfolios, learning roadmaps and practical engineering topics.',
+          ),
+        ],
+        [
+          'Stories from real learners',
+          paragraph(
+            'Students share their experiences on the testimonials wall. Reading how other learners moved from their first lesson to a completed course helps new students choose the right path and stay motivated.',
+          ),
+        ],
+        [
+          'Get started',
+          paragraph(
+            'Create a free account, browse the course catalogue and open any free lesson. No credit card is required to start learning. When you are ready, enrol in a course, follow the modules, pass the quizzes and claim your certificate.',
+          ),
+        ],
+      ],
+    );
+  }
+
+  if (path === '/courses') {
+    return article(
+      'Tech courses — learn to code with TweackTech',
+      'Browse project-based courses in programming, data, design and DevOps. Each course includes detailed lesson guides, runnable examples, module quizzes and a certificate on completion.',
+      [
+        [
+          'Available courses',
+          courses.length
+            ? courses
+                .map((course) =>
+                  card(
+                    course.title,
+                    course.shortDescription || course.description,
+                    `${course.level || 'All levels'} · ${course.totalLessons || 0} lessons · ${
+                      course.type === 'FREE' ? 'Free to start' : 'Paid course'
+                    }`,
+                  ),
+                )
+                .join('')
+            : paragraph(
+                'Our catalogue includes React, Node.js, Python, Go, TypeScript, PHP, MySQL, SQL, DevOps, UI/UX design and system design courses for beginners through advanced learners.',
+              ),
+        ],
+        [
+          'How the courses work',
+          list([
+            'Every module has several lessons with written guides and practical exercises.',
+            'Use the Code Playground to run examples directly in your browser.',
+            'Pass the module quiz with 8 out of 10 to unlock the next module.',
+            'Complete the course to unlock a verifiable certificate.',
+          ]),
+        ],
+      ],
+    );
+  }
+
+  if (path.startsWith('/courses/')) {
+    const course = courses.find((item) => `/courses/${item.id}` === path);
+    if (!course) return article('TweackTech course', 'Explore this course on TweackTech.', []);
+    return article(
+      course.title,
+      course.shortDescription || plain(course.description),
+      [
+        [
+          'What you will learn',
+          arr(course.outcomes).length
+            ? list(arr(course.outcomes))
+            : paragraph(plain(course.description) || 'Practical, project-based tech skills.'),
+        ],
+        [
+          'Course curriculum',
+          (course.modules || []).length
+            ? course.modules
+                .map((module) =>
+                  card(
+                    module.title,
+                    arr(module.lessons).map((lesson) => lesson.title).join(' · '),
+                    `${arr(module.lessons).length} lessons`,
+                  ),
+                )
+                .join('')
+            : paragraph('Structured modules with written guides, videos and quizzes.'),
+        ],
+        [
+          'Requirements',
+          arr(course.requirements).length
+            ? list(arr(course.requirements))
+            : paragraph('A computer and an interest in learning technology. No prior experience is needed for beginner courses.'),
+        ],
+        [
+          'Certificate',
+          paragraph(
+            'Complete every lesson and pass each module quiz to unlock a certificate you can share and verify online.',
+          ),
+        ],
+      ],
+    );
+  }
+
+  if (path === '/blog') {
+    return article(
+      'TweackTech blog — guides and career advice for developers',
+      'Practical tutorials, learning roadmaps, interview preparation and career articles written for developers at every stage.',
+      [
+        [
+          'Latest articles',
+          blog.length
+            ? blog
+                .map((post) => card(post.title, post.excerpt || post.content, post.category?.name || ''))
+                .join('')
+            : paragraph('Read tutorials and career guides from the TweackTech team.'),
+        ],
+        [
+          'What you will find here',
+          list([
+            'Step-by-step programming tutorials with runnable examples.',
+            'Career advice on portfolios, interviews and finding developer roles.',
+            'Learning roadmaps for React, Node.js, Python, DevOps and system design.',
+          ]),
+        ],
+      ],
+    );
+  }
+
+  if (path.startsWith('/blog/')) {
+    const post = blog.find((item) => `/blog/${item.slug}` === path);
+    if (!post) return article('TweackTech blog', 'Read guides and career articles for developers.', []);
+    return article(
+      post.title,
+      post.excerpt || plain(post.content).slice(0, 220),
+      [['Article', `<div style="color:#334155">${safeArticle(post.content || '')}</div>`]],
+    );
+  }
+
+  if (path === '/jobs') {
+    return article(
+      'Developer jobs on the TweackTech job board',
+      'Discover developer roles from companies hiring tech talent. Filter by location, level and role, then apply directly through TweackTech.',
+      [
+        [
+          'Open roles',
+          jobs.length
+            ? jobs
+                .map((job) => card(`${job.title} at ${job.company}`, job.description, `${job.location} · ${job.type}`))
+                .join('')
+            : paragraph('Browse remote and on-site developer roles across multiple skill levels.'),
+        ],
+        [
+          'How to apply',
+          list([
+            'Create a TweackTech account and complete your developer profile.',
+            'Open a role to read the full description and requirements.',
+            'Apply with your profile and portfolio links.',
+          ]),
+        ],
+      ],
+    );
+  }
+
+  if (path.startsWith('/jobs/')) {
+    const job = jobs.find((item) => `/jobs/${item.id}` === path);
+    if (!job) return article('Developer job', 'View this role on TweackTech.', []);
+    return article(
+      `${job.title} at ${job.company}`,
+      plain(job.description).slice(0, 220),
+      [
+        ['About the role', `<div style="color:#334155">${safeArticle(job.description || '')}</div>`],
+        [
+          'Details',
+          list([
+            `Location: ${job.location || 'Remote'}`,
+            `Employment type: ${job.type || 'Full time'}`,
+            `Level: ${job.level || 'All levels'}`,
+          ]),
+        ],
+        ['How to apply', paragraph('Sign in to TweackTech, complete your developer profile and apply directly on this role.')],
+      ],
+    );
+  }
+
+  if (path === '/mentors') {
+    return article(
+      'Meet the TweackTech mentors',
+      'Learn from verified working professionals who teach practical, job-ready technology skills.',
+      [
+        [
+          'Our mentors',
+          mentors.length
+            ? mentors
+                .map((mentor) =>
+                  card(
+                    nameOf(mentor.user, mentor.headline || 'Tech Mentor'),
+                    mentor.bio || mentor.headline,
+                    arr(mentor.skills).join(' · '),
+                  ),
+                )
+                .join('')
+            : paragraph('TweackTech mentors are experienced developers and engineers who share real-world knowledge.'),
+        ],
+        [
+          'Why learn with a mentor',
+          list([
+            'Real-world examples instead of abstract theory.',
+            'Guidance on projects, tooling and career decisions.',
+            'Feedback that helps you improve faster.',
+          ]),
+        ],
+      ],
+    );
+  }
+
+  if (path.startsWith('/mentors/')) {
+    const mentor = mentors.find((item) => `/mentors/${item.userId}` === path);
+    if (!mentor) return article('TweackTech mentor', 'Meet our verified mentors.', []);
+    const name = nameOf(mentor.user, mentor.headline || 'Tech Mentor');
+    return article(name, mentor.bio || mentor.headline || 'Verified TweackTech mentor.', [
+      ['About', paragraph(mentor.bio || `${name} teaches practical technology skills on TweackTech.`)],
+      ['Skills', arr(mentor.skills).length ? list(arr(mentor.skills)) : paragraph('Software engineering and development.')],
+      ['Teaching', paragraph('Mentors share written guides, runnable examples and project-based lessons with TweackTech learners.')],
+    ]);
+  }
+
+  if (path === '/talent') {
+    return article(
+      'TweackTech talent hub — discover developers',
+      'Browse developer profiles with verified skills, availability and portfolio links. Find the right person for your next project or role.',
+      [
+        [
+          'Developer profiles',
+          talent.length
+            ? talent
+                .map((profile) =>
+                  card(
+                    nameOf(profile.user, profile.headline || 'Developer'),
+                    profile.bio || profile.headline,
+                    arr(profile.skills).join(' · '),
+                  ),
+                )
+                .join('')
+            : paragraph('Discover skilled developers across programming, design and DevOps.'),
+        ],
+        [
+          'For developers',
+          paragraph(
+            'Create a profile to showcase your skills, experience, hourly rate and availability. A complete profile makes it easier for companies and mentors to find you.',
+          ),
+        ],
+      ],
+    );
+  }
+
+  if (path.startsWith('/talent/')) {
+    const profile = talent.find((item) => `/talent/${item.id}` === path);
+    if (!profile) return article('Developer profile', 'Discover developers on TweackTech.', []);
+    const name = nameOf(profile.user, profile.headline || 'Developer');
+    return article(name, profile.bio || profile.headline || 'Developer on TweackTech.', [
+      ['About', paragraph(profile.bio || `${name} is a developer in the TweackTech talent hub.`)],
+      ['Skills', arr(profile.skills).length ? list(arr(profile.skills)) : paragraph('Software development.')],
+      ['Availability', paragraph(profile.availability ? `Availability: ${profile.availability}` : 'Open to opportunities.')],
+    ]);
+  }
+
+  if (path === '/testimonials') {
+    return article(
+      'Student stories and testimonials',
+      'Read experiences from developers who learned with TweackTech, and share your own story after completing a course.',
+      [
+        [
+          'What students say',
+          testimonials.length
+            ? testimonials
+                .map((item) =>
+                  card(nameOf(item.user, 'TweackTech learner'), item.content || item.quote || '', item.course?.title || ''),
+                )
+                .join('')
+            : paragraph('Learners use TweackTech to build practical skills, complete projects and earn certificates.'),
+        ],
+        [
+          'Share your experience',
+          paragraph(
+            'Completed learners can submit a testimony from their account. Submitted stories are reviewed before they appear publicly.',
+          ),
+        ],
+      ],
+    );
+  }
+
+  const staticPages = {
+    '/about': [
+      'About TweackTech',
+      'TweackTech is a technology learning platform and talent hub founded by Meyor Dari to make practical tech education accessible to everyone.',
+      [
+        [
+          'Our mission',
+          paragraph(
+            'We believe the best way to learn technology is to build things. TweackTech combines structured courses, written guides, runnable code, quizzes and a supportive community so learners can move from curiosity to confidence.',
+          ),
+        ],
+        [
+          'What we offer',
+          list([
+            'Project-based courses across programming, data, design and DevOps.',
+            'A talent hub where developers showcase verified skills.',
+            'A job board connecting developers with hiring companies.',
+            'Career articles and learning guides on the TweackTech blog.',
+          ]),
+        ],
+        [
+          'Who we serve',
+          paragraph(
+            'Beginners taking their first programming steps, self-taught developers filling knowledge gaps, and working engineers preparing for the next role all find a clear path on TweackTech.',
+          ),
+        ],
+      ],
+    ],
+    '/contact': [
+      'Contact TweackTech',
+      'Questions about courses, partnerships, mentoring or hiring? Get in touch with the TweackTech team.',
+      [
+        ['Email', paragraph('You can reach us at tweacktech@gmail.com. We aim to reply to every message.')],
+        [
+          'Support',
+          paragraph(
+            'Signed-in users can open a support ticket from the dashboard. Include your course or lesson name so we can help faster.',
+          ),
+        ],
+        [
+          'Location',
+          paragraph('TweackTech is a remote-first team based in Lagos, Nigeria, serving learners worldwide.'),
+        ],
+      ],
+    ],
+    '/support': [
+      'TweackTech support centre',
+      'Find answers about accounts, courses, enrolment, payments, certificates and technical issues.',
+      [
+        [
+          'Accounts and learning',
+          list([
+            'Forgot your password? Use the reset link on the sign-in page.',
+            'Course access begins after enrolment; free lessons can be previewed without an account.',
+            'Progress is saved as you complete lessons and quizzes.',
+          ]),
+        ],
+        [
+          'Payments and certificates',
+          paragraph(
+            'Paid courses unlock after payment approval. Certificates are issued when every lesson is complete and all module quizzes are passed.',
+          ),
+        ],
+        [
+          'Contact support',
+          paragraph('Email tweacktech@gmail.com or open a ticket from your dashboard for personalised help.'),
+        ],
+      ],
+    ],
+    '/faq': [
+      'Frequently asked questions',
+      'Quick answers about learning on TweackTech, enrolment, certificates and the talent hub.',
+      [
+        [
+          'Can I start for free?',
+          paragraph(
+            'Yes. Several courses are free to start, and the first lesson of every course can be previewed without enrolment.',
+          ),
+        ],
+        [
+          'How do module quizzes work?',
+          paragraph(
+            'Each quiz has ten one-point questions. Score at least eight out of ten to unlock the next module. You can retake a quiz at any time.',
+          ),
+        ],
+        [
+          'Do I get a certificate?',
+          paragraph(
+            'Completing all lessons and passing the module quizzes unlocks a certificate that can be shared and verified online.',
+          ),
+        ],
+        [
+          'Can I learn offline?',
+          paragraph(
+            'The TweackTech web app is installable and caches lessons for offline reading after you have opened them online.',
+          ),
+        ],
+        [
+          'How do I join the talent hub?',
+          paragraph('Create an account, open the talent hub and publish a profile with your skills and portfolio.'),
+        ],
+      ],
+    ],
+    '/privacy': [
+      'Privacy policy',
+      'How TweackTech collects, uses and protects your information.',
+      [
+        [
+          'Information we collect',
+          paragraph(
+            'We collect account details such as your name and email, learning progress, quiz results, testimonies you submit and any profile information you choose to publish in the talent hub.',
+          ),
+        ],
+        [
+          'How we use information',
+          paragraph(
+            'We use your information to provide courses, save progress, issue certificates, show relevant job opportunities and improve the platform. We do not sell your personal information.',
+          ),
+        ],
+        [
+          'Cookies and local storage',
+          paragraph(
+            'We use essential local storage for your session, theme preference, notes and offline lesson caching. Advertising cookies are only used where permitted and after consent where required.',
+          ),
+        ],
+        [
+          'Your choices',
+          paragraph(
+            'You can update your profile from your account settings. For account deletion or data export requests, contact tweacktech@gmail.com.',
+          ),
+        ],
+        [
+          'Contact',
+          paragraph('Questions about privacy can be sent to tweacktech@gmail.com.'),
+        ],
+      ],
+    ],
+    '/terms': [
+      'Terms of service',
+      'The rules for using the TweackTech learning platform and talent hub.',
+      [
+        [
+          'Using the platform',
+          paragraph(
+            'You may use TweackTech for lawful learning and professional development. Do not attempt to disrupt the service, scrape paid lesson content or misuse other users information.',
+          ),
+        ],
+        [
+          'Accounts and enrolment',
+          paragraph(
+            'You are responsible for your account credentials. Free courses can be started without payment; paid courses unlock after payment approval.',
+          ),
+        ],
+        [
+          'Certificates',
+          paragraph(
+            'Certificates are awarded when the course requirements are met. They reflect participation and assessment on TweackTech, not accreditation by an external body.',
+          ),
+        ],
+        [
+          'Content ownership',
+          paragraph(
+            'Course materials are provided for your personal learning. Reproducing or redistributing lesson content without permission is not allowed.',
+          ),
+        ],
+        [
+          'Changes',
+          paragraph('We may update these terms as the platform grows. Material changes will be announced on the site.'),
+        ],
+      ],
+    ],
+    '/cookies': [
+      'Cookie policy',
+      'What TweackTech stores in your browser and why.',
+      [
+        [
+          'Essential storage',
+          paragraph(
+            'We store a session token, theme choice, lesson notes and cached lesson guides so the site works and remembers your progress. These are necessary for the service.',
+          ),
+        ],
+        [
+          'Advertising',
+          paragraph(
+            'Google AdSense may use cookies to show relevant ads and measure performance. You can control advertising cookies through your browser and Google advertising settings.',
+          ),
+        ],
+        [
+          'Managing cookies',
+          paragraph('You can clear or block cookies in your browser settings, although some features may stop working.'),
+        ],
+      ],
+    ],
+  };
+
+  if (staticPages[path]) {
+    const [heading, intro, sections] = staticPages[path];
+    return article(heading, intro, sections);
+  }
+
+  return article('TweackTech', 'Learn tech skills, get certified and get hired.', [
+    [
+      'Explore TweackTech',
+      paragraph('Browse courses, read career articles, meet mentors and discover developer jobs.'),
+    ],
+  ]);
+};
+
+const injectContent = (html, content) => {
+  if (!content) return html;
+  // Replace the root whether it is empty (fresh build) or already filled by a
+  // previous prerender run.
+  return html.replace(
+    /<div id="root">[\s\S]*?<\/div>(?=<script)/,
+    `<div id="root">${content}</div>`,
+  );
+};
+
 const main = async () => {
   if (!fs.existsSync(INDEX)) {
     console.warn('[prerender] build/index.html not found — skipping');
     return;
   }
   const shell = fs.readFileSync(INDEX, 'utf8');
-  const routes = await buildRoutes();
+  const { routes, data } = await buildRoutes();
   let written = 0;
-  routes.forEach(({ path: routePath, seo }) => {
+  routes.forEach(({ path: routePath, seo, content }) => {
     const directory = path.join(BUILD, routePath.replace(/^\//, ''));
     try {
       fs.mkdirSync(directory, { recursive: true });
-      fs.writeFileSync(path.join(directory, 'index.html'), injectSeo(shell, seo));
+      const withSeo = injectSeo(shell, seo);
+      const withContent = injectContent(withSeo, content || staticContent(routePath, data));
+      fs.writeFileSync(path.join(directory, 'index.html'), withContent);
       written += 1;
     } catch (error) {
       console.warn(`[prerender] Could not write ${routePath}: ${error.message}`);
