@@ -23,6 +23,7 @@
     "prebuild": "node -e \"require('fs').rmSync('dist',{recursive:true,force:true})\"",
     "seed:tiers": "node scripts/seed-course-tiers.js",
     "seed:quizzes": "node scripts/seed-module-quizzes.js",
+    "seed:blog": "node scripts/seed-blog-posts.js",
     "upgrade:quizzes": "node scripts/upgrade-module-quizzes.js",
     "upgrade:quiz-questions": "node scripts/upgrade-quiz-questions.js",
     "upgrade:lessons": "node scripts/upgrade-lesson-content.js",
