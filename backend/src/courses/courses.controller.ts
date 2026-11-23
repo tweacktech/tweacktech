@@ -128,8 +128,8 @@ export class CoursesController {
   @Public()
   @Get(':id')
   @Header('Cache-Control', 'public, max-age=20, stale-while-revalidate=60')
-  async findById(@Param('id', ParseUUIDPipe) id: string) {
-    return this.coursesService.findById(id);
+  async findById(@Param('id', ParseUUIDPipe) id: string, @CurrentUser() user: any) {
+    return this.coursesService.findById(id, user);
   }
 
   @Post()

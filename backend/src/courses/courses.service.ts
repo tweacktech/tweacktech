@@ -248,7 +248,7 @@ export class CoursesService {
     return getPaginatedResponse(courses.map(applyCoursePricing), total, page, limit);
   }
 
-  async findById(id: string) {
+  async findById(id: string, user?: { sub: string; role: Role }) {
     const course = await this.prisma.course.findUnique({
       where: { id },
       include: {
@@ -274,7 +274,9 @@ export class CoursesService {
                 id: true,
                 title: true,
                 description: true,
+                readingContent: true,
                 type: true,
+                contentUrl: true,
                 duration: true,
                 order: true,
                 isFree: true,
@@ -297,6 +299,31 @@ export class CoursesService {
     });
 
     if (!course) throw new NotFoundException('Course not found');
+
+    // The lesson player loads guides from this endpoint. Keep them readable
+    // for enrolled learners and staff, but never expose lesson material to
+    // anonymous or unenrolled callers scraping the public catalogue.
+    const isManager =
+      user?.role === Role.SUPERADMIN ||
+      user?.role === Role.ADMIN ||
+      user?.role === Role.STAFF;
+    let canReadLessons = isManager;
+    if (!canReadLessons && user?.sub) {
+      const enrollment = await this.prisma.enrollment.findUnique({
+        where: { userId_courseId: { userId: user.sub, courseId: id } },
+        select: { id: true },
+      });
+      canReadLessons = Boolean(enrollment);
+    }
+    if (!canReadLessons) {
+      course.modules.forEach((module) =>
+        module.lessons.forEach((lesson) => {
+          lesson.readingContent = null;
+          lesson.contentUrl = null;
+        }),
+      );
+    }
+
     return applyCoursePricing(course);
   }
 
