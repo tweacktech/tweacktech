@@ -706,7 +706,16 @@ const staticContent = (path, data) => {
     return article(
       post.title,
       post.excerpt || plain(post.content).slice(0, 220),
-      [['Article', `<div style="color:#334155">${safeArticle(post.content || '')}</div>`]],
+      [
+        [
+          'Article',
+          `${
+            post.featuredImage
+              ? `<img src="${esc(post.featuredImage)}" alt="${esc(post.title)}" width="1200" height="630" style="max-width:100%;height:auto;border-radius:12px;margin-bottom:18px" />`
+              : ''
+          }<div style="color:#334155">${safeArticle(post.content || '')}</div>`,
+        ],
+      ],
     );
   }
 
