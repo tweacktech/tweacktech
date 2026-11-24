@@ -488,45 +488,47 @@ const safeArticle = (value) =>
     .replace(/javascript:/gi, '');
 
 const staticNav = `
-<nav aria-label="Main navigation" style="background:#0f172a;color:#fff;padding:14px 20px;font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif">
+<nav class="pr-nav" aria-label="Main navigation" style="padding:14px 20px">
   <div style="max-width:1000px;margin:0 auto;display:flex;flex-wrap:wrap;gap:18px">
-    <a href="/" style="color:#fff;font-weight:700;text-decoration:none">TweackTech</a>
-    <a href="/courses" style="color:#cbd5e1;text-decoration:none">Courses</a>
-    <a href="/mentors" style="color:#cbd5e1;text-decoration:none">Mentors</a>
-    <a href="/talent" style="color:#cbd5e1;text-decoration:none">Talent Hub</a>
-    <a href="/jobs" style="color:#cbd5e1;text-decoration:none">Jobs</a>
-    <a href="/blog" style="color:#cbd5e1;text-decoration:none">Blog</a>
-    <a href="/testimonials" style="color:#cbd5e1;text-decoration:none">Student stories</a>
-    <a href="/about" style="color:#cbd5e1;text-decoration:none">About</a>
-    <a href="/contact" style="color:#cbd5e1;text-decoration:none">Contact</a>
-    <a href="/faq" style="color:#cbd5e1;text-decoration:none">FAQ</a>
+    <a href="/" class="pr-brand" style="font-weight:700;text-decoration:none">TweackTech</a>
+    <a href="/courses" style="text-decoration:none">Courses</a>
+    <a href="/mentors" style="text-decoration:none">Mentors</a>
+    <a href="/talent" style="text-decoration:none">Talent Hub</a>
+    <a href="/jobs" style="text-decoration:none">Jobs</a>
+    <a href="/blog" style="text-decoration:none">Blog</a>
+    <a href="/testimonials" style="text-decoration:none">Student stories</a>
+    <a href="/about" style="text-decoration:none">About</a>
+    <a href="/contact" style="text-decoration:none">Contact</a>
+    <a href="/faq" style="text-decoration:none">FAQ</a>
   </div>
 </nav>`;
 
 const article = (heading, intro, sections) => `
+<div class="prerender-wrap">
 ${staticNav}
-<main class="prerender-page" style="max-width:1000px;margin:0 auto;padding:32px 20px 64px;color:#0f172a;font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif;line-height:1.75">
+<main class="prerender-page" style="max-width:1000px;margin:0 auto;padding:32px 20px 64px;line-height:1.75">
   <h1 style="font-size:32px;line-height:1.2;margin:0 0 16px">${esc(heading)}</h1>
-  <p style="font-size:18px;color:#475569;margin:0 0 24px">${esc(intro)}</p>
+  <p class="pr-lead" style="font-size:18px;margin:0 0 24px">${esc(intro)}</p>
   ${sections
     .map(
       ([headingText, body]) =>
         `<section style="margin-top:34px"><h2 style="font-size:22px;margin:0 0 10px">${esc(
           headingText,
-        )}</h2><div style="color:#334155">${body}</div></section>`,
+        )}</h2><div class="pr-body">${body}</div></section>`,
     )
     .join('')}
 </main>
-<footer style="border-top:1px solid #e2e8f0;padding:24px 20px;text-align:center;color:#64748b;font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif;font-size:13px">
+<footer class="pr-footer" style="padding:24px 20px;text-align:center;font-size:13px">
   <div style="max-width:1000px;margin:0 auto;display:flex;flex-wrap:wrap;gap:16px;justify-content:center">
-    <a href="/privacy" style="color:#64748b">Privacy policy</a>
-    <a href="/terms" style="color:#64748b">Terms of service</a>
-    <a href="/cookies" style="color:#64748b">Cookie policy</a>
-    <a href="/support" style="color:#64748b">Support centre</a>
-    <a href="/contact" style="color:#64748b">Contact</a>
+    <a href="/privacy">Privacy policy</a>
+    <a href="/terms">Terms of service</a>
+    <a href="/cookies">Cookie policy</a>
+    <a href="/support">Support centre</a>
+    <a href="/contact">Contact</a>
   </div>
   <p style="margin:12px 0 0">© ${new Date().getFullYear()} TweackTech Learning Institute · Lagos, Nigeria · Remote-first</p>
-</footer>`;
+</footer>
+</div>`;
 
 const paragraph = (text) => `<p style="margin:0 0 14px">${esc(text)}</p>`;
 const list = (items) =>
@@ -534,10 +536,10 @@ const list = (items) =>
     .map((item) => `<li style="margin-bottom:8px">${esc(item)}</li>`)
     .join('')}</ul>`;
 const card = (title, description, meta = '') =>
-  `<article style="border:1px solid #e2e8f0;border-radius:12px;padding:16px;margin-bottom:12px"><h3 style="margin:0 0 6px;font-size:17px">${esc(
+  `<article class="pr-card" style="border:1px solid transparent;border-radius:12px;padding:16px;margin-bottom:12px"><h3 style="margin:0 0 6px;font-size:17px">${esc(
     title,
-  )}</h3>${description ? `<p style="margin:0;color:#475569">${esc(plain(description))}</p>` : ''}${
-    meta ? `<p style="margin:6px 0 0;font-size:13px;color:#64748b">${esc(meta)}</p>` : ''
+  )}</h3>${description ? `<p class="pr-lead" style="margin:0;font-size:14px">${esc(plain(description))}</p>` : ''}${
+    meta ? `<p class="pr-meta" style="margin:6px 0 0;font-size:13px">${esc(meta)}</p>` : ''
   }</article>`;
 
 const staticContent = (path, data) => {
@@ -1080,14 +1082,41 @@ const staticContent = (path, data) => {
   ]);
 };
 
+// Styles for the static content shown before React mounts. They follow the
+// same light/dark theme script as the app, so a hard reload does not flash
+// unreadable text.
+const PRERENDER_CSS = `<style id="prerender-css">
+.prerender-wrap{background:#ffffff;color:#0f172a;font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif}
+.prerender-wrap a{color:#0f172a}
+.prerender-wrap .pr-lead,.prerender-wrap .pr-body,.prerender-wrap li{color:#334155}
+.prerender-wrap .pr-meta,.prerender-wrap .pr-footer{color:#64748b}
+.prerender-wrap .pr-nav{background:#0f172a}
+.prerender-wrap .pr-nav a{color:#e2e8f0}
+.prerender-wrap .pr-brand{color:#ffffff}
+.prerender-wrap .pr-card{border-color:#e2e8f0}
+.prerender-wrap .pr-footer{border-top:1px solid #e2e8f0}
+html.dark .prerender-wrap{background:#020617;color:#f1f5f9}
+html.dark .prerender-wrap a{color:#e2e8f0}
+html.dark .prerender-wrap .pr-lead,html.dark .prerender-wrap .pr-body,html.dark .prerender-wrap li{color:#cbd5e1}
+html.dark .prerender-wrap .pr-meta,html.dark .prerender-wrap .pr-footer{color:#94a3b8}
+html.dark .prerender-wrap .pr-nav{background:#0b1120}
+html.dark .prerender-wrap .pr-brand{color:#ffffff}
+html.dark .prerender-wrap .pr-card{border-color:#1e293b}
+html.dark .prerender-wrap .pr-footer{border-top-color:#1e293b}
+</style>`;
+
 const injectContent = (html, content) => {
   if (!content) return html;
   // Replace the root whether it is empty (fresh build) or already filled by a
   // previous prerender run.
-  return html.replace(
+  let output = html.replace(
     /<div id="root">[\s\S]*?<\/div>(?=<script)/,
     `<div id="root">${content}</div>`,
   );
+  if (!output.includes('id="prerender-css"')) {
+    output = output.replace('</head>', `${PRERENDER_CSS}\n</head>`);
+  }
+  return output;
 };
 
 const main = async () => {
