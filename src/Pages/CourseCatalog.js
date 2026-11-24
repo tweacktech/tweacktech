@@ -5,8 +5,6 @@ import Navbar from '../Component/Navbar';
 import Footer from '../Component/Footer';
 import { useAuth } from '../AuthContext';
 import Pagination from '../Component/Pagination';
-import { useCurrency } from '../CurrencyContext';
-import { effectivePrice, isDiscountActive } from '../lib/coursePrice';
 
 const unwrap = (res) => (res?.data && res.data.data !== undefined ? res.data.data : res?.data);
 
@@ -20,11 +18,9 @@ const TYPES = [
 
 
 
-const typeBadge = (type) => {
-  if (type === 'FREE') return <span className="badge bg-emerald-700 text-white shadow-sm">Free</span>;
-  if (type === 'PARTIAL') return <span className="badge bg-amber-400 text-amber-950 shadow-sm">Partial payment</span>;
-  return <span className="badge bg-sky-700 text-white shadow-sm">Paid</span>;
-};
+const typeBadge = () => (
+  <span className="badge bg-emerald-700 text-white shadow-sm">Free</span>
+);
 
 const levelTone = (level) => {
   if (level === 'Beginner') return 'bg-emerald-100 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-400';
@@ -33,7 +29,6 @@ const levelTone = (level) => {
 };
 
 const CourseCard = ({ course }) => {
-  const { format } = useCurrency();
   return (
   <Link to={`/courses/${course.id}`} className="card card-hover group flex flex-col overflow-hidden">
     <div className="relative h-44 overflow-hidden bg-slate-100 dark:bg-slate-800">
@@ -46,7 +41,7 @@ const CourseCard = ({ course }) => {
         className="h-full w-full object-cover transition duration-500 group-hover:scale-105"
       />
       <div className="absolute inset-x-0 top-0 flex items-start justify-between p-3">
-        {typeBadge(course.type)}
+        {typeBadge()}
         {course.isFeatured && (
           <span className="badge-warning">
             <Sparkles className="h-3 w-3" /> Featured
@@ -59,22 +54,7 @@ const CourseCard = ({ course }) => {
         </span>
       )}
       <span className="absolute bottom-3 right-3 flex items-center gap-1.5 rounded-lg bg-slate-900/80 px-2 py-1 text-xs font-semibold text-white backdrop-blur">
-        {course.type === 'FREE' ? (
-          'Free'
-        ) : course.price == null ? (
-          'Contact us'
-        ) : isDiscountActive(course) ? (
-          <>
-            <span className="text-white/60 line-through">
-              {format(course.price, course.currency || 'USD')}
-            </span>
-            <span className="text-emerald-300">
-              {format(effectivePrice(course), course.currency || 'USD')}
-            </span>
-          </>
-        ) : (
-          format(course.price, course.currency || 'USD')
-        )}
+        Free
       </span>
     </div>
 

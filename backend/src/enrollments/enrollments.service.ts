@@ -66,8 +66,9 @@ export class EnrollmentsService {
       throw new BadRequestException('Already enrolled in this course');
     }
 
-    // Free courses auto-enroll, paid courses create pending payment
-    if (course.type === 'FREE') {
+    // Every course is open for direct enrolment. Payment remains available as
+    // an optional way to support the platform, but it never gates content.
+    {
       const enrollment = await this.prisma.enrollment.create({
         data: {
           userId,
@@ -100,12 +101,6 @@ export class EnrollmentsService {
 
       return enrollment;
     }
-
-    return {
-      course,
-      requiresPayment: true,
-      message: 'This course requires payment before enrollment',
-    };
   }
 
   async findMyEnrollments(userId: string, params: { page?: number; limit?: number }) {

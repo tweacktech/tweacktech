@@ -28,7 +28,7 @@ import { useAuth } from '../AuthContext';
 import { useSeo } from '../Component/useSeo';
 import { useCurrency } from '../CurrencyContext';
 import { getErrorMessage } from '../lib/apiError';
-import { effectivePrice, isDiscountActive } from '../lib/coursePrice';
+import { effectivePrice } from '../lib/coursePrice';
 
 const unwrap = (res) => (res?.data && res.data.data !== undefined ? res.data.data : res?.data);
 
@@ -43,16 +43,12 @@ const safeParse = (value, fallback) => {
   }
 };
 
-const typeLabel = (type) => {
-  if (type === 'FREE') return 'Free course';
-  if (type === 'PARTIAL') return 'Partial payment';
-  return 'Paid course';
-};
+const typeLabel = () => 'Open course';
 
 const CourseDetail = () => {
   const { courseId } = useParams();
   const { api, user, isAuthenticated } = useAuth();
-  const { selected, setCurrency, currencies, format, convert, formatIn } = useCurrency();
+  const { selected, setCurrency, currencies, convert, formatIn } = useCurrency();
   const navigate = useNavigate();
 
   const [course, setCourse] = useState(null);
@@ -195,27 +191,7 @@ const CourseDetail = () => {
       );
       return;
     }
-    if (course?.type !== 'FREE') {
-      setPaymentOpen(true);
-      setPaymentError('');
-      setPaymentSuccess('');
-      Promise.all([
-        api.get('/payments/bank-accounts').catch(() => null),
-        api.get('/payments/my?limit=100').catch(() => null),
-      ]).then(([bankRes, paymentRes]) => {
-        if (bankRes) setBankAccounts(unwrap(bankRes) || []);
-        if (paymentRes) {
-          const payments = unwrap(paymentRes)?.payments || [];
-          const open = payments.find(
-            (payment) =>
-              (payment.course?.id === courseId || payment.courseId === courseId) &&
-              ['PENDING', 'AWAITING_APPROVAL', 'REJECTED'].includes(payment.status),
-          );
-          setExistingPayment(open || null);
-        }
-      });
-      return;
-    }
+    // All courses are now open for direct enrolment — no payment gate.
     setEnrolling(true);
     setEnrollError('');
     try {
@@ -465,26 +441,8 @@ const CourseDetail = () => {
           <aside className="space-y-5">
             <div className="card p-6 lg:sticky lg:top-24">
               <div className="flex flex-wrap items-baseline gap-2">
-                <p className="text-3xl font-extrabold text-slate-900 dark:text-white">
-                  {course.type === 'FREE'
-                    ? 'Free'
-                    : course.price === null || course.price === undefined
-                    ? 'Contact us'
-                    : format(effectivePrice(course), course.currency || 'USD')}
-                </p>
-                {course.type !== 'FREE' && isDiscountActive(course) && (
-                  <p className="text-sm font-semibold text-slate-400 line-through">
-                    {format(course.price, course.currency || 'USD')}
-                  </p>
-                )}
+                <p className="text-3xl font-extrabold text-slate-900 dark:text-white">Free</p>
               </div>
-              {course.type !== 'FREE' && (
-                <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
-                  Base price {course.currency || 'USD'} {effectivePrice(course).toFixed(2)} · pay in{' '}
-                  {selected}
-                  {isDiscountActive(course) ? ' · discount active' : ''}
-                </p>
-              )}
               {course.enrollmentLocked && (
                 <p className="mt-2 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs font-medium text-amber-800 dark:border-amber-900/60 dark:bg-amber-950/40 dark:text-amber-300">
                   {course.enrollmentLockedMessage ||
@@ -492,11 +450,7 @@ const CourseDetail = () => {
                 </p>
               )}
               <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
-                {course.type === 'PARTIAL'
-                  ? 'Start with a partial payment and pay the rest later.'
-                  : course.type === 'FREE'
-                  ? 'Full access at no cost.'
-                  : 'One-time payment, lifetime access.'}
+                Full access at no cost.
               </p>
 
               {enrolled ? (
