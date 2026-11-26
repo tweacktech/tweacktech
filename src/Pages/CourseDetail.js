@@ -69,6 +69,7 @@ const CourseDetail = () => {
   const [paymentBusy, setPaymentBusy] = useState(false);
   const [paymentError, setPaymentError] = useState('');
   const [paymentSuccess, setPaymentSuccess] = useState('');
+  const [featuredGuide, setFeaturedGuide] = useState(null);
 
   useSeo({
     title: course?.title || 'Tech Courses',
@@ -114,6 +115,23 @@ const CourseDetail = () => {
   useEffect(() => {
     load();
   }, [load]);
+
+  useEffect(() => {
+    let cancelled = false;
+    api
+      .get('/blog/featured?limit=10')
+      .then((res) => {
+        if (cancelled) return;
+        const posts = unwrap(res) || [];
+        setFeaturedGuide(
+          posts.find((post) => /choose your tech stack/i.test(post.title || '')) || posts[0] || null,
+        );
+      })
+      .catch(() => undefined);
+    return () => {
+      cancelled = true;
+    };
+  }, [api]);
 
   // Finish an enrolment the visitor started before being asked to sign in.
   useEffect(() => {
@@ -517,10 +535,30 @@ const CourseDetail = () => {
                   <Layers className="h-4 w-4" /> {modules.length} modules
                 </li>
                 <li className="flex items-center gap-2">
-                  <Award className="h-4 w-4" /> Certificate on paid-course completion
+                  <Award className="h-4 w-4" /> Certificate on course completion
                 </li>
               </ul>
             </div>
+
+            {featuredGuide && (
+              <Link
+                to={`/blog/${featuredGuide.slug}`}
+                className="card block p-5 transition hover:border-red-300 dark:hover:border-red-800"
+              >
+                <p className="text-[11px] font-bold uppercase tracking-wider text-red-600 dark:text-red-400">
+                  Featured guide
+                </p>
+                <p className="mt-2 text-sm font-bold text-slate-900 dark:text-white">
+                  {featuredGuide.title}
+                </p>
+                <p className="mt-2 line-clamp-3 text-xs leading-relaxed text-slate-500 dark:text-slate-400">
+                  {featuredGuide.excerpt}
+                </p>
+                <p className="mt-3 text-xs font-semibold text-red-600 dark:text-red-400">
+                  Not sure where to start? Read this →
+                </p>
+              </Link>
+            )}
 
             {(course.instructor || course.instructors?.length > 0) && (
               <div className="card p-6">

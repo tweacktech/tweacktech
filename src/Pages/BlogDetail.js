@@ -7,6 +7,7 @@ import ShareButtons from '../Component/ShareButtons';
 import { useAuth } from '../AuthContext';
 import { useSeo } from '../Component/useSeo';
 import sanitizeHtml from '../lib/sanitizeHtml';
+import { formatReadingStats } from '../lib/readingTime';
 
 const unwrap = (res) => (res?.data && res.data.data !== undefined ? res.data.data : res?.data);
 
@@ -21,11 +22,6 @@ const formatDate = (value) => {
   } catch {
     return '';
   }
-};
-
-const readingTime = (content) => {
-  const words = (content || '').replace(/<[^>]*>/g, '').split(/\s+/).filter(Boolean).length;
-  return Math.max(1, Math.round(words / 200));
 };
 
 const BlogDetail = () => {
@@ -157,7 +153,7 @@ const BlogDetail = () => {
               {post.author?.firstName} {post.author?.lastName}
             </span>
             <span className="flex items-center gap-1.5">
-              <Clock className="h-4 w-4" /> {readingTime(post.content)} min read
+              <Clock className="h-4 w-4" /> {formatReadingStats(post.content)}
             </span>
             <span className="flex items-center gap-1.5">
               <Eye className="h-4 w-4" /> {post.viewCount ?? 0} views

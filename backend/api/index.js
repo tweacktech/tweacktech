@@ -20,8 +20,8 @@ let initialised = null;
 
 async function initialise() {
   const app = await NestFactory.create(AppModule, new ExpressAdapter(server), {
-    // Paystack (and most gateways) sign the raw request body.
-    rawBody: true,
+    // Body parsers are installed in configureApp with an explicit limit.
+    bodyParser: false,
     logger: ['error', 'warn', 'log'],
   });
   await configureApp(app);

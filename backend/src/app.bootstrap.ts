@@ -8,6 +8,7 @@ import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
 import { ConfigService } from '@nestjs/config';
 import { join } from 'path';
 import { mkdirSync } from 'fs';
+import express from 'express';
 import { HttpExceptionFilter } from './common/filters/http-exception.filter';
 import { TransformInterceptor } from './common/interceptors/transform.interceptor';
 import { TimeoutInterceptor } from './common/interceptors/timeout.interceptor';
@@ -31,6 +32,15 @@ try {
 export async function configureApp(app: NestExpressApplication) {
   const configService = app.get(ConfigService);
   const isServerless = Boolean(process.env.VERCEL);
+
+  // Body parsers with an explicit limit. Nest's default is 100 KB, which is
+  // too small for n8n workflow posts that carry long article bodies or
+  // inline images. Keep the raw buffer so Paystack webhook signatures work.
+  const verifyRaw = (req: any, _res: any, buffer: Buffer) => {
+    req.rawBody = buffer;
+  };
+  app.use(express.json({ limit: '20mb', verify: verifyRaw }));
+  app.use(express.urlencoded({ extended: true, limit: '20mb', verify: verifyRaw }));
 
   // Compress JSON and static assets (threshold keeps tiny responses as-is).
   app.use(compression({ threshold: 1024 }));

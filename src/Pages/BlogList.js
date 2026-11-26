@@ -5,6 +5,7 @@ import Navbar from '../Component/Navbar';
 import Footer from '../Component/Footer';
 import { useAuth } from '../AuthContext';
 import Pagination from '../Component/Pagination';
+import { formatReadingStats } from '../lib/readingTime';
 
 const unwrap = (res) => (res?.data && res.data.data !== undefined ? res.data.data : res?.data);
 
@@ -19,11 +20,6 @@ const formatDate = (value) => {
   } catch {
     return '';
   }
-};
-
-const readingTime = (content) => {
-  const words = (content || '').replace(/<[^>]*>/g, '').split(/\s+/).filter(Boolean).length;
-  return Math.max(1, Math.round(words / 200));
 };
 
 const ArticleCard = ({ post, featured }) => (
@@ -58,7 +54,7 @@ const ArticleCard = ({ post, featured }) => (
           {post.author?.firstName} {post.author?.lastName}
         </span>
         <span className="flex items-center gap-1">
-          <Clock className="h-3.5 w-3.5" /> {readingTime(post.content)} min read
+          <Clock className="h-3.5 w-3.5" /> {formatReadingStats(post.content)}
         </span>
       </div>
 

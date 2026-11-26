@@ -92,6 +92,7 @@ const CourseCatalog = () => {
   const [page, setPage] = useState(1);
   const [meta, setMeta] = useState(null);
   const [categories, setCategories] = useState([]);
+  const [featuredPosts, setFeaturedPosts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
@@ -106,6 +107,12 @@ const CourseCatalog = () => {
       .get('/courses/categories')
       .then((res) => {
         if (!cancelled) setCategories(unwrap(res) || []);
+      })
+      .catch(() => undefined);
+    api
+      .get('/blog/featured?limit=4')
+      .then((res) => {
+        if (!cancelled) setFeaturedPosts(unwrap(res) || []);
       })
       .catch(() => undefined);
     return () => {
@@ -253,6 +260,45 @@ const CourseCatalog = () => {
           <div className="mb-6 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700 dark:border-red-900/60 dark:bg-red-950/40 dark:text-red-400">
             {error}
           </div>
+        )}
+
+        {featuredPosts.length > 0 && activeFilters === 0 && (
+          <section className="mb-8 rounded-2xl border border-red-200 bg-white p-5 dark:border-red-900/60 dark:bg-slate-900">
+            <div className="mb-4 flex items-center gap-2">
+              <Sparkles className="h-4 w-4 text-red-600" />
+              <h2 className="text-sm font-bold uppercase tracking-wider text-slate-900 dark:text-white">
+                Start here: choose your path
+              </h2>
+            </div>
+            <div className="grid gap-4 md:grid-cols-2">
+              {featuredPosts.slice(0, 2).map((post) => (
+                <Link
+                  key={post.id}
+                  to={`/blog/${post.slug}`}
+                  className="group flex gap-4 rounded-xl border border-slate-200 p-4 transition hover:border-red-300 hover:bg-red-50/60 dark:border-slate-700 dark:hover:border-red-800 dark:hover:bg-red-950/20"
+                >
+                  {post.featuredImage && (
+                    <img
+                      src={post.featuredImage}
+                      alt=""
+                      className="h-20 w-28 shrink-0 rounded-lg object-cover"
+                    />
+                  )}
+                  <div className="min-w-0">
+                    <p className="line-clamp-2 text-sm font-bold text-slate-900 group-hover:text-red-600 dark:text-white dark:group-hover:text-red-400">
+                      {post.title}
+                    </p>
+                    <p className="mt-1 line-clamp-2 text-xs text-slate-500 dark:text-slate-400">
+                      {post.excerpt}
+                    </p>
+                    <p className="mt-2 text-[11px] font-semibold text-red-600 dark:text-red-400">
+                      Read the guide →
+                    </p>
+                  </div>
+                </Link>
+              ))}
+            </div>
+          </section>
         )}
 
         {loading ? (

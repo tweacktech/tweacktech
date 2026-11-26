@@ -61,6 +61,7 @@ const POOLS = {
     'photo-1517245386807-bb43f82c33c4',
     'photo-1542744173-8e7e53415bb0',
     'photo-1531482615713-2afd69097998',
+    'photo-1600880292203-757bb62b4baf',
   ],
   Cybersecurity: [
     'photo-1563986768609-322da13575f3',
