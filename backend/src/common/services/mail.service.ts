@@ -48,10 +48,14 @@ export class MailService {
   }
 
   private get from(): string {
-    return (
-      this.config.get<string>('EMAIL_FROM') ||
-      'TweackTech <onboarding@resend.dev>'
-    );
+    const configured = this.config.get<string>('EMAIL_FROM');
+    if (configured) return configured;
+    if (this.config.get('NODE_ENV') === 'production') {
+      this.logger.error(
+        'EMAIL_FROM is not set. Resend only delivers to the account owner from onboarding@resend.dev — verify a domain and set EMAIL_FROM before relying on password reset mail.',
+      );
+    }
+    return 'TweackTech <onboarding@resend.dev>';
   }
 
   async sendTemplate(

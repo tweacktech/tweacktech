@@ -1,6 +1,7 @@
 import { Module } from '@nestjs/common';
-import { ConfigModule } from '@nestjs/config';
+import { ConfigModule, ConfigService } from '@nestjs/config';
 import { APP_GUARD, APP_INTERCEPTOR } from '@nestjs/core';
+import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
 import { AuthModule } from './auth/auth.module';
 import { UsersModule } from './users/users.module';
 import { CoursesModule } from './courses/courses.module';
@@ -41,6 +42,19 @@ import { TestimonialsModule } from './testimonials/testimonials.module';
       isGlobal: true,
       envFilePath: '.env',
     }),
+    // Baseline abuse protection. Tighter per-route limits are applied with
+    // @Throttle() on auth and integration endpoints. Counters are in-memory,
+    // so on serverless each instance enforces its own window.
+    ThrottlerModule.forRootAsync({
+      inject: [ConfigService],
+      useFactory: (config: ConfigService) => [
+        {
+          name: 'default',
+          ttl: Number(config.get('THROTTLE_TTL_MS') || 60_000),
+          limit: Number(config.get('THROTTLE_LIMIT') || 180),
+        },
+      ],
+    }),
     PrismaModule,
     ActivityModule,
     MailModule,
@@ -73,6 +87,12 @@ import { TestimonialsModule } from './testimonials/testimonials.module';
     SeedersModule,
   ],
   providers: [
+    // Must run before authentication so login/register brute force is limited
+    // even when the request would otherwise fail auth.
+    {
+      provide: APP_GUARD,
+      useClass: ThrottlerGuard,
+    },
     {
       provide: APP_GUARD,
       useClass: JwtAuthGuard,

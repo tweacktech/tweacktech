@@ -33,7 +33,8 @@ const sections = [
     title: 'Managing cookies',
     body: [
       'Most browsers let you block or delete cookies through their settings. If you disable essential cookies, you may not be able to sign in or use some features.',
-      'Clearing your browser storage will also reset your saved theme preference.',
+      'You can also change your choice at any time using the "Cookie settings" link in the footer. Choosing "Essential only" keeps sign-in working while turning off advertising and analytics storage.',
+      'Clearing your browser storage will also reset your saved theme preference and your cookie choice.',
     ],
   },
   {

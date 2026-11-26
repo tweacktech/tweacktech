@@ -108,6 +108,9 @@ const SpeedTypingTest = () => {
     } else if (timeRemaining === 0) {
       endGame();
     }
+    // endGame closes over the scoring helpers; re-creating it every tick would
+    // restart the countdown, so it is intentionally excluded.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isGameStarted, timeRemaining]);
 
   const endGame = () => {

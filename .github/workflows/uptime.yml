@@ -1,0 +1,92 @@
+name: Uptime
+
+on:
+  schedule:
+    - cron: '*/15 * * * *'
+  workflow_dispatch:
+
+permissions:
+  issues: write
+  contents: read
+
+jobs:
+  check:
+    name: API and site health
+    runs-on: ubuntu-latest
+    steps:
+      - name: Ping API and site
+        id: ping
+        run: |
+          api=$(curl -s -o /tmp/health.json -w '%{http_code}' --max-time 25 https://tweacktech-api.vercel.app/api/health || echo 000)
+          site=$(curl -s -o /dev/null -w '%{http_code}' --max-time 25 https://tweacktech.vercel.app/ || echo 000)
+          echo "api=$api" >> "$GITHUB_OUTPUT"
+          echo "site=$site" >> "$GITHUB_OUTPUT"
+          echo "API: $api · site: $site"
+          cat /tmp/health.json 2>/dev/null || true
+
+      - name: Report an outage
+        if: steps.ping.outputs.api != '200' || steps.ping.outputs.site != '200'
+        uses: actions/github-script@v7
+        env:
+          API_STATUS: ${{ steps.ping.outputs.api }}
+          SITE_STATUS: ${{ steps.ping.outputs.site }}
+        with:
+          script: |
+            const title = 'Uptime check failing';
+            const body = [
+              `API status: ${process.env.API_STATUS}`,
+              `Site status: ${process.env.SITE_STATUS}`,
+              `Checked at: ${new Date().toISOString()}`,
+              '',
+              'Runbook: check the Vercel deployment logs and the Neon database status. If `/api/health` reports `database: down`, the database is unreachable, not the app.',
+            ].join('\n');
+
+            const existing = await github.rest.issues.listForRepo({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              state: 'open',
+              labels: 'uptime',
+            });
+
+            if (existing.data.length > 0) {
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: existing.data[0].number,
+                body,
+              });
+            } else {
+              await github.rest.issues.create({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                title,
+                body,
+                labels: ['uptime'],
+              });
+            }
+
+      - name: Close a recovered outage
+        if: steps.ping.outputs.api == '200' && steps.ping.outputs.site == '200'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const open = await github.rest.issues.listForRepo({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              state: 'open',
+              labels: 'uptime',
+            });
+            for (const issue of open.data) {
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: issue.number,
+                body: `Recovered — API and site both returned 200 at ${new Date().toISOString()}.`,
+              });
+              await github.rest.issues.update({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: issue.number,
+                state: 'closed',
+              });
+            }

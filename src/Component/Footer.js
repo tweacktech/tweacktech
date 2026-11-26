@@ -1,6 +1,7 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { GraduationCap, Mail, MapPin } from 'lucide-react';
+import { openConsentSettings } from '../lib/consent';
 
 const columns = [
   {
@@ -36,6 +37,7 @@ const columns = [
       { to: '/privacy', label: 'Privacy policy' },
       { to: '/terms', label: 'Terms of service' },
       { to: '/cookies', label: 'Cookie policy' },
+      { label: 'Cookie settings', action: 'consent' },
     ],
   },
 ];
@@ -88,13 +90,23 @@ const Footer = () => {
               </h2>
               <ul className="mt-4 space-y-2.5">
                 {column.links.map((link) => (
-                  <li key={link.to}>
-                    <Link
-                      to={link.to}
-                      className="text-sm text-slate-600 dark:text-slate-400 hover:text-red-600 dark:hover:text-red-400 transition-colors"
-                    >
-                      {link.label}
-                    </Link>
+                  <li key={link.to || link.label}>
+                    {link.action === 'consent' ? (
+                      <button
+                        type="button"
+                        onClick={openConsentSettings}
+                        className="text-left text-sm text-slate-600 transition-colors hover:text-red-600 dark:text-slate-400 dark:hover:text-red-400"
+                      >
+                        {link.label}
+                      </button>
+                    ) : (
+                      <Link
+                        to={link.to}
+                        className="text-sm text-slate-600 dark:text-slate-400 hover:text-red-600 dark:hover:text-red-400 transition-colors"
+                      >
+                        {link.label}
+                      </Link>
+                    )}
                   </li>
                 ))}
               </ul>

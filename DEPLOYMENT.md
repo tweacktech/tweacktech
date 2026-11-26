@@ -225,12 +225,32 @@ When you change the precache list or caching strategy, bump `VERSION` in
 
 ### Request body size (4.5 MB)
 
-Vercel limits serverless request bodies to 4.5 MB. Payment proofs are capped at
-**4 MB** and show a validation error above that. Media uploads that use
-multipart through the API are subject to the same platform limit. Large course
-videos should be added as YouTube/external URLs, or uploaded directly to
-Cloudinary in a future change. (Direct-to-Cloudinary signed uploads are the
-recommended path if 100 MB browser uploads are required.)
+Vercel limits serverless request bodies to 4.5 MB. The API's own JSON parser
+accepts up to **20 MB** (`backend/src/app.bootstrap.ts`), so n8n and other
+self-hosted clients are no longer rejected by Nest's old 100 KB default — but
+on Vercel the platform cap still applies. For articles with inline images, send
+image URLs (or use the media upload endpoint) instead of base64 data URLs.
+
+Payment proofs are capped at **4 MB** and show a validation error above that.
+Media uploads that use multipart through the API are subject to the same
+platform limit. Large course videos should be added as YouTube/external URLs,
+or uploaded directly to Cloudinary. (Direct-to-Cloudinary signed uploads are
+the recommended path if 100 MB browser uploads are required.)
+
+### Abuse protection
+
+`@nestjs/throttler` applies a global limit of 180 requests per minute per IP
+(`THROTTLE_LIMIT` / `THROTTLE_TTL_MS`). Tighter limits are set on credential
+endpoints: 10/minute for login, register and Google sign-in, 5 per 5 minutes for
+password reset, and 30/minute for the n8n blog endpoint. Counters are in-memory,
+so each serverless instance enforces its own window.
+
+### Operational alerts
+
+Set `ALERT_WEBHOOK_URL` to a Slack, Discord or generic JSON webhook. The API
+posts there on database outages and any 5xx response, deduplicated per route for
+five minutes. `.github/workflows/uptime.yml` also checks the API and site every
+15 minutes and opens a labelled issue when either is unhealthy.
 
 ### Cold starts and Neon
 

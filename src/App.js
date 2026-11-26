@@ -6,6 +6,7 @@ import { CurrencyProvider } from "./CurrencyContext";
 import Loader from "./Component/Loader";
 import ErrorBoundary from "./Component/ErrorBoundary";
 import OfflineBanner from "./Component/OfflineBanner";
+import ConsentBanner from "./Component/ConsentBanner";
 import SupportChatbot from "./Component/SupportChatbot";
 import NotificationToast from "./Component/NotificationToast";
 import { canAccessAdminPath } from "./lib/permissions";
@@ -38,6 +39,7 @@ const CookiePolicyPage = lazy(() => import("./Pages/CookiePolicyPage"));
 const AboutPage = lazy(() => import("./Pages/AboutPage"));
 const ContactPage = lazy(() => import("./Pages/ContactPage"));
 const FAQPage = lazy(() => import("./Pages/FAQPage"));
+const SpeedTypingTest = lazy(() => import("./Pages/SpeedTypingTest"));
 const ProfilePage = lazy(() => import("./Pages/ProfilePage"));
 const Messages = lazy(() => import("./Pages/Messages"));
 const CalendarPage = lazy(() => import("./Pages/Calendar"));
@@ -197,6 +199,7 @@ function AppRoutes() {
     <BrowserRouter>
       <ScrollToTop />
       <OfflineBanner />
+      <ConsentBanner />
       <ErrorBoundary>
         <Suspense fallback={<PageLoader />}>
           <Routes>
@@ -219,6 +222,7 @@ function AppRoutes() {
             <Route path="/about" element={<AboutPage />} />
             <Route path="/contact" element={<ContactPage />} />
             <Route path="/faq" element={<FAQPage />} />
+            <Route path="/typing" element={<SpeedTypingTest />} />
             <Route path="/privacy" element={<PrivacyPage />} />
             <Route path="/terms" element={<TermsPage />} />
             <Route path="/cookies" element={<CookiePolicyPage />} />

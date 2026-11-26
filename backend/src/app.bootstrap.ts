@@ -45,6 +45,37 @@ export async function configureApp(app: NestExpressApplication) {
   // Compress JSON and static assets (threshold keeps tiny responses as-is).
   app.use(compression({ threshold: 1024 }));
 
+  // Security headers for API responses. The frontend sets its own, richer
+  // policy in vercel.json; these cover JSON, uploads and local development.
+  app.use((req: any, res: any, next: any) => {
+    res.setHeader('X-Content-Type-Options', 'nosniff');
+    res.setHeader('X-Frame-Options', 'DENY');
+    res.setHeader('X-Permitted-Cross-Domain-Policies', 'none');
+    res.setHeader('Referrer-Policy', 'no-referrer');
+    res.setHeader(
+      'Permissions-Policy',
+      'camera=(), microphone=(), geolocation=()',
+    );
+    res.setHeader('Cross-Origin-Opener-Policy', 'same-origin');
+    // Uploads are embedded by the frontend, which lives on another origin.
+    res.setHeader('Cross-Origin-Resource-Policy', 'cross-origin');
+    if (configService.get('NODE_ENV') === 'production') {
+      res.setHeader(
+        'Strict-Transport-Security',
+        'max-age=63072000; includeSubDomains; preload',
+      );
+    }
+    // A JSON API never needs to render content. Skip Swagger, which does.
+    const path = String(req.path || '');
+    if (path.startsWith('/api') && !path.startsWith('/api/docs')) {
+      res.setHeader(
+        'Content-Security-Policy',
+        "default-src 'none'; base-uri 'none'; form-action 'none'; frame-ancestors 'none'",
+      );
+    }
+    next();
+  });
+
   app.setGlobalPrefix('api');
 
   // Behind Vercel/most reverse proxies the client IP and protocol live in the

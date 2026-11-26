@@ -8,6 +8,7 @@ import {
 } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
 import { Request, Response } from 'express';
+import { sendAlert } from '../utils/alert';
 
 const DATABASE_DOWN_CODES = new Set([
   'P1000', // authentication failed
@@ -52,6 +53,13 @@ export class HttpExceptionFilter implements ExceptionFilter {
       this.logger.warn(
         `Database unavailable for ${request.method} ${request.url}`,
       );
+      sendAlert({
+        title: 'Database offline',
+        message: 'TweackTech API cannot reach the database',
+        path: request.url,
+        method: request.method,
+        status: HttpStatus.SERVICE_UNAVAILABLE,
+      });
       response.status(HttpStatus.SERVICE_UNAVAILABLE).json({
         statusCode: HttpStatus.SERVICE_UNAVAILABLE,
         code: 'DATABASE_OFFLINE',
@@ -95,6 +103,17 @@ export class HttpExceptionFilter implements ExceptionFilter {
     this.logger.error(
       `${request.method} ${request.url} - ${status} - ${message}`,
     );
+
+    if (status >= HttpStatus.INTERNAL_SERVER_ERROR) {
+      sendAlert({
+        title: 'API server error',
+        message,
+        path: request.url,
+        method: request.method,
+        status,
+        detail: exception instanceof Error ? exception.stack : undefined,
+      });
+    }
 
     response.status(status).json({
       statusCode: status,

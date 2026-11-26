@@ -6,6 +6,7 @@ import {
   ServiceUnavailableException,
   UnauthorizedException,
 } from '@nestjs/common';
+import { Throttle } from '@nestjs/throttler';
 import { Public } from '../common/decorators/public.decorator';
 import { IntegrationsService } from './integrations.service';
 
@@ -15,6 +16,7 @@ export class IntegrationsController {
   constructor(private readonly integrations: IntegrationsService) {}
 
   @Public()
+  @Throttle({ default: { limit: 30, ttl: 60_000 } })
   @Post('blog')
   async createBlog(@Headers('x-api-key') apiKey: string, @Body() body: any) {
     const expected = process.env.N8N_API_KEY;

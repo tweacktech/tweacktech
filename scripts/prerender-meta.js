@@ -1125,6 +1125,10 @@ const injectContent = (html, content) => {
 };
 
 const main = async () => {
+  if (process.env.SKIP_PRERENDER === '1') {
+    console.log('[prerender] SKIP_PRERENDER=1 — skipping static page generation');
+    return;
+  }
   if (!fs.existsSync(INDEX)) {
     console.warn('[prerender] build/index.html not found — skipping');
     return;

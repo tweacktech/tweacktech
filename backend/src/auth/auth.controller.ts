@@ -8,6 +8,7 @@ import {
   Logger,
   Query,
 } from '@nestjs/common';
+import { Throttle } from '@nestjs/throttler';
 import { AuthService } from './auth.service';
 import { Public } from '../common/decorators/public.decorator';
 import { CurrentUser } from '../common/decorators/current-user.decorator';
@@ -32,18 +33,21 @@ export class AuthController {
 
 
   @Public()
+  @Throttle({ default: { limit: 10, ttl: 60_000 } })
   @Post('google')
   async google(@Body() body: { idToken?: string }) {
     return this.authService.googleLogin(body?.idToken || '');
   }
 
   @Public()
+  @Throttle({ default: { limit: 10, ttl: 60_000 } })
   @Post('register')
   async register(@Body() body: RegisterDto) {
     return this.authService.register(body);
   }
 
   @Public()
+  @Throttle({ default: { limit: 10, ttl: 60_000 } })
   @Post('login')
   async login(@Body() body: LoginDto) {
     return this.authService.login(body.email, body.password);
@@ -51,18 +55,21 @@ export class AuthController {
 
   // Must be public: the access token is usually expired when this is called.
   @Public()
+  @Throttle({ default: { limit: 30, ttl: 60_000 } })
   @Post('refresh')
   async refresh(@Body() body: RefreshTokenDto) {
     return this.authService.refreshToken(body.refreshToken);
   }
 
   @Public()
+  @Throttle({ default: { limit: 5, ttl: 300_000 } })
   @Post('forgot-password')
   async forgotPassword(@Body() body: ForgotPasswordDto) {
     return this.authService.forgotPassword(body.email);
   }
 
   @Public()
+  @Throttle({ default: { limit: 5, ttl: 300_000 } })
   @Post('reset-password')
   async resetPassword(@Body() body: ResetPasswordDto) {
     return this.authService.resetPassword(body.token, body.password);
@@ -80,6 +87,7 @@ export class AuthController {
     return this.authService.updateProfile(user.sub, body);
   }
 
+  @Throttle({ default: { limit: 10, ttl: 300_000 } })
   @Patch('change-password')
   @UseGuards(JwtAuthGuard)
   async changePassword(@CurrentUser() user: any, @Body() body: ChangePasswordDto) {
