@@ -852,7 +852,7 @@ export class CoursesService {
         quiz.moduleId &&
         submission &&
         typeof submission.score === 'number' &&
-        submission.score >= Number(quiz.passScore || 6)
+        submission.score >= Number(quiz.passScore ?? 8)
       ) {
         passedModules.add(quiz.moduleId);
       }
@@ -928,7 +928,7 @@ export class CoursesService {
           quizPassed: passedModules.has(module.id),
           quizAttempted: Boolean(submission),
           quizScore: typeof submission?.score === 'number' ? submission.score : null,
-          quizPassScore: quiz ? Number(quiz.passScore || 8) : null,
+          quizPassScore: quiz ? Number(quiz.passScore ?? 8) : null,
           totalLessons: module.lessons.length,
           completedLessons: lessons.filter(
             (lesson) => lesson.moduleId === module.id && lesson.isCompleted,

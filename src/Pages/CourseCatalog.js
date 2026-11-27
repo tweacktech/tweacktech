@@ -7,7 +7,6 @@ import { useAuth } from '../AuthContext';
 import { useCurrency } from '../CurrencyContext';
 import { effectivePrice, isDiscountActive } from '../lib/coursePrice';
 import Pagination from '../Component/Pagination';
-import EnrolButton from '../Component/EnrolButton';
 
 const unwrap = (res) => (res?.data && res.data.data !== undefined ? res.data.data : res?.data);
 
@@ -36,8 +35,7 @@ const levelTone = (level) => {
 const CourseCard = ({ course }) => {
   const { format } = useCurrency();
   return (
-  <div className="card card-hover group flex flex-col overflow-hidden">
-  <Link to={`/courses/${course.id}`} className="flex flex-1 flex-col">
+  <Link to={`/courses/${course.id}`} className="card card-hover group flex flex-col overflow-hidden">
     <div className="relative h-44 overflow-hidden bg-slate-100 dark:bg-slate-800">
       <img loading="lazy" decoding="async"
         src={
@@ -105,10 +103,6 @@ const CourseCard = ({ course }) => {
       </div>
     </div>
   </Link>
-  <div className="px-5 pb-5">
-    <EnrolButton courseId={course.id} compact disabled={course.enrollmentLocked} />
-  </div>
-  </div>
   );
 };
 

@@ -14,7 +14,22 @@ import { LANGUAGE_LABELS } from '../lib/lessonCode';
 
 const PYODIDE_VERSION = 'v0.26.2';
 const SQL_VERSION = '1.10.3';
+const TS_VERSION = '5';
 const CDN = 'https://cdn.jsdelivr.net';
+
+// Languages that need a server runtime cannot execute in the browser. Send
+// learners to a free public runner instead of leaving them with a dead Run
+// button. Data formats are validated rather than executed.
+const EXTERNAL_IDE = {
+  php: { label: 'Online PHP IDE', url: 'https://onlinephp.io/' },
+  go: { label: 'Go Playground', url: 'https://go.dev/play/' },
+  bash: { label: 'OneCompiler Bash', url: 'https://onecompiler.com/bash' },
+  shell: { label: 'OneCompiler Shell', url: 'https://onecompiler.com/bash' },
+  json: { label: 'JSON Formatter', url: 'https://jsonformatter.org/' },
+  yaml: { label: 'YAML Validator', url: 'https://www.yamllint.com/' },
+  markdown: { label: 'Markdown Preview', url: 'https://markdownlivepreview.com/' },
+  http: { label: 'HTTP request tool', url: 'https://reqres.in/' },
+};
 
 const RUNNER_DOC = (token) => `<!doctype html><html><head><meta charset="utf-8"></head><body>
 <script>
@@ -140,7 +155,7 @@ function normaliseSql(code) {
  * through Pyodide, SQL through sql.js with sample tables. PHP shows the
  * documented result because it needs a server runtime.
  */
-const CodePlayground = ({ open, onClose, lessonTitle, language, initialCode, expectedOutput }) => {
+const CodePlayground = ({ open, onClose, lessonTitle, language, initialCode, expectedOutput, embedded = false }) => {
   const token = useRef(Math.random().toString(36).slice(2)).current;
   const iframeRef = useRef(null);
   const readyRef = useRef(false);
@@ -157,7 +172,7 @@ const CodePlayground = ({ open, onClose, lessonTitle, language, initialCode, exp
 
   const lang = language || 'javascript';
   const label = LANGUAGE_LABELS[lang] || lang;
-  const canRun = ['javascript', 'python', 'sql', 'html', 'css'].includes(lang);
+  const canRun = ['javascript', 'typescript', 'python', 'sql', 'html', 'css'].includes(lang);
 
   useEffect(() => {
     if (open) {
@@ -173,7 +188,7 @@ const CodePlayground = ({ open, onClose, lessonTitle, language, initialCode, exp
   }, [open, initialCode]);
 
   useEffect(() => {
-    if (!open) return undefined;
+    if (!open || embedded) return undefined;
     const onKey = (event) => {
       if (event.key === 'Escape') onClose();
     };
@@ -184,7 +199,7 @@ const CodePlayground = ({ open, onClose, lessonTitle, language, initialCode, exp
       window.removeEventListener('keydown', onKey);
       document.body.style.overflow = previous;
     };
-  }, [open, onClose]);
+  }, [open, onClose, embedded]);
 
   const append = useCallback((kind, text) => {
     setLines((prev) => [...prev, { kind, text: String(text ?? '') }]);
@@ -223,13 +238,38 @@ const CodePlayground = ({ open, onClose, lessonTitle, language, initialCode, exp
     if (outputRef.current) outputRef.current.scrollTop = outputRef.current.scrollHeight;
   }, [lines]);
 
-  const runJavaScript = useCallback(() => {
+  const runJavaScript = useCallback(
+    (source = code) => {
+      setDocMode(false);
+      setRunning(true);
+      const payload = { source: 'tweack-ide-run', token, code: source };
+      if (readyRef.current) iframeRef.current?.contentWindow?.postMessage(payload, '*');
+      else pendingRef.current = source;
+    },
+    [code, token],
+  );
+
+  const runTypeScript = useCallback(async () => {
     setDocMode(false);
     setRunning(true);
-    const payload = { source: 'tweack-ide-run', token, code };
-    if (readyRef.current) iframeRef.current?.contentWindow?.postMessage(payload, '*');
-    else pendingRef.current = code;
-  }, [code, token]);
+    setRuntimeNote((note) => note || 'Loading TypeScript compiler (first run only)…');
+    try {
+      await ensureScript(
+        `${CDN}/npm/typescript@${TS_VERSION}/lib/typescript.js`,
+        () => window.ts,
+      );
+      setRuntimeNote('');
+      const compiled = window.ts.transpileModule(code, {
+        compilerOptions: { target: window.ts.ScriptTarget.ES2020, module: window.ts.ModuleKind.None },
+        reportDiagnostics: false,
+      }).outputText;
+      runJavaScript(compiled);
+    } catch (error) {
+      setRuntimeNote('');
+      setRunning(false);
+      append('err', `TypeScript compiler unavailable: ${error.message}. Check your internet connection and try again.`);
+    }
+  }, [code, append, runJavaScript]);
 
   const runDocument = useCallback(() => {
     setRunning(true);
@@ -305,11 +345,12 @@ const CodePlayground = ({ open, onClose, lessonTitle, language, initialCode, exp
 
   const run = useCallback(() => {
     if (lang === 'javascript') return runJavaScript();
+    if (lang === 'typescript') return runTypeScript();
     if (lang === 'html' || lang === 'css') return runDocument();
     if (lang === 'python') return runPython();
     if (lang === 'sql') return runSql();
     return undefined;
-  }, [lang, runJavaScript, runDocument, runPython, runSql]);
+  }, [lang, runJavaScript, runTypeScript, runDocument, runPython, runSql]);
 
   const copy = useCallback(async () => {
     try {
@@ -325,9 +366,8 @@ const CodePlayground = ({ open, onClose, lessonTitle, language, initialCode, exp
 
   if (!open) return null;
 
-  return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-950/70 p-3 backdrop-blur-sm sm:p-6" role="dialog" aria-modal="true">
-      <div className="flex max-h-[92vh] w-full max-w-6xl flex-col overflow-hidden rounded-2xl border border-slate-700 bg-slate-900 shadow-2xl">
+  const panel = (
+      <div className={`flex w-full flex-col overflow-hidden rounded-2xl border border-slate-700 bg-slate-900 shadow-2xl ${embedded ? '' : 'max-h-[92vh] max-w-6xl'}`}>
         {/* Header */}
         <div className="flex flex-wrap items-center gap-3 border-b border-slate-700 bg-slate-950 px-4 py-3">
           <span className="grid h-9 w-9 place-items-center rounded-xl bg-red-600 text-white">
@@ -340,9 +380,11 @@ const CodePlayground = ({ open, onClose, lessonTitle, language, initialCode, exp
           <span className="rounded-full border border-emerald-500/40 bg-emerald-500/10 px-2.5 py-1 text-[11px] font-semibold text-emerald-300">
             {canRun ? 'Interactive' : 'Reference'}
           </span>
-          <button type="button" onClick={onClose} className="rounded-lg p-2 text-slate-400 hover:bg-slate-800 hover:text-white" aria-label="Close playground">
-            <X className="h-5 w-5" />
-          </button>
+          {!embedded && (
+            <button type="button" onClick={onClose} className="rounded-lg p-2 text-slate-400 hover:bg-slate-800 hover:text-white" aria-label="Close playground">
+              <X className="h-5 w-5" />
+            </button>
+          )}
         </div>
 
         {/* Toolbar */}
@@ -374,10 +416,25 @@ const CodePlayground = ({ open, onClose, lessonTitle, language, initialCode, exp
           </div>
         )}
 
-        {lang === 'php' && (
+        {!canRun && (
           <div className="flex items-start gap-2 border-b border-amber-500/30 bg-amber-500/10 px-4 py-2 text-xs text-amber-200">
             <AlertCircle className="mt-0.5 h-3.5 w-3.5 shrink-0" />
-            <span>PHP runs on a server, so it cannot execute in the browser. Use the code below in your local PHP environment — the expected result is shown under the editor.</span>
+            <span>
+              {label} needs a server runtime, so it cannot run inside this page. Copy your code into{' '}
+              {EXTERNAL_IDE[lang] ? (
+                <a
+                  href={EXTERNAL_IDE[lang].url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="font-semibold underline underline-offset-2"
+                >
+                  {EXTERNAL_IDE[lang].label}
+                </a>
+              ) : (
+                'a free online runner'
+              )}{' '}
+              to execute it. Any expected output from the lesson is shown under the editor.
+            </span>
           </div>
         )}
 
@@ -430,7 +487,7 @@ const CodePlayground = ({ open, onClose, lessonTitle, language, initialCode, exp
                       {line.text}
                     </pre>
                   ))}
-                  {lang === 'php' && expectedOutput && (
+                  {!canRun && expectedOutput && (
                     <div className="mt-3 rounded-lg border border-amber-500/30 bg-amber-500/10 p-3">
                       <p className="mb-1 text-[11px] font-bold uppercase tracking-wider text-amber-300">Expected output</p>
                       <pre className="whitespace-pre-wrap break-words text-amber-100">{expectedOutput}</pre>
@@ -455,12 +512,18 @@ const CodePlayground = ({ open, onClose, lessonTitle, language, initialCode, exp
 
         <div className="border-t border-slate-700 bg-slate-950 px-4 py-2 text-[11px] text-slate-500">
           {lang === 'javascript' && 'Runs in an isolated sandbox. console.log output appears on the right.'}
+          {lang === 'typescript' && 'Compiled to JavaScript in your browser, then run in the isolated sandbox.'}
           {lang === 'python' && 'Python runs locally in your browser via WebAssembly. First load may take a few seconds.'}
           {lang === 'sql' && 'Queries run against sample students, courses and enrollments tables.'}
-          {lang === 'php' && 'Use the expected output as a reference while you test locally.'}
+          {!canRun && 'This language needs a server runtime, so it is shown as a reference. Open the link below to run it for free.'}
           {(lang === 'html' || lang === 'css') && 'The preview updates when you run the code.'}
         </div>
       </div>
+  );
+
+  return embedded ? panel : (
+    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-950/70 p-3 backdrop-blur-sm sm:p-6" role="dialog" aria-modal="true">
+      {panel}
     </div>
   );
 };

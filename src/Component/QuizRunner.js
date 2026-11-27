@@ -115,6 +115,14 @@ const QuizRunner = ({ api, assignmentId, onClose, onSubmitted }) => {
     setIndex(0);
   };
 
+  // Correct options are withheld until grading. In the review screen we can
+  // safely translate the selected option IDs into readable answer text.
+  const optionText = (questionId, optionId) => {
+    const question = questions.find((item) => item.id === questionId);
+    const option = question?.options?.find((item) => item.id === optionId);
+    return option?.text || '';
+  };
+
   return (
     <div className="modal-overlay fixed inset-0 z-[90] bg-slate-950/70">
       <div className="modal-card w-full border border-slate-200 bg-white shadow-2xl dark:border-slate-800 dark:bg-slate-900 sm:max-w-3xl">
@@ -175,6 +183,12 @@ const QuizRunner = ({ api, assignmentId, onClose, onSubmitted }) => {
                   ? 'Passed'
                   : 'Submitted'}
               </p>
+              <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
+                You need {quiz.passScore ?? 8} out of {quiz.maxScore} to pass.{' '}
+                {result?.passed
+                  ? 'The next module is now unlocked.'
+                  : 'Review the answers below, then retake when you are ready.'}
+              </p>
               {quiz.submission?.feedback && (
                 <p className="mt-1 text-xs text-emerald-700/80 dark:text-emerald-300/80">
                   {quiz.submission.feedback}
@@ -206,6 +220,19 @@ const QuizRunner = ({ api, assignmentId, onClose, onSubmitted }) => {
                         <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
                           {item.isCorrect ? 'Correct' : 'Incorrect'} · {item.earned}/{item.points} points
                         </p>
+                        {!item.isCorrect && (
+                          <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
+                            Your answer:{' '}
+                            {Array.isArray(item.selected)
+                              ? item.selected.map((id) => optionText(item.questionId, id)).filter(Boolean).join(', ') || 'No answer'
+                              : optionText(item.questionId, item.selected) || 'No answer'}
+                          </p>
+                        )}
+                        {!item.isCorrect && item.correctAnswer && (
+                          <p className="mt-1 text-xs font-medium text-emerald-700 dark:text-emerald-300">
+                            Correct answer: {item.correctAnswer}
+                          </p>
+                        )}
                         {item.explanation && (
                           <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
                             {item.explanation}

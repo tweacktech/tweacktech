@@ -41,6 +41,7 @@ const AboutPage = lazy(() => import("./Pages/AboutPage"));
 const ContactPage = lazy(() => import("./Pages/ContactPage"));
 const FAQPage = lazy(() => import("./Pages/FAQPage"));
 const SpeedTypingTest = lazy(() => import("./Pages/SpeedTypingTest"));
+const IdePage = lazy(() => import("./Pages/IdePage"));
 const ProfilePage = lazy(() => import("./Pages/ProfilePage"));
 const Messages = lazy(() => import("./Pages/Messages"));
 const CalendarPage = lazy(() => import("./Pages/Calendar"));
@@ -225,6 +226,8 @@ function AppRoutes() {
             <Route path="/contact" element={<ContactPage />} />
             <Route path="/faq" element={<FAQPage />} />
             <Route path="/typing" element={<SpeedTypingTest />} />
+            <Route path="/ide" element={<IdePage />} />
+            <Route path="/playground" element={<IdePage />} />
             <Route path="/privacy" element={<PrivacyPage />} />
             <Route path="/terms" element={<TermsPage />} />
             <Route path="/cookies" element={<CookiePolicyPage />} />

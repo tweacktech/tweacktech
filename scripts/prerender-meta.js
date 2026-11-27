@@ -399,6 +399,7 @@ const buildRoutes = async () => {
     ['/privacy', 'Privacy Policy - TweackTech', 'How TweackTech collects, uses and protects your information.'],
     ['/terms', 'Terms of Service - TweackTech', 'The rules for using the TweackTech learning platform and talent hub.'],
     ['/cookies', 'Cookie Policy - TweackTech', 'What TweackTech stores in your browser and why.'],
+    ['/ide', 'Free Code IDE - Run Code in Your Browser | TweackTech', 'Write and run JavaScript, TypeScript, Python, SQL, HTML and CSS for free in your browser. No account or payment required.'],
   ].forEach(([path, title, description]) =>
     routes.push({ path, seo: { title, description, url: path } }),
   );
@@ -728,6 +729,40 @@ const staticContent = (path, data) => {
           paragraph(
             'Complete every lesson and pass each module quiz to unlock a certificate you can share and verify online.',
           ),
+        ],
+      ],
+    );
+  }
+
+  if (path === '/ide') {
+    return article(
+      'Free code IDE — write and run code in your browser',
+      'A free playground for everyone. Pick a language, edit the starter code and run it without creating an account or paying anything.',
+      [
+        [
+          'Languages you can run here',
+          list([
+            'JavaScript runs in an isolated browser sandbox, with console output shown beside the editor.',
+            'TypeScript is compiled in the browser and then run as JavaScript.',
+            'Python runs through Pyodide (WebAssembly), with the standard library available.',
+            'SQL queries run against sample students, courses and enrollments tables using sql.js.',
+            'HTML and CSS render in a live preview panel as soon as you press Run.',
+          ]),
+        ],
+        [
+          'Languages available as reference',
+          paragraph(
+            'Go, PHP, Bash, JSON, YAML and Markdown need a server runtime or a dedicated validator, so they cannot execute inside this page. The IDE keeps them editable and links to a free external runner where you can execute the same code.',
+          ),
+        ],
+        [
+          'How to use the playground',
+          list([
+            'Choose a language from the tabs above the editor.',
+            'Edit the example code or replace it completely.',
+            'Press Run code and read the console output or rendered preview.',
+            'Use Reset to restore the starter example and Copy to take the code with you.',
+          ]),
         ],
       ],
     );

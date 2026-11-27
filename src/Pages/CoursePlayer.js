@@ -1198,7 +1198,8 @@ const CoursePlayer = () => {
           assignmentId={moduleQuizId}
           onClose={() => setQuizOpen(false)}
           onSubmitted={async () => {
-            setQuizOpen(false);
+            // Keep the modal open so the learner can see their score and
+            // question-by-question review before deciding what to do next.
             await refreshAccess();
           }}
         />

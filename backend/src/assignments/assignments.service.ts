@@ -859,6 +859,10 @@ export class AssignmentsService {
         earned: isCorrect ? Number(question.points) : 0,
         isCorrect,
         selected,
+        // Released only after grading, so the review screen can teach from
+        // each answer without leaking correct options before submission.
+        explanation: question.explanation || '',
+        correctAnswer: correctOptions.map((option) => option.text).join(' / '),
       };
     });
 

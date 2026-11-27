@@ -41,9 +41,18 @@ export function extractOutput(html = '') {
 
 export const LANGUAGE_LABELS = {
   javascript: 'JavaScript',
+  typescript: 'TypeScript',
   python: 'Python',
   sql: 'SQL',
-  php: 'PHP',
   html: 'HTML',
   css: 'CSS',
+  php: 'PHP',
+  go: 'Go',
+  bash: 'Bash',
+  shell: 'Shell',
+  json: 'JSON',
+  yaml: 'YAML',
+  markdown: 'Markdown',
+  text: 'Text',
+  http: 'HTTP',
 };
