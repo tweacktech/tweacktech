@@ -381,7 +381,7 @@ const CourseDetail = () => {
                   course.thumbnail ||
                   'https://images.unsplash.com/photo-1498050108023-c5249f4df085?q=80&w=1200&auto=format&fit=crop'
                 }
-                alt=""
+                alt={`${course.title} course cover`}
                 className="h-64 w-full object-cover opacity-80"
               />
               <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/40 to-transparent" />

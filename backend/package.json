@@ -29,7 +29,9 @@
     "upgrade:quiz-questions": "node scripts/upgrade-quiz-questions.js",
     "upgrade:lessons": "node scripts/upgrade-lesson-content.js",
     "unlock:free-courses": "node scripts/unlock-free-courses.js",
-    "unlock:all-courses": "node scripts/unlock-all-courses.js"
+    "unlock:all-courses": "node scripts/unlock-all-courses.js",
+    "audit:blog": "node scripts/audit-blog.js",
+    "fix:raw-urls": "node scripts/find-raw-urls.js --fix"
   },
   "dependencies": {
     "@nestjs/common": "^10.4.0",

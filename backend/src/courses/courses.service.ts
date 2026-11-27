@@ -20,6 +20,7 @@ import {
 } from '../common/utils/pagination';
 import { NotificationsService } from '../notifications/notifications.service';
 import { applyCoursePricing, effectivePrice } from '../common/utils/course-pricing';
+import { stripBareImageUrls } from '../common/utils/text';
 
 const STAFF_ROLES: Role[] = [Role.SUPERADMIN, Role.ADMIN, Role.STAFF];
 
@@ -136,7 +137,7 @@ export class CoursesService {
         title: data.title,
         slug: finalSlug,
         shortDescription: data.shortDescription,
-        description: data.description,
+        description: stripBareImageUrls(data.description),
         type: data.type || CourseType.FREE,
         price: parseFloat(data.price || 0),
         currency: (data.currency || 'USD').toUpperCase(),
@@ -398,6 +399,9 @@ export class CoursesService {
     }
 
     if (payload.slug) payload.slug = this.generateSlug(payload.slug);
+    if (payload.description !== undefined) {
+      payload.description = stripBareImageUrls(payload.description);
+    }
     if (payload.price !== undefined) payload.price = parseFloat(payload.price || 0);
     if (payload.discountPrice !== undefined) {
       payload.discountPrice = payload.discountPrice

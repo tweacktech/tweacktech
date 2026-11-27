@@ -252,6 +252,34 @@ posts there on database outages and any 5xx response, deduplicated per route for
 five minutes. `.github/workflows/uptime.yml` also checks the API and site every
 15 minutes and opens a labelled issue when either is unhealthy.
 
+### Blog content quality (AdSense)
+
+Two scripts keep the blog from looking automated:
+
+```bash
+cd backend
+npm run audit:blog            # list posts that are too short or syndicated
+node scripts/audit-blog.js --unpublish   # set those posts back to draft
+npm run fix:raw-urls          # strip image URLs pasted into course text
+```
+
+`audit-blog.js` flags anything under **400 words** and anything containing the
+"Read the original source" markup the n8n integration adds. The n8n endpoint
+refuses to publish both categories unattended: a syndicated item needs a
+`commentary` field, and any body under 300 words is stored as a draft. Seeded
+articles live in `backend/scripts/seed-blog-posts.js`; extra depth sections are
+appended from `backend/scripts/expansions/`, so re-running `npm run seed:blog`
+regenerates every article at full length.
+
+### Ads placement
+
+The AdSense library is injected per route by `src/Component/AdSenseLoader.js`
+using the allow list in `src/lib/adsense.js` (home, blog, course catalogue,
+course detail, about, FAQ). Sign-in, dashboard, admin, checkout, legal and 404
+screens never load it, and neither do the talent, mentor or testimonial
+directories. Auto ads inside the AdSense dashboard should also be limited to
+those content paths.
+
 ### Cold starts and Neon
 
 - First request after idle can take several seconds while Neon wakes.

@@ -37,7 +37,7 @@ const CourseCard = ({ course }) => {
           course.thumbnail ||
           'https://images.unsplash.com/photo-1498050108023-c5249f4df085?q=80&w=800&auto=format&fit=crop'
         }
-        alt=""
+        alt={`${course.title} course cover`}
         className="h-full w-full object-cover transition duration-500 group-hover:scale-105"
       />
       <div className="absolute inset-x-0 top-0 flex items-start justify-between p-3">
@@ -280,7 +280,7 @@ const CourseCatalog = () => {
                   {post.featuredImage && (
                     <img
                       src={post.featuredImage}
-                      alt=""
+                      alt={post.title}
                       className="h-20 w-28 shrink-0 rounded-lg object-cover"
                     />
                   )}

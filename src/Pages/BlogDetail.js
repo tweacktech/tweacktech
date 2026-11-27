@@ -171,7 +171,7 @@ const BlogDetail = () => {
           {post.featuredImage && (
             <img
               src={post.featuredImage}
-              alt=""
+              alt={post.title}
               className="mt-6 h-auto w-full rounded-2xl object-cover"
             />
           )}

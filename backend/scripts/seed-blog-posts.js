@@ -23,11 +23,34 @@ const esc = (value) =>
     .replace(/</g, '&lt;')
     .replace(/>/g, '&gt;');
 
+// Depth sections live in scripts/expansions and are keyed by slug. They are
+// concatenated across parts so a slug can be extended by more than one file.
+const EXPANSION_PARTS = [
+  require('./expansions/part-A'),
+  require('./expansions/part-B'),
+  require('./expansions/part-C'),
+  require('./expansions/part-D'),
+  require('./expansions/part-E'),
+  require('./expansions/part-F'),
+  require('./expansions/part-G'),
+  require('./expansions/part-H'),
+];
+
+const EXPANSIONS = EXPANSION_PARTS.reduce((acc, part) => {
+  for (const [slug, sections] of Object.entries(part)) {
+    acc[slug] = [...(acc[slug] || []), ...sections];
+  }
+  return acc;
+}, {});
+
+// The page header already renders post.excerpt, so content must not repeat it.
 const buildContent = (post) => {
-  const sections = post.s
+  const slug = slugify(post.t);
+  const allSections = [...post.s, ...(EXPANSIONS[slug] || [])];
+  const sections = allSections
     .map(([heading, body]) => `<h2>${esc(heading)}</h2><p>${esc(body)}</p>`)
     .join('\n');
-  return `<article class="blog-post">\n<p class="lead">${esc(post.i)}</p>\n${sections}\n<h2>Key takeaways</h2><ul>${post.k
+  return `<article class="blog-post">\n${sections}\n<h2>Key takeaways</h2><ul>${post.k
     .map((item) => `<li>${esc(item)}</li>`)
     .join('')}</ul>\n<p>Want to go deeper? Explore the related hands-on courses on TweackTech, where every lesson includes a written guide and a runnable example.</p>\n</article>`;
 };

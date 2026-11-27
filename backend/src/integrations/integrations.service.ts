@@ -3,6 +3,10 @@ import { Role } from '@prisma/client';
 import { BlogService } from '../blog/blog.service';
 import { MediaService } from '../media/media.service';
 import { PrismaService } from '../common/services/prisma.service';
+import { sentenceExcerpt } from '../common/utils/text';
+
+// Anything shorter than this reads as a stub and is held as a draft.
+const MIN_ARTICLE_WORDS = 300;
 
 @Injectable()
 export class IntegrationsService {
@@ -30,19 +34,35 @@ export class IntegrationsService {
       featuredImage = await this.media.uploadDataUrl(featuredImage, 'blog');
     }
 
-    const rawContent = String(
-      body.content || body.full || body.summary || body.excerpt || '',
-    );
+    const rawContent = String(body.content || body.full || body.summary || body.excerpt || '');
     const plain = rawContent.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim();
-    const excerpt = String(body.excerpt || body.summary || plain).slice(0, 240);
+    const excerpt = sentenceExcerpt(
+      String(body.excerpt || body.summary || plain),
+      240,
+    );
 
     const source = String(body.sourceUrl || body.link || body.source || '').trim();
-    const sourceLink = /^https?:\/\//i.test(source)
+    const isSyndicated = /^https?:\/\//i.test(source);
+    const sourceLink = isSyndicated
       ? `<p class="source"><a href="${source.replace(/"/g, '&quot;')}" rel="nofollow noopener" target="_blank">Read the original source</a></p>`
       : '';
+
+    // A syndicated item needs original commentary to be publishable. Google
+    // treats a republished article with only a source link as replicated
+    // content, so anything without commentary is stored as a draft that an
+    // editor has to finish by hand.
+    const commentary = String(
+      body.commentary || body.analysis || body.original || '',
+    ).trim();
+    const commentaryBlock = commentary
+      ? `<h2>Why this matters for learners</h2><p>${commentary
+          .replace(/</g, '&lt;')
+          .replace(/>/g, '&gt;')}</p>`
+      : '';
+
     const content = rawContent
-      ? `${rawContent}${sourceLink}`
-      : `<p>${plain || excerpt}</p>${sourceLink}`;
+      ? `${rawContent}${commentaryBlock}${sourceLink}`
+      : `<p>${plain || excerpt}</p>${commentaryBlock}${sourceLink}`;
 
     const tags = Array.isArray(body.tags)
       ? body.tags.map((item: unknown) => String(item).trim()).filter(Boolean)
@@ -53,18 +73,40 @@ export class IntegrationsService {
           .filter(Boolean)
       : [];
 
-    return this.blog.create(
+    const requestedPublish = body.isPublished !== false;
+    const wordCount = plain.split(/\s+/).filter(Boolean).length;
+    // Thin posts and bare republished articles are the two patterns that get a
+    // site rejected for low-value content, so neither publishes unattended.
+    const tooShort = wordCount < MIN_ARTICLE_WORDS;
+    const needsCommentary = isSyndicated && !commentary;
+    const canPublish = requestedPublish && !tooShort && !needsCommentary;
+
+    const post = await this.blog.create(
       {
         title,
         excerpt,
         content,
         featuredImage: featuredImage || null,
-        isPublished: body.isPublished !== false,
-        isFeatured: body.isFeatured === true,
+        isPublished: canPublish,
+        isFeatured: body.isFeatured === true && canPublish,
         categoryId: body.categoryId || null,
         tags: tags.length ? tags.join(', ') : null,
       },
       author.id,
     );
+
+    let moderation = 'published';
+    if (!canPublish) {
+      if (needsCommentary) {
+        moderation =
+          'draft: syndicated content needs an original "commentary" field before it can publish';
+      } else if (tooShort) {
+        moderation = `draft: ${wordCount} words is below the ${MIN_ARTICLE_WORDS} word minimum for publishing`;
+      } else {
+        moderation = 'draft: publishing was not requested';
+      }
+    }
+
+    return { ...post, moderation };
   }
 }

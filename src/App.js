@@ -7,6 +7,7 @@ import Loader from "./Component/Loader";
 import ErrorBoundary from "./Component/ErrorBoundary";
 import OfflineBanner from "./Component/OfflineBanner";
 import ConsentBanner from "./Component/ConsentBanner";
+import AdSenseLoader from "./Component/AdSenseLoader";
 import SupportChatbot from "./Component/SupportChatbot";
 import NotificationToast from "./Component/NotificationToast";
 import { canAccessAdminPath } from "./lib/permissions";
@@ -200,6 +201,7 @@ function AppRoutes() {
       <ScrollToTop />
       <OfflineBanner />
       <ConsentBanner />
+      <AdSenseLoader />
       <ErrorBoundary>
         <Suspense fallback={<PageLoader />}>
           <Routes>
