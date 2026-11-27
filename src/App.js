@@ -195,7 +195,16 @@ function AppRoutes() {
     };
   }, []);
 
-  if (loading) return <PageLoader />;
+  // Mount consent during auth restore too, so first-time visitors always see
+  // the notice instead of only a full-screen loader.
+  if (loading) {
+    return (
+      <BrowserRouter>
+        <ConsentBanner />
+        <PageLoader />
+      </BrowserRouter>
+    );
+  }
 
   return (
     <BrowserRouter>

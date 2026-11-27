@@ -5,6 +5,14 @@ describe('sentenceExcerpt', () => {
     expect(sentenceExcerpt('A short note.', 240)).toBe('A short note.');
   });
 
+  it('trims a short RSS fragment that was cut mid-word', () => {
+    const fragment =
+      'Avi Davidson lost his left hand as a teenager. Since then, he has used several prosthetics. For the first time in ye';
+    const result = sentenceExcerpt(fragment, 240);
+    expect(result.endsWith('.')).toBe(true);
+    expect(result).not.toContain('For the first time');
+  });
+
   it('strips HTML before measuring', () => {
     expect(sentenceExcerpt('<p>Hello <strong>world</strong></p>', 240)).toBe(
       'Hello world',

@@ -31,6 +31,8 @@
     "unlock:free-courses": "node scripts/unlock-free-courses.js",
     "unlock:all-courses": "node scripts/unlock-all-courses.js",
     "audit:blog": "node scripts/audit-blog.js",
+    "clean:syndicated": "node scripts/clean-syndicated-posts.js",
+    "seed:public-content": "node scripts/seed-public-content.js",
     "fix:raw-urls": "node scripts/find-raw-urls.js --fix",
     "curriculum:check": "node scripts/audit-curriculum.js",
     "curriculum:build": "node scripts/rebuild-curriculum.js",

@@ -12,11 +12,15 @@ import {
  * re-openable from the footer ("Cookie settings").
  */
 const ConsentBanner = () => {
-  const [visible, setVisible] = useState(false);
+  // Start from the stored choice so the banner is present on the first
+  // committed render for a visitor who has not decided yet.
+  const [visible, setVisible] = useState(() => !readConsent());
   const [expanded, setExpanded] = useState(false);
 
   useEffect(() => {
-    if (!readConsent()) setVisible(true);
+    // A static notice lives in index.html so crawlers and no-JS visitors see
+    // the same consent request. Remove it once React takes over.
+    document.getElementById('static-consent-notice')?.remove();
     const reopen = () => {
       setExpanded(true);
       setVisible(true);
@@ -36,7 +40,7 @@ const ConsentBanner = () => {
   return (
     <div
       role="dialog"
-      aria-label="Cookie and advertising preferences"
+      aria-label="Cookie consent preferences"
       aria-live="polite"
       className="fixed inset-x-3 bottom-3 z-[70] mx-auto max-w-3xl rounded-2xl border border-slate-200 bg-white p-4 shadow-2xl dark:border-slate-700 dark:bg-slate-900 sm:p-5"
     >
@@ -46,10 +50,10 @@ const ConsentBanner = () => {
         </span>
         <div className="min-w-0 flex-1">
           <p className="text-sm font-bold text-slate-900 dark:text-white">
-            Your privacy, your choice
+            Cookie consent — your privacy, your choice
           </p>
           <p className="mt-1 text-xs leading-relaxed text-slate-600 dark:text-slate-400">
-            We use essential cookies to keep you signed in. With your permission
+            We ask for your consent to use cookies. Essential cookies keep you signed in. With your permission
             we also use advertising cookies to keep TweackTech free. You can
             change this any time from the footer.{' '}
             <Link to="/cookies" className="font-semibold text-red-600 underline dark:text-red-400">
@@ -87,7 +91,7 @@ const ConsentBanner = () => {
               onClick={() => choose(false, false)}
               className="rounded-lg border border-slate-300 px-4 py-2 text-xs font-bold text-slate-700 transition hover:bg-slate-50 dark:border-slate-600 dark:text-slate-200 dark:hover:bg-slate-800"
             >
-              Essential only
+              Reject non-essential
             </button>
             {!expanded && (
               <button
@@ -95,7 +99,7 @@ const ConsentBanner = () => {
                 onClick={() => setExpanded(true)}
                 className="text-xs font-semibold text-slate-500 underline dark:text-slate-400"
               >
-                What does this mean?
+                Cookie settings
               </button>
             )}
           </div>

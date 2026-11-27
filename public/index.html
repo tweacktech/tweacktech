@@ -128,6 +128,42 @@
   </head>
   <body>
     <noscript>You need to enable JavaScript to run this app.</noscript>
+
+    <!-- Cookie consent is also present in the delivered HTML, before React
+         hydration, so crawlers and no-JS visitors see the same notice. -->
+    <aside id="static-consent-notice" role="dialog" aria-label="Cookie consent preferences"
+      style="position:fixed;left:12px;right:12px;bottom:12px;z-index:70;max-width:720px;margin:0 auto;padding:16px;border-radius:14px;border:1px solid #cbd5e1;background:#fff;color:#0f172a;box-shadow:0 10px 40px rgba(0,0,0,.2);font:14px/1.5 system-ui,sans-serif">
+      <strong style="display:block;font-size:15px;margin-bottom:4px">Cookie consent</strong>
+      <span>We use essential cookies to keep you signed in. We ask for your consent before using advertising or analytics cookies. Read our <a href="/cookies" style="color:#dc2626">Cookie policy</a>.</span>
+      <details style="margin-top:8px"><summary style="cursor:pointer;font-weight:600">Cookie settings</summary>
+        <span style="display:block;margin-top:4px">Essential cookies are always on. Advertising cookies let Google AdSense show relevant ads. Analytics is off unless you accept.</span>
+      </details>
+      <div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:10px">
+        <button id="static-consent-accept" type="button" style="background:#dc2626;color:#fff;border:0;border-radius:8px;padding:8px 14px;font-weight:700;cursor:pointer">Accept all</button>
+        <button id="static-consent-reject" type="button" style="background:#fff;color:#334155;border:1px solid #cbd5e1;border-radius:8px;padding:8px 14px;font-weight:700;cursor:pointer">Reject non-essential</button>
+      </div>
+    </aside>
+    <script>
+      (function () {
+        var key = 'tweack-consent-v1';
+        var notice = document.getElementById('static-consent-notice');
+        function decided() {
+          try { var v = JSON.parse(localStorage.getItem(key) || 'null'); return !!(v && v.version === 1); }
+          catch (e) { return false; }
+        }
+        if (decided()) { notice.remove(); return; }
+        function choose(analytics, ads) {
+          localStorage.setItem(key, JSON.stringify({
+            version: 1, necessary: true, analytics: !!analytics, ads: !!ads,
+            decidedAt: new Date().toISOString()
+          }));
+          notice.remove();
+        }
+        document.getElementById('static-consent-accept').onclick = function () { choose(true, true); };
+        document.getElementById('static-consent-reject').onclick = function () { choose(false, false); };
+      })();
+    </script>
+
     <div id="root"></div>
 
     <!--

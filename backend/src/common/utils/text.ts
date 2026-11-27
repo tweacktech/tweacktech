@@ -23,7 +23,22 @@ export const sentenceExcerpt = (value: string, maxLength = 240): string => {
     .replace(/\s+/g, ' ')
     .trim();
   if (!text) return '';
-  if (text.length <= maxLength) return text;
+
+  // RSS summaries are sometimes already cut off mid-word. A short fragment
+  // must not be published as an excerpt, so trim it to its last complete
+  // sentence (or word) even when it is below the requested length.
+  if (text.length <= maxLength) {
+    if (text.length < 60 || /[.!?…]["')\]]?$/.test(text)) return text;
+    const shortWindow = text.slice(0, maxLength + 40);
+    const shortStop = Math.max(
+      shortWindow.lastIndexOf('. '),
+      shortWindow.lastIndexOf('! '),
+      shortWindow.lastIndexOf('? '),
+    );
+    if (shortStop > 0) return shortWindow.slice(0, shortStop + 1);
+    const shortSpace = text.lastIndexOf(' ');
+    return shortSpace > 0 ? `${text.slice(0, shortSpace)}…` : text;
+  }
 
   const window = text.slice(0, maxLength + 40);
   const lastStop = Math.max(

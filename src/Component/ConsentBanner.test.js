@@ -36,7 +36,7 @@ describe('ConsentBanner', () => {
 
   it('records essential-only and stays hidden afterwards', () => {
     renderBanner();
-    fireEvent.click(screen.getByRole('button', { name: /essential only/i }));
+    fireEvent.click(screen.getByRole('button', { name: /reject non-essential/i }));
     expect(readConsent()).toMatchObject({ ads: false, analytics: false });
     expect(localStorage.getItem(CONSENT_KEY)).toBeTruthy();
     expect(screen.queryByText(/your privacy, your choice/i)).not.toBeInTheDocument();

@@ -34,17 +34,21 @@ export class IntegrationsService {
       featuredImage = await this.media.uploadDataUrl(featuredImage, 'blog');
     }
 
-    const rawContent = String(body.content || body.full || body.summary || body.excerpt || '');
+    const fullContent = String(body.content || body.full || '');
+    const rawContent = fullContent || String(body.summary || body.excerpt || '');
     const plain = rawContent.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim();
-    const excerpt = sentenceExcerpt(
-      String(body.excerpt || body.summary || plain),
-      240,
-    );
+    const summaryText = String(body.excerpt || body.summary || '');
+    const summaryPlain = summaryText.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim();
+    const excerpt = sentenceExcerpt(summaryText || plain, 240);
+    // The RSS feed often sends the summary again as the body. Publishing that
+    // as the first paragraph duplicates the visible excerpt, so keep it out of
+    // the article body and let original commentary be the content instead.
+    const summaryOnly = !fullContent || plain === summaryPlain;
 
     const source = String(body.sourceUrl || body.link || body.source || '').trim();
     const isSyndicated = /^https?:\/\//i.test(source);
     const sourceLink = isSyndicated
-      ? `<p class="source"><a href="${source.replace(/"/g, '&quot;')}" rel="nofollow noopener" target="_blank">Read the original source</a></p>`
+      ? `<p class="source"><a href="${source.replace(/"/g, '&quot;')}" rel="nofollow noopener" target="_blank">Further reading: the original report</a></p>`
       : '';
 
     // A syndicated item needs original commentary to be publishable. Google
@@ -60,9 +64,9 @@ export class IntegrationsService {
           .replace(/>/g, '&gt;')}</p>`
       : '';
 
-    const content = rawContent
-      ? `${rawContent}${commentaryBlock}${sourceLink}`
-      : `<p>${plain || excerpt}</p>${commentaryBlock}${sourceLink}`;
+    const bodyHtml = summaryOnly ? '' : rawContent;
+    const content =
+      `${bodyHtml}${commentaryBlock}${sourceLink}` || `<p>${excerpt}</p>${sourceLink}`;
 
     const tags = Array.isArray(body.tags)
       ? body.tags.map((item: unknown) => String(item).trim()).filter(Boolean)
@@ -74,7 +78,11 @@ export class IntegrationsService {
       : [];
 
     const requestedPublish = body.isPublished !== false;
-    const wordCount = plain.split(/\s+/).filter(Boolean).length;
+    const articlePlain = `${bodyHtml} ${commentary}`
+      .replace(/<[^>]+>/g, ' ')
+      .replace(/\s+/g, ' ')
+      .trim();
+    const wordCount = articlePlain.split(/\s+/).filter(Boolean).length;
     // Thin posts and bare republished articles are the two patterns that get a
     // site rejected for low-value content, so neither publishes unattended.
     const tooShort = wordCount < MIN_ARTICLE_WORDS;
