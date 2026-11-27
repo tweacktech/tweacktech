@@ -7,7 +7,7 @@ import {
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { PrismaService } from '../common/services/prisma.service';
-import { EnrollmentStatus, Role } from '@prisma/client';
+import { CourseType, EnrollmentStatus, Role } from '@prisma/client';
 import { CertificatesService } from '../certificates/certificates.service';
 import { NotificationsService } from '../notifications/notifications.service';
 import { MailService } from '../common/services/mail.service';
@@ -66,9 +66,10 @@ export class EnrollmentsService {
       throw new BadRequestException('Already enrolled in this course');
     }
 
-    // Every course is open for direct enrolment. Payment remains available as
-    // an optional way to support the platform, but it never gates content.
-    {
+    // Free courses enrol directly. Paid and partial courses must be paid for
+    // first: PaymentsService.completePayment() creates/activates the enrolment
+    // when a payment is verified or approved by staff.
+    if (course.type === CourseType.FREE) {
       const enrollment = await this.prisma.enrollment.create({
         data: {
           userId,
@@ -101,6 +102,12 @@ export class EnrollmentsService {
 
       return enrollment;
     }
+
+    return {
+      course,
+      requiresPayment: true,
+      message: 'This course requires payment before enrollment',
+    };
   }
 
   async findMyEnrollments(userId: string, params: { page?: number; limit?: number }) {

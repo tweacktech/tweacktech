@@ -680,7 +680,11 @@ const staticContent = (path, data) => {
             paragraph(
               `${course.title} is a ${String(course.level || 'all-level').toLowerCase()} course with ${
                 course.totalLessons || modules.reduce((sum, module) => sum + arr(module.lessons).length, 0)
-              } lessons across ${modules.length || 4} modules. You can enrol directly at no cost; an optional payment supports the platform but never restricts access to the material.`,
+              } lessons across ${modules.length || 4} modules. ${
+                course.type === 'FREE'
+                  ? 'This course is free and you can enrol directly.'
+                  : 'Enrolment opens after your payment is verified or approved by our team.'
+              }`,
             ),
         ],
         [

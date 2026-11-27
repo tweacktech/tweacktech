@@ -75,6 +75,27 @@ const CourseDetail = () => {
   const [paymentSuccess, setPaymentSuccess] = useState('');
   const [featuredGuide, setFeaturedGuide] = useState(null);
 
+  const openPaymentFlow = useCallback(() => {
+    setPaymentOpen(true);
+    setPaymentError('');
+    setPaymentSuccess('');
+    Promise.all([
+      api.get('/payments/bank-accounts').catch(() => null),
+      api.get('/payments/my?limit=100').catch(() => null),
+    ]).then(([bankRes, paymentRes]) => {
+      if (bankRes) setBankAccounts(unwrap(bankRes) || []);
+      if (paymentRes) {
+        const payments = unwrap(paymentRes)?.payments || [];
+        const open = payments.find(
+          (payment) =>
+            (payment.course?.id === courseId || payment.courseId === courseId) &&
+            ['PENDING', 'AWAITING_APPROVAL', 'REJECTED'].includes(payment.status),
+        );
+        setExistingPayment(open || null);
+      }
+    });
+  }, [api, courseId]);
+
   useSeo({
     title: course?.title || 'Tech Courses',
     description:
@@ -152,6 +173,13 @@ const CourseDetail = () => {
     } catch {
       /* ignore */
     }
+    // A paid course cannot be auto-enrolled after sign-in. Continue with the
+    // payment flow instead of silently opening a lesson the student has not
+    // paid for.
+    if (course?.type !== 'FREE') {
+      openPaymentFlow();
+      return undefined;
+    }
     let cancelled = false;
     (async () => {
       try {
@@ -170,7 +198,7 @@ const CourseDetail = () => {
     return () => {
       cancelled = true;
     };
-  }, [isAuthenticated, courseId, loading, api, navigate]);
+  }, [isAuthenticated, courseId, loading, api, navigate, course?.type, openPaymentFlow]);
 
   const modules = useMemo(() => course?.modules || [], [course]);
   const lessonCount = useMemo(
@@ -213,7 +241,12 @@ const CourseDetail = () => {
       );
       return;
     }
-    // All courses are now open for direct enrolment — no payment gate.
+    if (course?.type !== 'FREE') {
+      // Paid and partial courses open the payment flow. Staff approval (or a
+      // verified gateway payment) creates the enrolment on the backend.
+      openPaymentFlow();
+      return;
+    }
     setEnrolling(true);
     setEnrollError('');
     try {
@@ -481,7 +514,10 @@ const CourseDetail = () => {
               </div>
               {course.type !== 'FREE' && (
                 <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
-                  Optional support price in {selected}
+                  {course.type === 'PARTIAL'
+                    ? 'Partial payment option · '
+                    : 'One-time payment · '}
+                  {selected}
                   {isDiscountActive(course) ? ' · discount active' : ''}
                 </p>
               )}
@@ -494,7 +530,7 @@ const CourseDetail = () => {
               <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
                 {course.type === 'FREE'
                   ? 'Full access at no cost.'
-                  : 'You can enrol for free — payment is optional and never required for access.'}
+                  : 'Payment is required before enrolment. Access opens once your payment is verified or approved.'}
               </p>
 
               {enrolled ? (
@@ -537,9 +573,13 @@ const CourseDetail = () => {
                     ? 'Enrolling…'
                     : course.enrollmentLocked
                     ? 'Enrolment closed'
+                    : course.type === 'FREE'
+                    ? isAuthenticated
+                      ? 'Enroll now'
+                      : 'Sign in to enroll'
                     : isAuthenticated
-                    ? 'Enroll now'
-                    : 'Sign in to enroll'}
+                    ? 'Pay to enrol'
+                    : 'Sign in to pay'}
                   {!enrolling && !course.enrollmentLocked && <ArrowRight className="h-4 w-4" />}
                 </button>
               )}
