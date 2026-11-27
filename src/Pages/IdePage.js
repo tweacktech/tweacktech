@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
-import Navbar from '../Component/Navbar';
-import Footer from '../Component/Footer';
+import { Link } from 'react-router-dom';
+import { ArrowLeft } from 'lucide-react';
 import CodePlayground from '../Component/CodePlayground';
 import { useSeo } from '../Component/useSeo';
 
@@ -89,21 +89,17 @@ const IdePage = () => {
   });
 
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-100">
-      <Navbar />
-      <main className="mx-auto max-w-6xl px-4 py-10 sm:px-6">
-        <header className="mb-7">
-          <p className="text-xs font-bold uppercase tracking-[0.2em] text-red-400">Developer tools</p>
-          <h1 className="mt-2 text-3xl font-extrabold tracking-tight sm:text-4xl">Free code IDE</h1>
-          <p className="mt-3 max-w-3xl text-sm leading-7 text-slate-400 sm:text-base">
-            Write code, run it and inspect the output without signing in or paying anything.
-            JavaScript, TypeScript, Python, SQL, HTML and CSS run right here in your browser.
-            Go, PHP, Bash and data formats are available as editable examples with a link to a
-            free runner where needed.
-          </p>
-        </header>
-
-        <div className="mb-4 flex flex-wrap gap-2" role="tablist" aria-label="Choose a language">
+    <div className="flex h-[100dvh] flex-col overflow-hidden bg-slate-950 text-slate-100">
+      {/* Slim code-mode bar. No site navigation and no page scroll: the editor
+          fills the rest of the viewport. */}
+      <div className="flex flex-none items-center gap-3 border-b border-slate-800 bg-slate-950 px-3 py-2">
+        <Link
+          to="/"
+          className="inline-flex shrink-0 items-center gap-1.5 rounded-lg border border-slate-700 px-2.5 py-1.5 text-xs font-semibold text-slate-300 hover:border-slate-500 hover:text-white"
+        >
+          <ArrowLeft className="h-3.5 w-3.5" /> Exit IDE
+        </Link>
+        <div className="flex min-w-0 flex-1 gap-1.5 overflow-x-auto" role="tablist" aria-label="Choose a language">
           {EXAMPLES.map((item) => (
             <button
               key={item.id}
@@ -111,18 +107,23 @@ const IdePage = () => {
               role="tab"
               aria-selected={language === item.id}
               onClick={() => setLanguage(item.id)}
-              className={`rounded-full border px-3.5 py-1.5 text-xs font-semibold transition ${
+              className={`shrink-0 rounded-full border px-3 py-1 text-[11px] font-semibold transition ${
                 language === item.id
                   ? 'border-red-500 bg-red-600 text-white'
                   : 'border-slate-700 bg-slate-900 text-slate-300 hover:border-slate-500 hover:text-white'
               }`}
             >
               {item.label}
-              {!RUNNABLE.has(item.id) && <span className="ml-1.5 text-[10px] opacity-70">reference</span>}
+              {!RUNNABLE.has(item.id) && <span className="ml-1 opacity-60">· ref</span>}
             </button>
           ))}
         </div>
+        <span className="hidden shrink-0 text-[11px] font-bold uppercase tracking-widest text-red-400 sm:inline">
+          Free IDE
+        </span>
+      </div>
 
+      <div className="min-h-0 flex-1 p-2 sm:p-3">
         <CodePlayground
           key={language}
           open
@@ -132,21 +133,7 @@ const IdePage = () => {
           language={language}
           initialCode={example.code}
         />
-
-        <section className="mt-10 grid gap-4 sm:grid-cols-3">
-          {[
-            ['No account needed', 'Open the IDE, pick a language and start typing. Nothing is stored on our servers.'],
-            ['Runs in your browser', 'JavaScript is sandboxed; Python, SQL and TypeScript runtimes load on demand from a public CDN.'],
-            ['Learn by trying', 'Use the examples as a starting point, then change them and see what happens.'],
-          ].map(([title, body]) => (
-            <div key={title} className="rounded-xl border border-slate-800 bg-slate-900 p-5">
-              <h2 className="text-sm font-bold text-white">{title}</h2>
-              <p className="mt-2 text-xs leading-6 text-slate-400">{body}</p>
-            </div>
-          ))}
-        </section>
-      </main>
-      <Footer />
+      </div>
     </div>
   );
 };

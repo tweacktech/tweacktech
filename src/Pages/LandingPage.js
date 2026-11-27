@@ -13,6 +13,7 @@ import {
   PlayCircle,
   Share2,
   Sparkles,
+  Terminal,
   Users,
 } from 'lucide-react';
 import Navbar from '../Component/Navbar';
@@ -264,6 +265,9 @@ const LandingPage = () => {
                 <Link to="/talent" className="btn-secondary !px-6 !py-3 !text-base">
                   <Users className="h-5 w-5" /> Explore talent
                 </Link>
+                <Link to="/ide" className="btn-secondary !px-6 !py-3 !text-base">
+                  <Terminal className="h-5 w-5" /> Try the free IDE
+                </Link>
               </div>
 
               <div className="mt-8 flex flex-wrap items-center justify-center gap-x-6 gap-y-2 text-sm text-slate-500 dark:text-slate-400 lg:justify-start">
@@ -367,6 +371,33 @@ const LandingPage = () => {
                 </p>
               </div>
             ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Free IDE */}
+      <section className="py-6 sm:py-8">
+        <div className="container-page">
+          <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-slate-900 via-slate-950 to-red-950 p-7 text-white shadow-xl sm:p-10">
+            <div className="absolute -right-16 -top-16 h-56 w-56 rounded-full bg-red-500/20 blur-3xl" />
+            <div className="relative flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
+              <div className="max-w-2xl">
+                <span className="inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-3 py-1 text-[11px] font-bold uppercase tracking-widest text-red-200">
+                  <Terminal className="h-3.5 w-3.5" /> Free for everyone
+                </span>
+                <h2 className="mt-4 text-2xl font-extrabold tracking-tight sm:text-3xl">
+                  Write and run code without signing up
+                </h2>
+                <p className="mt-3 text-sm leading-7 text-slate-300 sm:text-base">
+                  Our full-screen IDE runs JavaScript, TypeScript, Python, SQL, HTML and CSS
+                  right in your browser. Pick a language, edit the example and see the output
+                  instantly — no account, no payment, no setup.
+                </p>
+              </div>
+              <Link to="/ide" className="btn-primary shrink-0 !bg-red-600 !px-6 !py-3 !text-base hover:!bg-red-500">
+                <Terminal className="h-5 w-5" /> Open the free IDE <ArrowRight className="h-4 w-4" />
+              </Link>
+            </div>
           </div>
         </div>
       </section>

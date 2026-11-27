@@ -17,7 +17,6 @@ import {
   Menu,
   MessageCircle,
   Settings,
-  Terminal,
   User,
   Users,
   X,
@@ -32,7 +31,6 @@ const navLinks = [
   { to: '/talent', label: 'Talent Hub', icon: Users },
   { to: '/jobs', label: 'Jobs', icon: Briefcase },
   { to: '/blog', label: 'Blog', icon: GraduationCap },
-  { to: '/ide', label: 'Free IDE', icon: Terminal },
 ];
 
 const Navbar = () => {

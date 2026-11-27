@@ -367,7 +367,7 @@ const CodePlayground = ({ open, onClose, lessonTitle, language, initialCode, exp
   if (!open) return null;
 
   const panel = (
-      <div className={`flex w-full flex-col overflow-hidden rounded-2xl border border-slate-700 bg-slate-900 shadow-2xl ${embedded ? '' : 'max-h-[92vh] max-w-6xl'}`}>
+      <div className={`flex w-full flex-col overflow-hidden rounded-2xl border border-slate-700 bg-slate-900 shadow-2xl ${embedded ? 'h-full' : 'max-h-[92vh] max-w-6xl'}`}>
         {/* Header */}
         <div className="flex flex-wrap items-center gap-3 border-b border-slate-700 bg-slate-950 px-4 py-3">
           <span className="grid h-9 w-9 place-items-center rounded-xl bg-red-600 text-white">
