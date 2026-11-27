@@ -360,8 +360,10 @@ const buildRoutes = async () => {
   // Publish the free preview lessons as full static articles at their real
   // lesson URLs. This gives crawlers and reviewers substantial original content
   // without exposing any paid-course material.
+  const courseDetails = {};
   const lessonPages = await mapLimit(courses?.data || [], 3, async (course) => {
     const detail = await fetchJson(`/courses/${course.id}`);
+    if (detail) courseDetails[course.id] = detail;
     return (detail?.modules || []).flatMap((module) =>
       arr(module.lessons)
         .filter((lesson) => lesson.isFree && lesson.readingContent)
@@ -410,6 +412,7 @@ const buildRoutes = async () => {
       mentors: Array.isArray(mentors) ? mentors : [],
       talent: talent?.profiles || [],
       testimonials: Array.isArray(testimonials) ? testimonials : testimonials?.testimonials || [],
+      courseDetails,
     },
   };
 };
@@ -560,7 +563,15 @@ const card = (title, description, meta = '') =>
   }</article>`;
 
 const staticContent = (path, data) => {
-  const { courses = [], blog = [], jobs = [], mentors = [], talent = [], testimonials = [] } = data;
+  const {
+    courses = [],
+    blog = [],
+    jobs = [],
+    mentors = [],
+    talent = [],
+    testimonials = [],
+    courseDetails = {},
+  } = data;
 
   if (path === '/') {
     return article(
@@ -654,10 +665,23 @@ const staticContent = (path, data) => {
   if (path.startsWith('/courses/')) {
     const course = courses.find((item) => `/courses/${item.id}` === path);
     if (!course) return article('TweackTech course', 'Explore this course on TweackTech.', []);
+    // The course list omits modules, so use the detail fetched for the free
+    // lesson pages. Only titles and module descriptions are published here;
+    // paid lesson content is never placed in the static HTML.
+    const modules = courseDetails[course.id]?.modules || [];
     return article(
       course.title,
       course.shortDescription || plain(course.description),
       [
+        [
+          'About this course',
+          paragraph(plain(course.description)) +
+            paragraph(
+              `${course.title} is a ${String(course.level || 'all-level').toLowerCase()} course with ${
+                course.totalLessons || modules.reduce((sum, module) => sum + arr(module.lessons).length, 0)
+              } lessons across ${modules.length || 4} modules. You can enrol directly at no cost; an optional payment supports the platform but never restricts access to the material.`,
+            ),
+        ],
         [
           'What you will learn',
           arr(course.outcomes).length
@@ -666,17 +690,32 @@ const staticContent = (path, data) => {
         ],
         [
           'Course curriculum',
-          (course.modules || []).length
-            ? course.modules
+          modules.length
+            ? modules
                 .map((module) =>
                   card(
                     module.title,
-                    arr(module.lessons).map((lesson) => lesson.title).join(' · '),
-                    `${arr(module.lessons).length} lessons`,
+                    `${plain(module.description || '')} ${arr(module.lessons)
+                      .map((lesson) => lesson.title)
+                      .join(' · ')}`.trim(),
+                    `${arr(module.lessons).length} lessons · one ten-question quiz`,
                   ),
                 )
                 .join('')
             : paragraph('Structured modules with written guides, videos and quizzes.'),
+        ],
+        [
+          'Who this course is for',
+          paragraph(
+            plain(course.targetAudience) ||
+              'Learners who want a structured, practical route through the subject, with written guides and exercises they can work through at their own pace.',
+          ),
+        ],
+        [
+          'How you will learn',
+          paragraph(
+            'Each lesson contains a learning objective, a written guide, a worked example with expected output, common mistakes to avoid and a practice task. The first lesson of the course is free to read without an account. Modules end in a ten-question quiz: score eight out of ten to unlock the next module, and retake it as often as you like. Every answer includes a short explanation so you can learn from a wrong attempt.',
+          ),
         ],
         [
           'Requirements',
