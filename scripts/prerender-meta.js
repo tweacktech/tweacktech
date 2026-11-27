@@ -179,9 +179,12 @@ const injectSeo = (html, options = {}) => {
   return output;
 };
 
-const fetchJson = async (endpoint) => {
+const fetchJson = async (endpoint, attempt = 1) => {
   const controller = new AbortController();
-  const timer = setTimeout(() => controller.abort(), 10000);
+  // Course detail responses are large and the database can be slow under a
+  // burst of parallel requests. Give them room, then try once more before
+  // giving up on the static page.
+  const timer = setTimeout(() => controller.abort(), 30000);
   try {
     const response = await fetch(`${API_URL}${endpoint}`, {
       headers: { Accept: 'application/json' },
@@ -191,11 +194,27 @@ const fetchJson = async (endpoint) => {
     const body = await response.json();
     return body?.data ?? null;
   } catch (error) {
+    if (attempt < 2) return fetchJson(endpoint, attempt + 1);
     console.warn(`[prerender] Could not load ${endpoint}: ${error.message}`);
     return null;
   } finally {
     clearTimeout(timer);
   }
+};
+
+// Keep the number of simultaneous course-detail requests low so one slow
+// query cannot abort the rest of the prerender batch.
+const mapLimit = async (items, limit, worker) => {
+  const results = new Array(items.length);
+  let next = 0;
+  const runners = Array.from({ length: Math.min(limit, items.length) }, async () => {
+    while (next < items.length) {
+      const index = next++;
+      results[index] = await worker(items[index], index);
+    }
+  });
+  await Promise.all(runners);
+  return results;
 };
 
 const PLACEHOLDER_NAMES = new Set([
@@ -341,30 +360,28 @@ const buildRoutes = async () => {
   // Publish the free preview lessons as full static articles at their real
   // lesson URLs. This gives crawlers and reviewers substantial original content
   // without exposing any paid-course material.
-  const lessonPages = await Promise.all(
-    (courses?.data || []).map(async (course) => {
-      const detail = await fetchJson(`/courses/${course.id}`);
-      return (detail?.modules || []).flatMap((module) =>
-        arr(module.lessons)
-          .filter((lesson) => lesson.isFree && lesson.readingContent)
-          .map((lesson) => ({
-            path: `/courses/${course.id}/lessons/${lesson.id}`,
-            seo: {
-              title: `${lesson.title} — ${course.title}`,
-              description: plain(lesson.description || lesson.readingContent).slice(0, 180),
-              url: `/courses/${course.id}/lessons/${lesson.id}`,
-              type: 'article',
-              keywords: `${lesson.title}, ${course.title}, free tech lesson, TweackTech`,
-            },
-            content: article(
-              `${lesson.title} — ${course.title}`,
-              lesson.description || `A free lesson from ${course.title}.`,
-              [['Lesson guide', `<div style="color:#334155">${safeArticle(lesson.readingContent)}</div>`]],
-            ),
-          })),
-      );
-    }),
-  );
+  const lessonPages = await mapLimit(courses?.data || [], 3, async (course) => {
+    const detail = await fetchJson(`/courses/${course.id}`);
+    return (detail?.modules || []).flatMap((module) =>
+      arr(module.lessons)
+        .filter((lesson) => lesson.isFree && lesson.readingContent)
+        .map((lesson) => ({
+          path: `/courses/${course.id}/lessons/${lesson.id}`,
+          seo: {
+            title: `${lesson.title} — ${course.title}`,
+            description: plain(lesson.description || lesson.readingContent).slice(0, 180),
+            url: `/courses/${course.id}/lessons/${lesson.id}`,
+            type: 'article',
+            keywords: `${lesson.title}, ${course.title}, free tech lesson, TweackTech`,
+          },
+          content: article(
+            `${lesson.title} — ${course.title}`,
+            lesson.description || `A free lesson from ${course.title}.`,
+            [['Lesson guide', `<div style="color:#334155">${safeArticle(lesson.readingContent)}</div>`]],
+          ),
+        })),
+    );
+  });
   lessonPages.flat().forEach((route) => routes.push(route));
 
   // Public informational pages need real crawlable content too, not just meta.
