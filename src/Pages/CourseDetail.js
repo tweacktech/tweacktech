@@ -28,7 +28,7 @@ import { useAuth } from '../AuthContext';
 import { useSeo } from '../Component/useSeo';
 import { useCurrency } from '../CurrencyContext';
 import { getErrorMessage } from '../lib/apiError';
-import { effectivePrice } from '../lib/coursePrice';
+import { effectivePrice, isDiscountActive } from '../lib/coursePrice';
 
 const unwrap = (res) => (res?.data && res.data.data !== undefined ? res.data.data : res?.data);
 
@@ -43,7 +43,11 @@ const safeParse = (value, fallback) => {
   }
 };
 
-const typeLabel = () => 'Open course';
+const typeLabel = (type) => {
+  if (type === 'FREE') return 'Free course';
+  if (type === 'PARTIAL') return 'Partial payment';
+  return 'Paid course';
+};
 
 const CourseDetail = () => {
   const { courseId } = useParams();
@@ -459,8 +463,28 @@ const CourseDetail = () => {
           <aside className="space-y-5">
             <div className="card p-6 lg:sticky lg:top-24">
               <div className="flex flex-wrap items-baseline gap-2">
-                <p className="text-3xl font-extrabold text-slate-900 dark:text-white">Free</p>
+                <p className="text-3xl font-extrabold text-slate-900 dark:text-white">
+                  {course.type === 'FREE'
+                    ? 'Free'
+                    : course.price === null || course.price === undefined
+                    ? 'Contact us'
+                    : formatIn(
+                        convert(effectivePrice(course), course.currency || 'USD', selected),
+                        selected,
+                      )}
+                </p>
+                {course.type !== 'FREE' && isDiscountActive(course) && (
+                  <p className="text-sm font-semibold text-slate-400 line-through">
+                    {formatIn(convert(course.price, course.currency || 'USD', selected), selected)}
+                  </p>
+                )}
               </div>
+              {course.type !== 'FREE' && (
+                <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
+                  Optional support price in {selected}
+                  {isDiscountActive(course) ? ' · discount active' : ''}
+                </p>
+              )}
               {course.enrollmentLocked && (
                 <p className="mt-2 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs font-medium text-amber-800 dark:border-amber-900/60 dark:bg-amber-950/40 dark:text-amber-300">
                   {course.enrollmentLockedMessage ||
@@ -468,7 +492,9 @@ const CourseDetail = () => {
                 </p>
               )}
               <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
-                Full access at no cost.
+                {course.type === 'FREE'
+                  ? 'Full access at no cost.'
+                  : 'You can enrol for free — payment is optional and never required for access.'}
               </p>
 
               {enrolled ? (
