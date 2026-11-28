@@ -39,6 +39,21 @@ export function extractOutput(html = '') {
   return match ? decode(match[1]).trim() : '';
 }
 
+// The lesson playground can actually execute these languages. Lessons in
+// other languages (for example PHP or Go) should not offer a dead editor that
+// only prints "Reference" with no output.
+export const PLAYGROUND_LANGUAGES = new Set([
+  'javascript',
+  'typescript',
+  'python',
+  'sql',
+  'html',
+  'css',
+]);
+
+export const canUsePlayground = (detected) =>
+  Boolean(detected?.code) && PLAYGROUND_LANGUAGES.has(detected.language);
+
 export const LANGUAGE_LABELS = {
   javascript: 'JavaScript',
   typescript: 'TypeScript',

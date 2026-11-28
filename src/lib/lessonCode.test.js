@@ -1,4 +1,9 @@
-import { detectLanguage, extractCode, extractOutput } from './lessonCode';
+import {
+  canUsePlayground,
+  detectLanguage,
+  extractCode,
+  extractOutput,
+} from './lessonCode';
 
 describe('lesson code helpers', () => {
   it('detects a language from the course title', () => {
@@ -24,6 +29,14 @@ describe('lesson code helpers', () => {
       code: '',
     });
     expect(extractCode()).toEqual({ language: 'javascript', code: '' });
+  });
+
+  it('offers the playground only for languages it can actually run', () => {
+    expect(canUsePlayground({ language: 'javascript', code: 'console.log(1)' })).toBe(true);
+    expect(canUsePlayground({ language: 'html', code: '<h1>Hi</h1>' })).toBe(true);
+    expect(canUsePlayground({ language: 'php', code: '<?php echo 1;' })).toBe(false);
+    expect(canUsePlayground({ language: 'go', code: 'package main' })).toBe(false);
+    expect(canUsePlayground({ language: 'javascript', code: '' })).toBe(false);
   });
 
   it('extracts the stated output', () => {

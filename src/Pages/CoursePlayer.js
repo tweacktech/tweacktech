@@ -30,7 +30,12 @@ import QuizRunner from '../Component/QuizRunner';
 import AiTutor from '../Component/AiTutor';
 import CodePlayground from '../Component/CodePlayground';
 import ReadAloud from '../Component/ReadAloud';
-import { detectLanguage, extractCode, extractOutput } from '../lib/lessonCode';
+import {
+  canUsePlayground,
+  detectLanguage,
+  extractCode,
+  extractOutput,
+} from '../lib/lessonCode';
 import sanitizeHtml from '../lib/sanitizeHtml';
 import {
   fallbackGuide,
@@ -213,7 +218,10 @@ const StudyMode = ({
   ide,
   onOpenIde,
   ideOpen,
-  setIdeOpen,
+  ideMinimized,
+  onMinimizeIde,
+  onRestoreIde,
+  onCloseIde,
 }) => {
   const [seconds, setSeconds] = useState(25 * 60);
   const [quizOpen, setQuizOpen] = useState(false);
@@ -295,10 +303,21 @@ const StudyMode = ({
               <span className="hidden sm:inline">{aiTutor ? 'Hide AI tutor' : 'AI tutor'}</span>
             </button>
           )}
-          {ide?.code && (
-            <button type="button" onClick={onOpenIde} className="btn-secondary !px-3 !py-2 text-xs">
+          {ide?.available && (
+            <button
+              type="button"
+              onClick={ideOpen && ideMinimized ? onRestoreIde : onOpenIde}
+              className="btn-secondary !px-3 !py-2 text-xs"
+              aria-pressed={ideOpen && !ideMinimized}
+            >
               <Terminal className="h-4 w-4" />
-              <span className="hidden sm:inline">Code Playground</span>
+              <span className="hidden sm:inline">
+                {ideOpen
+                  ? ideMinimized
+                    ? 'Restore playground'
+                    : 'Playground open'
+                  : 'Code Playground'}
+              </span>
             </button>
           )}
           <div className="hidden items-center gap-2 rounded-xl border border-slate-200 px-3 py-1.5 text-sm font-bold text-slate-700 dark:border-slate-700 dark:text-slate-200 sm:flex">
@@ -349,7 +368,7 @@ const StudyMode = ({
             </h2>
             <div className="mt-3 flex flex-wrap gap-2">
               <ReadAloud html={reading} lessonId={lesson?.id} compact />
-              {ide?.code && (
+              {ide?.available && (
                 <button type="button" onClick={onOpenIde} className="btn-primary !py-1.5 text-xs">
                   <Terminal className="h-3.5 w-3.5" /> Try in Code Playground
                 </button>
@@ -515,14 +534,20 @@ const StudyMode = ({
           }}
         />
       )}
-      <CodePlayground
-        open={ideOpen}
-        onClose={() => setIdeOpen(false)}
-        lessonTitle={lesson?.title}
-        language={ide?.language}
-        initialCode={ide?.code}
-        expectedOutput={ide?.expectedOutput}
-      />
+      {ide?.available && (
+        <CodePlayground
+          open={ideOpen}
+          onClose={onCloseIde}
+          lessonTitle={lesson?.title}
+          language={ide?.language}
+          initialCode={ide?.code}
+          expectedOutput={ide?.expectedOutput}
+          minimizable
+          minimized={ideMinimized}
+          onMinimize={onMinimizeIde}
+          onRestore={onRestoreIde}
+        />
+      )}
     </div>
   );
 };
@@ -545,6 +570,7 @@ const CoursePlayer = () => {
   const [aiTutor, setAiTutor] = useState(false);
   const [aiEnabled, setAiEnabled] = useState(true);
   const [ideOpen, setIdeOpen] = useState(false);
+  const [ideMinimized, setIdeMinimized] = useState(false);
   const [quizOpen, setQuizOpen] = useState(false);
 
   const canManage = ['SUPERADMIN', 'ADMIN', 'STAFF'].includes(user?.role);
@@ -681,12 +707,29 @@ const CoursePlayer = () => {
   const ide = useMemo(() => {
     if (!currentLesson) return null;
     const detected = extractCode(currentLesson.readingContent);
+    const language = detected.language || detectLanguage(course?.title);
     return {
-      language: detected.language || detectLanguage(course?.title),
+      language,
       code: detected.code,
       expectedOutput: extractOutput(currentLesson.readingContent),
+      // Only courses whose lesson examples can actually run get a playground.
+      available: canUsePlayground({ ...detected, language }),
     };
   }, [currentLesson, course?.title]);
+
+  // A lesson change is a fresh session: close and restore the playground.
+  useEffect(() => {
+    setIdeOpen(false);
+    setIdeMinimized(false);
+  }, [currentLesson?.id]);
+
+  const openIde = useCallback(() => {
+    setIdeMinimized(false);
+    setIdeOpen(true);
+  }, []);
+
+  const minimizeIde = useCallback(() => setIdeMinimized(true), []);
+  const restoreIde = useCallback(() => setIdeMinimized(false), []);
 
   // A locked lesson can never remain in Study mode, even if a stale flag or a
   // quick navigation tries to force it open.
@@ -846,9 +889,12 @@ const CoursePlayer = () => {
         setAiTutor={setAiTutor}
         aiEnabled={aiEnabled}
         ide={ide}
-        onOpenIde={() => setIdeOpen(true)}
+        onOpenIde={openIde}
         ideOpen={ideOpen}
-        setIdeOpen={setIdeOpen}
+        ideMinimized={ideMinimized}
+        onMinimizeIde={minimizeIde}
+        onRestoreIde={restoreIde}
+        onCloseIde={() => setIdeOpen(false)}
       />
     );
   }
@@ -1205,14 +1251,16 @@ const CoursePlayer = () => {
         />
       )}
 
-      <CodePlayground
-        open={ideOpen}
-        onClose={() => setIdeOpen(false)}
-        lessonTitle={currentLesson.title}
-        language={ide?.language}
-        initialCode={ide?.code}
-        expectedOutput={ide?.expectedOutput}
-      />
+      {ide?.available && (
+        <CodePlayground
+          open={ideOpen && !studyMode}
+          onClose={() => setIdeOpen(false)}
+          lessonTitle={currentLesson.title}
+          language={ide?.language}
+          initialCode={ide?.code}
+          expectedOutput={ide?.expectedOutput}
+        />
+      )}
 
       <Footer />
     </div>

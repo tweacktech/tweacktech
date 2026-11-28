@@ -5,6 +5,7 @@ import {
   Copy,
   Loader2,
   Maximize2,
+  Minimize2,
   Play,
   RotateCcw,
   Terminal,
@@ -155,7 +156,19 @@ function normaliseSql(code) {
  * through Pyodide, SQL through sql.js with sample tables. PHP shows the
  * documented result because it needs a server runtime.
  */
-const CodePlayground = ({ open, onClose, lessonTitle, language, initialCode, expectedOutput, embedded = false }) => {
+const CodePlayground = ({
+  open,
+  onClose,
+  lessonTitle,
+  language,
+  initialCode,
+  expectedOutput,
+  embedded = false,
+  minimizable = false,
+  minimized = false,
+  onMinimize,
+  onRestore,
+}) => {
   const token = useRef(Math.random().toString(36).slice(2)).current;
   const iframeRef = useRef(null);
   const readyRef = useRef(false);
@@ -366,6 +379,23 @@ const CodePlayground = ({ open, onClose, lessonTitle, language, initialCode, exp
 
   if (!open) return null;
 
+  // Study mode can park the playground beside the guide so the learner can
+  // read, practise and run code without closing the editor and losing edits.
+  if (minimized) {
+    return (
+      <button
+        type="button"
+        onClick={onRestore}
+        className="fixed bottom-20 right-4 z-[85] inline-flex items-center gap-2 rounded-full border border-red-500/60 bg-slate-900 px-4 py-2.5 text-xs font-bold text-white shadow-2xl hover:bg-slate-800"
+        aria-label="Restore code playground"
+      >
+        <Terminal className="h-4 w-4 text-red-400" />
+        Open playground
+        <Maximize2 className="h-3.5 w-3.5 text-slate-400" />
+      </button>
+    );
+  }
+
   const panel = (
       <div className={`flex w-full flex-col overflow-hidden rounded-2xl border border-slate-700 bg-slate-900 shadow-2xl ${embedded ? 'h-full' : 'max-h-[92vh] max-w-6xl'}`}>
         {/* Header */}
@@ -380,6 +410,17 @@ const CodePlayground = ({ open, onClose, lessonTitle, language, initialCode, exp
           <span className="rounded-full border border-emerald-500/40 bg-emerald-500/10 px-2.5 py-1 text-[11px] font-semibold text-emerald-300">
             {canRun ? 'Interactive' : 'Reference'}
           </span>
+          {minimizable && (
+            <button
+              type="button"
+              onClick={onMinimize}
+              className="rounded-lg p-2 text-slate-400 hover:bg-slate-800 hover:text-white"
+              aria-label="Minimize playground"
+              title="Minimize while you study"
+            >
+              <Minimize2 className="h-4 w-4" />
+            </button>
+          )}
           {!embedded && (
             <button type="button" onClick={onClose} className="rounded-lg p-2 text-slate-400 hover:bg-slate-800 hover:text-white" aria-label="Close playground">
               <X className="h-5 w-5" />
