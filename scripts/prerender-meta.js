@@ -741,31 +741,41 @@ const staticContent = (path, data) => {
   if (path === '/ide') {
     return article(
       'Free code IDE — write and run code in your browser',
-      'A free playground for everyone. Pick a language, edit the starter code and run it without creating an account or paying anything.',
+      'A free multi-file IDE for everyone. Create as many files as you need, switch between them with tabs, run 18 languages and click an error to jump straight to the reported line.',
       [
         [
-          'Languages you can run here',
+          'A real code workspace',
           list([
-            'JavaScript runs in an isolated browser sandbox, with console output shown beside the editor.',
-            'TypeScript is compiled in the browser and then run as JavaScript.',
-            'Python runs through Pyodide (WebAssembly), with the standard library available.',
-            'SQL queries run against sample students, courses and enrollments tables using sql.js.',
-            'HTML and CSS render in a live preview panel as soon as you press Run.',
+            'The file explorer and tab bar let you create, rename and switch files such as page.py, page1.py and page.js.',
+            'Every file remembers its own language, code and extension, and the workspace is saved in your browser.',
+            'Run with Ctrl+Enter, then read stdout, stderr and a Problems list with file name, line and column.',
+            'Click a problem to jump to that exact line in the editor. Error lines are highlighted in the gutter.',
+            'Reload is deliberately blocked while the IDE is open; use Exit IDE when you are finished.',
           ]),
         ],
         [
-          'Languages available as reference',
+          'Languages that run in your browser',
+          list([
+            'JavaScript runs in an isolated sandbox with console output and line-numbered stack traces.',
+            'TypeScript is compiled in the browser, reports compiler diagnostics and then runs as JavaScript.',
+            'Python runs through Pyodide (WebAssembly) with traceback lines from your own file.',
+            'SQL queries run against sample students, courses and enrollments tables using sql.js.',
+            'JSON and YAML are validated with precise positions; HTML, CSS and Markdown render in a live preview.',
+          ]),
+        ],
+        [
+          'Languages that run on a free remote runner',
           paragraph(
-            'Go, PHP, Bash, JSON, YAML and Markdown need a server runtime or a dedicated validator, so they cannot execute inside this page. The IDE keeps them editable and links to a free external runner where you can execute the same code.',
+            'PHP, Go, Bash, C, C++, Java, C#, Ruby and Rust need a real compiler or shell. The IDE sends them to Judge0 CE, a free public code runner, and brings stdout, stderr and compiler errors — with line numbers where the toolchain reports them — back into the same console.',
           ),
         ],
         [
-          'How to use the playground',
+          'How to use the IDE',
           list([
-            'Choose a language from the tabs above the editor.',
-            'Edit the example code or replace it completely.',
-            'Press Run code and read the console output or rendered preview.',
-            'Use Reset to restore the starter example and Copy to take the code with you.',
+            'Open a starter file or choose New file and pick a language.',
+            'Edit it, or double-click a file name to rename it.',
+            'Press Run (Ctrl+Enter) and inspect the Console or Problems tab.',
+            'Click any problem to jump to the line, then fix it and run again.',
           ]),
         ],
       ],

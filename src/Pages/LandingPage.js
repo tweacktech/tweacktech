@@ -389,9 +389,10 @@ const LandingPage = () => {
                   Write and run code without signing up
                 </h2>
                 <p className="mt-3 text-sm leading-7 text-slate-300 sm:text-base">
-                  Our full-screen IDE runs JavaScript, TypeScript, Python, SQL, HTML and CSS
-                  right in your browser. Pick a language, edit the example and see the output
-                  instantly — no account, no payment, no setup.
+                  Our full-screen, multi-file IDE runs 18 languages — including JavaScript,
+                  Python, Go, PHP, SQL and C++ — with line-numbered errors and live previews.
+                  Create page.py, page1.py and as many files as you need. No account, no
+                  payment, no setup.
                 </p>
               </div>
               <Link to="/ide" className="btn-primary shrink-0 !bg-red-600 !px-6 !py-3 !text-base hover:!bg-red-500">
