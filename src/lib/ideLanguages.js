@@ -159,11 +159,11 @@ export const nextFileName = (files, language) => {
   return `page${index}.${ext}`;
 };
 
-export const newFile = (language, files = []) => {
+export const newFile = (language, files = [], name = '') => {
   const lang = getLanguage(language);
   return {
     id: `file-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
-    name: nextFileName(files, lang.id),
+    name: renameExtension(name.trim() || nextFileName(files, lang.id), lang.id),
     language: lang.id,
     code: lang.starter,
   };

@@ -12,11 +12,23 @@ import {
   Terminal,
   X,
 } from 'lucide-react';
-import { LANGUAGES, getLanguage, newFile, renameExtension } from '../lib/ideLanguages';
+import {
+  LANGUAGES,
+  getLanguage,
+  newFile,
+  nextFileName,
+  renameExtension,
+} from '../lib/ideLanguages';
 import { runFile } from '../lib/ideRunner';
 
 const STORAGE_KEY = 'tweack-ide-workspace-v1';
 const LINE_HEIGHT = 24;
+
+const MODE_GROUPS = [
+  { mode: 'browser', label: 'Runs in your browser', hint: 'Sandbox, WebAssembly or parser' },
+  { mode: 'preview', label: 'Live preview', hint: 'Rendered when you press Run' },
+  { mode: 'remote', label: 'Free remote runner', hint: 'Compiler or shell on Judge0 CE' },
+];
 
 // Injected into HTML previews so script errors can be reported with a line
 // number. Kept on one line to make the offset calculation trivial.
@@ -90,7 +102,10 @@ const IdeWorkspace = () => {
   const [status, setStatus] = useState('Ready');
   const [cursor, setCursor] = useState({ line: 1, column: 1 });
   const [renaming, setRenaming] = useState(null);
-  const [newMenu, setNewMenu] = useState(false);
+  const [newFileOpen, setNewFileOpen] = useState(false);
+  const [newLanguage, setNewLanguage] = useState('javascript');
+  const [newName, setNewName] = useState('');
+  const [nameTouched, setNameTouched] = useState(false);
   const [tab, setTab] = useState('console');
   const editorRef = useRef(null);
   const outputRef = useRef(null);
@@ -163,20 +178,41 @@ const IdeWorkspace = () => {
     [activeId],
   );
 
+  const openNewFile = useCallback(() => {
+    setNewLanguage('javascript');
+    setNewName(nextFileName(files, 'javascript'));
+    setNameTouched(false);
+    setNewFileOpen(true);
+  }, [files]);
+
+  const chooseNewLanguage = (languageId) => {
+    setNewLanguage(languageId);
+    if (!nameTouched) setNewName(nextFileName(files, languageId));
+  };
+
   const addFile = useCallback(
-    (languageId) => {
+    (languageId, name = '') => {
       setWorkspace((prev) => {
-        const file = newFile(languageId, prev.files);
+        const file = newFile(languageId, prev.files, name);
         return { files: [...prev.files, file], activeId: file.id };
       });
-      setNewMenu(false);
+      setNewFileOpen(false);
       setOutput([]);
       setDiagnostics([]);
       setPreview(null);
-      setStatus('New file created');
+      setStatus(`Created ${name || nextFileName(files, languageId)}`);
     },
-    [],
+    [files],
   );
+
+  useEffect(() => {
+    if (!newFileOpen) return undefined;
+    const onEscape = (event) => {
+      if (event.key === 'Escape') setNewFileOpen(false);
+    };
+    window.addEventListener('keydown', onEscape);
+    return () => window.removeEventListener('keydown', onEscape);
+  }, [newFileOpen]);
 
   const closeFile = useCallback((id) => {
     setWorkspace((prev) => {
@@ -326,7 +362,7 @@ const IdeWorkspace = () => {
             <span className="text-[10px] font-bold uppercase tracking-widest text-slate-500">Files</span>
             <button
               type="button"
-              onClick={() => setNewMenu((value) => !value)}
+              onClick={openNewFile}
               className="rounded p-1 text-slate-400 hover:bg-slate-800 hover:text-white"
               aria-label="New file"
             >
@@ -422,34 +458,15 @@ const IdeWorkspace = () => {
                 </button>
               </div>
             ))}
-            <div className="relative">
-              <button
-                type="button"
-                onClick={() => setNewMenu((value) => !value)}
-                className="rounded-lg border border-dashed border-slate-700 px-2 py-1 text-xs text-slate-400 hover:border-slate-500 hover:text-white"
-                title="New file"
-              >
-                <Plus className="h-3.5 w-3.5" />
-              </button>
-              {newMenu && (
-                <div className="absolute left-0 top-8 z-40 max-h-72 w-56 overflow-auto rounded-xl border border-slate-700 bg-slate-900 p-2 shadow-2xl">
-                  <p className="px-1 pb-1 text-[10px] font-bold uppercase tracking-widest text-slate-500">
-                    New file language
-                  </p>
-                  {LANGUAGES.map((item) => (
-                    <button
-                      key={item.id}
-                      type="button"
-                      onClick={() => addFile(item.id)}
-                      className="flex w-full items-center justify-between rounded-lg px-2 py-1.5 text-left text-xs text-slate-300 hover:bg-slate-800 hover:text-white"
-                    >
-                      <span>{item.label}</span>
-                      <span className="text-[10px] text-slate-500">.{item.ext}</span>
-                    </button>
-                  ))}
-                </div>
-              )}
-            </div>
+            <button
+              type="button"
+              onClick={openNewFile}
+              className="rounded-lg border border-dashed border-slate-700 px-2 py-1 text-xs text-slate-400 hover:border-slate-500 hover:text-white"
+              title="New file"
+              aria-label="New file"
+            >
+              <Plus className="h-3.5 w-3.5" />
+            </button>
           </div>
 
           {/* Toolbar */}
@@ -478,7 +495,7 @@ const IdeWorkspace = () => {
             </button>
             <button
               type="button"
-              onClick={() => setNewMenu((value) => !value)}
+              onClick={openNewFile}
               className="inline-flex items-center gap-1.5 rounded-lg border border-slate-700 px-2.5 py-1.5 text-xs text-slate-300 hover:bg-slate-800 sm:hidden"
             >
               <Plus className="h-3.5 w-3.5" /> File
@@ -645,6 +662,117 @@ const IdeWorkspace = () => {
         <span className="ml-auto hidden sm:inline">Autosaved locally</span>
         <span className="text-slate-600">Reload blocked · use Exit IDE</span>
       </div>
+
+      {/* New-file dialog. A centered popup is used instead of a dropdown
+          because the tab bar scrolls horizontally and clipped the menu. */}
+      {newFileOpen && (
+        <div
+          role="dialog"
+          aria-modal="true"
+          aria-label="Create a new file"
+          onClick={() => setNewFileOpen(false)}
+          className="fixed inset-0 z-[120] flex items-center justify-center bg-slate-950/80 p-3 backdrop-blur-sm"
+        >
+          <div
+            onClick={(event) => event.stopPropagation()}
+            className="flex max-h-[88vh] w-full max-w-3xl flex-col overflow-hidden rounded-2xl border border-slate-700 bg-slate-900 shadow-2xl"
+          >
+            <div className="flex flex-none items-start justify-between gap-3 border-b border-slate-800 px-4 py-3">
+              <div>
+                <h2 className="text-sm font-bold text-white">New file</h2>
+                <p className="mt-0.5 text-[11px] text-slate-400">
+                  Pick a language, then choose a name. Every language has a runnable starter.
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setNewFileOpen(false)}
+                className="rounded-lg p-1.5 text-slate-400 hover:bg-slate-800 hover:text-white"
+                aria-label="Close new file dialog"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+
+            <div className="flex-none border-b border-slate-800 px-4 py-3">
+              <label htmlFor="new-file-name" className="text-[10px] font-bold uppercase tracking-widest text-slate-500">
+                File name
+              </label>
+              <div className="mt-1.5 flex flex-wrap items-center gap-2">
+                <input
+                  id="new-file-name"
+                  value={newName}
+                  onChange={(event) => {
+                    setNameTouched(true);
+                    setNewName(event.target.value);
+                  }}
+                  onKeyDown={(event) => {
+                    if (event.key === 'Enter') addFile(newLanguage, newName);
+                  }}
+                  spellCheck={false}
+                  className="min-w-0 flex-1 rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 font-mono text-xs text-white outline-none focus:border-red-500"
+                  placeholder={nextFileName(files, newLanguage)}
+                  aria-label="New file name"
+                />
+                <span className="rounded-lg border border-slate-700 px-2 py-1 text-[11px] text-slate-400">
+                  {getLanguage(newLanguage).label} · .{getLanguage(newLanguage).ext}
+                </span>
+              </div>
+            </div>
+
+            <div className="min-h-0 flex-1 space-y-5 overflow-auto px-4 py-4">
+              {MODE_GROUPS.map((group) => {
+                const items = LANGUAGES.filter((item) => item.mode === group.mode);
+                if (!items.length) return null;
+                return (
+                  <section key={group.mode}>
+                    <h3 className="mb-2 flex flex-wrap items-baseline gap-2 text-[11px] font-bold uppercase tracking-widest text-slate-400">
+                      {group.label}
+                      <span className="text-[10px] font-normal normal-case tracking-normal text-slate-600">
+                        {group.hint}
+                      </span>
+                    </h3>
+                    <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
+                      {items.map((item) => (
+                        <button
+                          key={item.id}
+                          type="button"
+                          onClick={() => chooseNewLanguage(item.id)}
+                          className={`flex items-center justify-between rounded-lg border px-3 py-2 text-left text-xs transition ${
+                            newLanguage === item.id
+                              ? 'border-red-500 bg-red-600/15 text-white'
+                              : 'border-slate-700 bg-slate-950/60 text-slate-300 hover:border-slate-500 hover:text-white'
+                          }`}
+                        >
+                          <span className="font-semibold">{item.label}</span>
+                          <span className="font-mono text-[10px] text-slate-500">.{item.ext}</span>
+                        </button>
+                      ))}
+                    </div>
+                  </section>
+                );
+              })}
+            </div>
+
+            <div className="flex flex-none justify-end gap-2 border-t border-slate-800 px-4 py-3">
+              <button
+                type="button"
+                onClick={() => setNewFileOpen(false)}
+                className="rounded-lg border border-slate-700 px-3 py-2 text-xs text-slate-300 hover:bg-slate-800"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={() => addFile(newLanguage, newName)}
+                className="rounded-lg bg-red-600 px-4 py-2 text-xs font-bold text-white hover:bg-red-500"
+              >
+                Create {newName || nextFileName(files, newLanguage)}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
